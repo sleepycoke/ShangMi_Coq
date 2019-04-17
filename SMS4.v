@@ -108,6 +108,8 @@ Fixpoint fb (i : N) :=
   (fb (i - 1)) + (fb (i - 2)). 
   *)
 
+Compute (O, O). 
+
 Fixpoint fb (i : nat) : N :=
   match i with
   | O => 0
@@ -119,6 +121,28 @@ Fixpoint fb (i : nat) : N :=
   end.
 
 (*Compute fb 40.  Takes 14 secs to compute. fb 60 takes more than 3 mins *)
+(* Even more slower since ti calls fb_vec 3 times now. 
+Fixpoint fb_vec (i : nat) : prod N N :=
+  match i with
+  | O => (1%N, 0%N)
+  | S i' => ( (add (fst (fb_vec i')) (snd (fb_vec i'))), (fst (fb_vec i'))  )
+  end.
+*)
+
+Definition fb_axl (vec : prod N N) : prod N N :=
+    ( (add (fst vec) (snd vec)), (fst vec)  ). 
+
+Fixpoint fb_vec (i : nat) : prod N N :=
+  match i with
+  | O => (1%N, 0%N)
+  | S i' => fb_axl (fb_vec i')
+  end. 
+
+Definition fb_fast (i : nat) : N := snd (fb_vec i). 
+
+Compute fb_fast 40. (* Blazingly fast! *)
+Compute fb_fast 600. (* Blazingly fast! *)
+Compute sub (fb 30) (fb_fast 30). (* = 0 *)
 
 (* ill-formed
 Fixpoint X(i : N)(X0 : N)(X1 : N)(X2 : N)(X3 : N) {struct i} : N :=
