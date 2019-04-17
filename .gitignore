@@ -28,3 +28,9 @@ lia.cache
 nia.cache
 nlia.cache
 nra.cache
+Playground.v
+*.swo
+*.swp
+.depend
+.DS_Store
+*.log

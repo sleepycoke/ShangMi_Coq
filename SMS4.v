@@ -5,6 +5,9 @@ Require Import Coq.Strings.Ascii.
 Require Import Coq.Strings.String. 
 Require Import Tables. 
 Require Import NArith.
+Require Import CCompLib.Integers.
+
+Locate Integers. 
 
 Import N. 
 Definition word_size := 32%N. 
