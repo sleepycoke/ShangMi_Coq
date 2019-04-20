@@ -233,7 +233,7 @@ Definition calXip3 (i : nat)(X0 : N)(X1 : N)(X2 : N)(X3 : N)(rk : nat->N) : N :=
   (shiftl (X (i + 2) X0 X1 X2 X3 rk) (word_size * 2)) +   
   (shiftl (X (i + 1) X0 X1 X2 X3 rk) word_size ) +   
   (X i X0 X1 X2 X3 rk). 
-Definition SMS4_enc (i : nat)(x : N) (rk : nat->N) : N :=
+Definition SM4_enc (i : nat)(x : N) (rk : nat->N) : N :=
   calXip3 i (mask_14 x) (mask_24 x) (mask_34 x) (mask_44 x) rk. 
 
 Definition quad2N (q : @quadruple N) : N :=
@@ -242,14 +242,14 @@ Definition quad2N (q : @quadruple N) : N :=
   (shiftl (q3rd q) (word_size * 1)) + 
   (q4th q). 
 
-Definition SMS4_enc_fast (i : nat)(x : N) (rk : nat->N) : N :=
+Definition SM4_enc_fast (i : nat)(x : N) (rk : nat->N) : N :=
   R (quad2N (X_vec i ((mask_14 x), (mask_24 x), (mask_34 x), (mask_44 x)) rk)). 
 
-Definition SMS4_dec (i : nat)(y : N)(rk : nat -> N) : N :=
-  SMS4_enc i y (fun (i : nat) => rk(31 - i)). 
+Definition SM4_dec (i : nat)(y : N)(rk : nat -> N) : N :=
+  SM4_enc i y (fun (i : nat) => rk(31 - i)). 
   
-Definition SMS4_dec_fast (i : nat)(y : N)(rk : nat -> N) : N :=
-  SMS4_enc_fast i y (fun (i : nat) => rk(31 - i)). 
+Definition SM4_dec_fast (i : nat)(y : N)(rk : nat -> N) : N :=
+  SM4_enc_fast i y (fun (i : nat) => rk(31 - i)). 
 
 Fixpoint K (i : nat) (MK : N) : N := 
   match i with
@@ -298,10 +298,10 @@ Compute of_N(rk_ext_fast key 2).
 
 
 
-Check SMS4_enc 32 plain (rk_ext key).  
-Check SMS4_enc_fast 0 plain (rk_ext_fast key).  
+Check SM4_enc 32 plain (rk_ext key).  
+Check SM4_enc_fast 0 plain (rk_ext_fast key).  
 (* Runs forever *)
-(*Compute SMS4_enc plain (rk_ext key).  *)
-Compute of_N (SMS4_enc 1 plain (rk_ext_fast key)).  
-Compute of_N (SMS4_enc_fast 1 plain (rk_ext_fast key)).  
-Compute of_N (SMS4_dec_fast (SMS4_enc_fast plain (rk_ext_fast key)) (rk_ext_fast key)). 
+(*Compute SM4_enc plain (rk_ext key).  *)
+Compute of_N (SM4_enc 1 plain (rk_ext_fast key)).  
+Compute of_N (SM4_enc_fast 1 plain (rk_ext_fast key)).  
+Compute of_N (SM4_dec_fast (SM4_enc_fast plain (rk_ext_fast key)) (rk_ext_fast key)). 
