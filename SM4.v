@@ -1,4 +1,5 @@
 Require Import Coq.PArith.BinPosDef. 
+Require Import Coq.Strings.BinaryString. 
 Require Import Coq.Strings.HexString. 
 Require Import Ascii String. 
 Require Import Coq.Strings.Ascii. 
@@ -52,6 +53,10 @@ Infix "<<<" := shiftl_cyc (at level 35).
 
 Compute of_N( 7 >>> 2). 
 Compute of_N((7 >>> 2) <<< 2). 
+Compute of_N(7 <<< 2). 
+Compute of_N(to_N("0xc0000000") <<< 2). 
+Compute of_N(to_N("0xc0000000") <<< 1). 
+Compute of_N(to_N("0xc0000000") <<< 1 <<< 1). 
 
 Compute lxor 5 7. 
 
@@ -101,11 +106,15 @@ Definition Tau (A : N) : N :=
   (Sbox (land A 255)). 
 
 Compute of_N(Tau (to_N("0x11223344"%string))). 
+Compute of_N(Tau (to_N("0x55667788"%string))). 
+Compute of_N(Tau (to_N("0xfffeeeef"%string))). 
 
 Definition L (B : N) : N :=
   B $ (B <<< 2) $ (B <<< 10) $ (B <<< 18) $ (B <<< 24). 
 Definition L' (B : N) : N :=
-  B $ (B <<< 13) $ (B <<< 23). 
+  (B $ (B <<< 13)) $ (B <<< 23). 
+
+Compute BinaryString.of_N (L' 1). 
 
 Definition mask_ws := sub modulus 1. 
 Definition mask_14 (A : N) : N := 
@@ -126,6 +135,10 @@ Definition R (A : N) : N :=
   shiftl (mask_14 A) (word_size * 0).
 
 Compute of_N(R (to_N("0x11112222333344445555666677778888"%string))). 
+Compute of_N(mask_14 (to_N("0x11112222333344445555666677778888"%string))). 
+Compute of_N(mask_24 (to_N("0x11112222333344445555666677778888"%string))). 
+Compute of_N(mask_34 (to_N("0x11112222333344445555666677778888"%string))). 
+Compute of_N(mask_44 (to_N("0x11112222333344445555666677778888"%string))). 
 
 Definition T (A : N) : N := L (Tau A). 
 Definition T' (A : N) : N := L' (Tau A). 
@@ -218,7 +231,7 @@ Definition X_vec_axl (vec : @quadruple N) (i : nat) (rk : nat -> N) : @quadruple
          q3rd vec, 
          q4th vec,
          F (q1st vec) (q2nd vec) 
-         (q3rd vec) (q4th vec) (rk i)
+         (q3rd vec) (q4th vec) (rk (i - 1))
       ).
 
 (* X_vec i = (X i, X (i + 1), X (i + 2), X (i + 3)) *)
@@ -242,8 +255,15 @@ Definition quad2N (q : @quadruple N) : N :=
   (shiftl (q3rd q) (word_size * 1)) + 
   (q4th q). 
 
+Definition N2quad (x : N) : quadruple := 
+  ((mask_14 x), (mask_24 x), (mask_34 x), (mask_44 x)). 
+
+Definition quadN2quadX (q : quadruple) : quadruple :=
+  (of_N (q1st q), of_N (q2nd q), of_N (q3rd q), of_N (q4th q)). 
+
+
 Definition SM4_enc_fast (i : nat)(x : N) (rk : nat->N) : N :=
-  R (quad2N (X_vec i ((mask_14 x), (mask_24 x), (mask_34 x), (mask_44 x)) rk)). 
+  R (quad2N (X_vec i (N2quad x) rk)). 
 
 Definition SM4_dec (i : nat)(y : N)(rk : nat -> N) : N :=
   SM4_enc i y (fun (i : nat) => rk(31 - i)). 
@@ -289,14 +309,41 @@ Definition rk_ext_fast  (MK : N) (i : nat): N := q4th (K_vec (i + 1) MK).
 Definition plain := to_N("0x0123456789abcdeffedcba9876543210"%string).
 Definition key := to_N("0x0123456789abcdeffedcba9876543210"%string).
 
+Compute of_N(K 0 key). 
+Compute of_N(K 1 key). 
+Compute of_N(K 2 key). 
+Compute of_N(K 3 key). 
+Compute of_N(K 4 key). 
+Compute of_N(K 5 key). (* differ from here *) 
+Compute of_N(K 0 0%N). 
+Compute of_N(K 1 0%N).
+Compute of_N(K 2 0%N).
+Compute of_N(K 3 0%N).
+Compute of_N(K 4 0%N). (* differ from here *) 
+
+Definition tmp := FK 1 $ FK 2 $ FK 3 $ CK 0. 
+Compute of_N(tmp). 
+Definition buf := Tau tmp. 
+Compute of_N(buf). 
+Compute BinaryString.of_N(buf). 
+Compute BinaryString.of_N(to_N("0x96690e8a")). 
+Compute of_N(buf <<< 13). 
+Compute of_N(buf <<< 23). 
+Compute of_N(L' (Tau tmp)). 
+Compute of_N(T' tmp). 
+
 Compute of_N(rk_ext key 0). 
 Compute of_N(rk_ext_fast key 0). 
 Compute of_N(rk_ext key 1). 
 Compute of_N(rk_ext_fast key 1). 
 Compute of_N(rk_ext key 2). 
 Compute of_N(rk_ext_fast key 2). 
+Compute of_N(rk_ext_fast key 31). 
 
-
+Definition keyQuad := N2quad key. 
+Compute of_N (X 4 (q1st keyQuad) (q2nd keyQuad) (q3rd keyQuad) (q4th keyQuad) (rk_ext_fast key)). 
+Compute of_N (X 7 (q1st keyQuad) (q2nd keyQuad) (q3rd keyQuad) (q4th keyQuad) (rk_ext_fast key)). 
+Compute quadN2quadX (X_vec 1 (N2quad key) (rk_ext_fast key)). 
 
 Check SM4_enc 32 plain (rk_ext key).  
 Check SM4_enc_fast 0 plain (rk_ext_fast key).  
@@ -304,4 +351,7 @@ Check SM4_enc_fast 0 plain (rk_ext_fast key).
 (*Compute SM4_enc plain (rk_ext key).  *)
 Compute of_N (SM4_enc 1 plain (rk_ext_fast key)).  
 Compute of_N (SM4_enc_fast 1 plain (rk_ext_fast key)).  
-Compute of_N (SM4_dec_fast (SM4_enc_fast plain (rk_ext_fast key)) (rk_ext_fast key)). 
+Definition cyphertext := of_N (SM4_enc_fast 32 plain (rk_ext_fast key)).  
+Definition decypheredtext := of_N (SM4_dec_fast 32 (to_N cyphertext) (rk_ext_fast key)). 
+Compute cyphertext. 
+Compute decypheredtext. 
