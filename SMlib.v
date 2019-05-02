@@ -10,9 +10,11 @@ Require Export CCompLib.Integers.
 
 Export N. 
 Definition word_size := 32%N. 
+Definition half_word_size := 16%N. 
 Definition modulus := shiftl 1 word_size.
-Definition half_modulus := div2 modulus.  
+Definition half_modulus := shiftl 1 half_word_size.  
 Definition mask_ws := sub modulus 1. 
+Definition mask_hfws := sub half_modulus 1. 
 
 
 Definition shiftr1_cyc (n : N) : N := 
@@ -77,3 +79,28 @@ Definition N2quad (x : N) : quadruple :=
 
 Definition quadN2quadX (q : quadruple) : quadruple :=
   (of_N (q1st q), of_N (q2nd q), of_N (q3rd q), of_N (q4th q)). 
+
+Definition pentad {X : Type} : Type := X * X * X * X * X. 
+Definition p1st {X : Type} (v : pentad) : X :=
+  match v with
+  | (x, _, _, _, _) => x
+  end.
+Definition p2nd {X : Type} (v : pentad) : X :=
+  match v with
+  | (_, x, _, _, _) => x
+  end.
+Definition p3rd {X : Type} (v : pentad) : X :=
+  match v with
+  | (_, _, x, _, _) => x
+  end.
+
+Definition p4th {X : Type} (v : pentad) : X :=
+  match v with
+  | (_, _, _, x, _) => x
+  end.
+
+Definition p5th {X : Type} (v : pentad) : X :=
+  match v with
+  | (_, _, _, _, x) => x
+  end.
+

@@ -2,8 +2,10 @@ Require Import SMlib.
 Require Import Coq.ZArith.BinIntDef.  
 Require Import Coq.Strings.BinaryString. 
 
-Locate "~". 
-Locate "+".
+(* The p-th segment of n, of lenth en, divided into q parts 
+Definition segment (p : nat) (q : nat) (len : N) (n : N) :=*)
+  
+
 
 Open Scope N. 
 
@@ -84,5 +86,34 @@ Definition Padding (m : string) (l : N) : string :=
   ) (prePad64 (binaryStr l)). 
 
 Compute Padding "011000010110001001100011" 24. 
+
+Compute shiftr 3 1.
+
+(*B is 512 bit, W j is 16 bit, j <= 67*)
+(* ill-formed *)
+(*
+Fixpoint W (j : N) (Bi : N) {struct j} : N :=
+  if leb j 15 then ((shiftr Bi (15 - j) * word_size) /\ mask_ws) else
+  P1 ( (W (j - 16) Bi) $ (W (j - 9) Bi) $ ((W (j - 3) Bi) <<< 15) $ ((W (j - 13) Bi) <<< 7) $ (W (j - 6) Bi) ).
+*)
+(* j <= 15 *)
+Definition W (j : nat) (Bi : N)  : N :=
+  (shiftr Bi (15 - (N.of_nat j)) * word_size) /\ mask_ws. 
+
+Definition Wv_aux (v : penta) :=  P1 ( (1st v)$ (2nd v) $ ((3rd v) <<< 15) 
+  $ ((4th v) <<< 7) $ (5th v).
+(* Wv_j = ( W_(j), W_(j + 7), W_(j + 13), W_(j + 3), W_(j + 10) ) , j <= 51*)
+Definition Wv (j : nat) (Bi : N) : N:= 
+  match j with
+  | 0 => ( (W 0 Bi), (W 7 Bi), (W 13 Bi), (W 3 Bi), (W 10 Bi) )
+  | S j' =>
+
+Definition Bitest := HexString.to_N "0x1111222233334444555566667777888899990000aaaabbbbccccddddeeeeffff1111222233334444555566667777888899990000aaaabbbbccccdd1deeeeffff". 
+Compute HexString.of_N (W 0 Bitest).  
+Compute HexString.of_N (W 1 Bitest).  
+Compute HexString.of_N (W 15 Bitest).  
+
+Definition W' (j : N) (Bi : N) :=
+  (W j Bi) $ (W (j + 4) Bi). 
 
 
