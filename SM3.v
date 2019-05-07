@@ -1,6 +1,7 @@
 Require Import SMlib.
 Require Import Coq.ZArith.BinIntDef.  
 Require Import Coq.Strings.BinaryString. 
+Require Import Program Arith.
 
 (* The p-th segment of n, of lenth en, divided into q parts 
 Definition segment (p : nat) (q : nat) (len : N) (n : N) :=*)
@@ -97,6 +98,36 @@ Fixpoint W (j : N) (Bi : N) {struct j} : N :=
   P1 ( (W (j - 16) Bi) $ (W (j - 9) Bi) $ ((W (j - 3) Bi) <<< 15) $ ((W (j - 13) Bi) <<< 7) $ (W (j - 6) Bi) ).
 *)
 (* j <= 15 *)
+Fixpoint W (j : nat) (Bi : N) {struct j} : N :=
+  match j with
+  | S (S (S (S (S (S (S (S (S (S (S (S (S (S (S (S j_16))))))))))))))) (* j_16 = j - 16 *)=> 
+     match j with
+     | S (S (S j_3)) => 
+         match j_3 with
+         | S (S (S j_6)) =>
+             match j_6 with
+             | S (S (S j_9)) =>
+               match j_9 with
+               | S(S (S (S j_13))) => 
+                  P1 ( (W j_16 Bi) $ (W j_9 Bi) $ (W j_3 Bi) <<< 15)
+                  $ (W j_13 Bi) <<< 7 $ (W j_6 Bi)
+               | _ => 0 (* impossible *)
+               end
+             | _ => 0 (* impossible *)
+             end
+         | _ => 0 (* impossible *)
+         end
+     | _ => 0 (* impossible *)
+     end
+  | _ => ((shiftr Bi ((N.of_nat (Nat.sub 15 j)) * word_size)) /\ mask_ws) (* j <= 15 *)
+  end.
+(*
+Require Import FunInd.
+Require Import Recdef.
+Function W (j : N) (Bi : N) {measure j} : N :=
+  if N.leb j 15 then ((shiftr Bi (15 - j) * word_size) /\ mask_ws) else
+  P1 ( (W (j - 16) Bi) $ (W (j - 9) Bi) $ ((W (j - 3) Bi) <<< 15) $ ((W (j - 13) Bi) <<< 7) $ (W (j - 6) Bi) ).
+
 Definition W (j : nat) (Bi : N)  : N :=
   (shiftr Bi (15 - (N.of_nat j)) * word_size) /\ mask_ws. 
 
@@ -107,13 +138,15 @@ Definition Wv (j : nat) (Bi : N) : N:=
   match j with
   | 0 => ( (W 0 Bi), (W 7 Bi), (W 13 Bi), (W 3 Bi), (W 10 Bi) )
   | S j' =>
+      *)
 
 Definition Bitest := HexString.to_N "0x1111222233334444555566667777888899990000aaaabbbbccccddddeeeeffff1111222233334444555566667777888899990000aaaabbbbccccdd1deeeeffff". 
 Compute HexString.of_N (W 0 Bitest).  
 Compute HexString.of_N (W 1 Bitest).  
 Compute HexString.of_N (W 15 Bitest).  
+Compute HexString.of_N (W 14 Bitest).  
 
-Definition W' (j : N) (Bi : N) :=
+Definition W' (j : nat) (Bi : N) :=
   (W j Bi) $ (W (j + 4) Bi). 
 
 
