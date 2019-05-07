@@ -20,7 +20,7 @@ Definition neg_ws (n : N) : N :=
 Notation "~ n" := (neg_ws n) (at level 75, right associativity) : N_scope. 
 
 Definition add_ws (m : N)(n : N) : N := 
-  m + n /\ mask_ws.  
+  (m + n) /\ mask_ws.  
 
 Infix "+ws" := add_ws (at level 50): N_scope. 
 
@@ -38,13 +38,13 @@ Compute IV.
 
 (* 0 <= j <= 63*)
 Definition T (j : N) : N := 
-  if leb j 15 then to_N "0x79cc4519"  else to_N "0x7a879d8a". 
+  if N.leb j 15 then to_N "0x79cc4519"  else to_N "0x7a879d8a". 
 (* 0 <= j <= 63, X Y Z are words*)
 Definition FF (j : N) (X : N)(Y : N)(Z : N) : N :=
-  if leb j 15 then X $ Y $ Z else
+  if N.leb j 15 then X $ Y $ Z else
   (X /\ Y) \/ (X /\ Z) \/ (Y /\ Z). 
 Definition GG (j : N) (X : N)(Y : N)(Z : N) : N :=
-  if leb j 15 then X $ Y $ Z else
+  if N.leb j 15 then X $ Y $ Z else
   (X /\ Y) \/ (~ X /\ Z). 
 
 (*Example fact : forall X Z : N, (~ X /\ Z) = (~ X) /\ Z.  /\ (Y /\ Z). *)
@@ -146,7 +146,43 @@ Compute HexString.of_N (W 1 Bitest).
 Compute HexString.of_N (W 15 Bitest).  
 Compute HexString.of_N (W 14 Bitest).  
 
+(* j <= 63 *)
 Definition W' (j : nat) (Bi : N) :=
   (W j Bi) $ (W (j + 4) Bi). 
 
+(* Vi is 256 bit, i.e. 8 words. a is 1 word *)  
+Definition A' (Vi : N) : N := (Vi >>> 7) /\ mask_ws. 
+Definition B' (Vi : N) : N := (Vi >>> 6) /\ mask_ws. 
+Definition C' (Vi : N) : N := (Vi >>> 5) /\ mask_ws. 
+Definition D' (Vi : N) : N := (Vi >>> 4) /\ mask_ws. 
+Definition E' (Vi : N) : N := (Vi >>> 3) /\ mask_ws. 
+Definition F' (Vi : N) : N := (Vi >>> 2) /\ mask_ws. 
+Definition G' (Vi : N) : N := (Vi >>> 1) /\ mask_ws. 
+Definition H' (Vi : N) : N := Vi /\ mask_ws. 
+
+Definition SS1 (Vi : N)(j : N) : N :=
+  (( (A' Vi) <<< 12 ) +ws (E' Vi) +ws ((T j) <<< j)) <<< 7.
+Definition SS2 (Vi : N) (j : N) :=
+  (SS1 Vi j) $ (A' Vi) <<< 12. 
+Definition TT1 (Vi : N)(j : N)(Bi : N) :=
+  (FF j (A' Vi) (B' Vi) (C' Vi)) +ws (D' Vi) +ws (SS2 Vi j) +ws (W' (N.to_nat j) Bi). 
+Definition TT2 (Vi : N)(j : N)(Bi : N) :=
+  (GG j (E' Vi) (F' Vi) (G' Vi)) +ws (H' Vi) +ws (SS1 Vi j) +ws (W (N.to_nat j) Bi ). 
+
+Definition A := TT1.
+Definition B := A'. 
+Definition C (Vi : N) := (B' Vi) <<< 9.
+Definition D := C'. 
+Definition E (Vi : N)(j : N)(Bi : N)  := P0 (TT2 Vi j Bi).
+Definition F := E'. 
+Definition G (Vi : N) := (F' Vi) <<< 19. 
+Definition H := G'. 
+
+Definition CF (Vi : N) (Bi : N) :=
+  A (
+
+Fixpoint V (i : nat) : N :=
+  match i with
+  | O => IV. 
+  | 
 
