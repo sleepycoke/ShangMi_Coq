@@ -88,10 +88,10 @@ Definition SM4_enc_fast (i : nat)(x : N) (rk : nat->N) : N :=
   R (quad2N (X_vec i (N2quad x) rk)). 
 
 Definition SM4_dec (i : nat)(y : N)(rk : nat -> N) : N :=
-  SM4_enc i y (fun (i : nat) => rk(31 - i)). 
+  SM4_enc i y (fun (j : nat) => rk(Nat.sub 31 j)). 
   
 Definition SM4_dec_fast (i : nat)(y : N)(rk : nat -> N) : N :=
-  SM4_enc_fast i y (fun (i : nat) => rk(31 - i)). 
+  SM4_enc_fast i y (fun (j : nat) => rk(Nat.sub 31 j)). 
 
 Fixpoint K (i : nat) (MK : N) : N := 
   match i with
@@ -127,6 +127,8 @@ Fixpoint K_vec (i : nat) (MK : N) : @quadruple N :=
 Definition rk_ext  (MK : N) (i : nat): N := K (i + 4) MK. 
 Definition rk_ext_fast  (MK : N) (i : nat): N := q4th (K_vec (i + 1) MK). 
 
+
+
 Definition plain := to_N("0x0123456789abcdeffedcba9876543210"%string).
 Definition key := to_N("0x0123456789abcdeffedcba9876543210"%string).
 
@@ -140,4 +142,6 @@ Definition expCypherText := "0x681edf34d206965e86b3e94f536e4246"%string.
 Compute cyphertext. 
 Compute decypheredtext. 
 
-  
+Example self_test : expCypherText = cyphertext.
+Proof. reflexivity. Qed. 
+

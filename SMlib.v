@@ -6,13 +6,13 @@ Require Export Coq.Strings.Ascii.
 Require Export Coq.Strings.String. 
 Require Export Tables. 
 Require Export NArith.
-Require Export CCompLib.Integers.
 
 Export N. 
 Definition word_size := 32%N. 
 Definition half_word_size := 16%N. 
 Definition modulus := shiftl 1 word_size.
-Definition half_modulus := shiftl 1 half_word_size.  
+Definition half_modulus := div2 modulus.  
+Definition hfws_modulus := shiftl 1 half_word_size.  
 Definition mask_ws := sub modulus 1. 
 Definition mask_hfws := sub half_modulus 1. 
 

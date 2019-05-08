@@ -150,8 +150,13 @@ Compute HexString.of_N (W 14 Bitest).
 Definition W' (j : nat) (Bi : N) :=
   (W j Bi) $ (W (j + 4) Bi). 
 
-(* Vi is 256 bit, i.e. 8 words. a is 1 word *)  
-Definition A' (Vi : N) : N := (Vi >>> 7) /\ mask_ws. 
+(* Vi is 256 bit, i.e. 8 words. A is 1 word *)  
+(*Fixpoint A (j : nat)(Vi : N) : N :=
+  match j with
+  | O => (Vi >>> 7) /\ mask_ws
+  | S j' =>
+    (FF j (A' Vi) (B' Vi) (C' Vi)) +ws (D' Vi) +ws (SS2 Vi j) +ws (W' (N.to_nat j) Bi). 
+
 Definition B' (Vi : N) : N := (Vi >>> 6) /\ mask_ws. 
 Definition C' (Vi : N) : N := (Vi >>> 5) /\ mask_ws. 
 Definition D' (Vi : N) : N := (Vi >>> 4) /\ mask_ws. 
@@ -186,3 +191,4 @@ Fixpoint V (i : nat) : N :=
   | O => IV. 
   | 
 
+      *)
