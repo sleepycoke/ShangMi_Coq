@@ -4,8 +4,6 @@ Require Import Coq.Strings.BinaryString.
 Require Import Program Arith.
 Require Import Coq.ZArith.BinIntDef. 
 
-
-
 Definition IV := 
   HexString.to_N("0x7380166f4914b2b9172442d7da8a0600a96f30bc163138aae38dee4db0fb0e4e").
 
@@ -45,13 +43,16 @@ Definition Block (i : nat)(m : string)(l : N) : N :=
   BinaryString.to_N ("0b" ++ (substring (i * 512) 512 (Padding m l))).
 
 (* j <= 15 *)
-Fixpoint W_list_init (j : nat)(Bi : N) : list N :=
+Fixpoint W_list_init_rec (j : nat)(Bi : N)(acc : list N) : list N :=
   match j with
-  | O => [(shiftr Bi (15 * word_size)) /\ mask_ws]
+  | O => acc
   | S j' => 
-      ((shiftr Bi ((N.of_nat (Nat.sub 15 j)) * word_size)) /\ mask_ws)
-      :: W_list_init j' Bi
+      W_list_init_rec j' Bi 
+      (((shiftr Bi ((N.of_nat (Nat.sub 15 j')) * word_size)) /\ mask_ws) :: acc)
   end. 
+
+Definition W_list_init (j : nat)(Bi : N) : list N :=
+  List.rev (W_list_init_rec (j) Bi []). 
 
 Definition W_list_aux (l' : list N) : list N :=
   (P1 ((List.nth 15 l' 0) $ (List.nth 8 l' 0) $ (List.nth 2 l' 0) <<< 15)
@@ -65,14 +66,14 @@ Fixpoint W_list (j : nat)(l : list N) :=
   end.
 
 Definition W (j : nat)(Bi : N) :=
-  List.nth (67 - j)%nat (W_list 52 (W_list_init 15 Bi)) 0. 
+  List.nth (67 - j)%nat (W_list 52 (W_list_init 16 Bi)) 0. 
 
 Definition Bitest := HexString.to_N "0x1111222233334444555566667777888899990000aaaabbbbccccddddeeeeffff1111222233334444555566667777888899990000aaaabbbbccccdd1deeeeffff". 
 Compute HexString.of_N (W 0 Bitest).  
 Compute HexString.of_N (W 1 Bitest).  
 Compute HexString.of_N (W 15 Bitest).  
 Compute HexString.of_N (W 14 Bitest).  
-
+Compute List.map HexString.of_N (W_list 52 (W_list_init 16 Bitest)). 
 (* j <= 63 *)
 Definition W' (j : nat) (Bi : N) :=
   (W j Bi) $ (W (j + 4) Bi). 
