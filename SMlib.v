@@ -49,6 +49,19 @@ Definition mask_34 (A : N) : N :=
 Definition mask_44 (A : N) : N := 
   land A mask_ws. 
 
+(* https://en.cppreference.com/w/c/language/operator_precedence *)
+(* Bit-wise operation are below + -*)
+Infix "/\" := N.land : N_scope.
+Infix "\/" := N.lor : N_scope.
+(* ~ n with respect to word_size *)
+Definition neg_ws (n : N) : N := 
+  n $ mask_ws. 
+Notation "~ n" := (neg_ws n) (at level 75, right associativity) : N_scope. 
+
+Definition add_ws (m : N)(n : N) : N := 
+  (m + n) /\ mask_ws.  
+
+Infix "+ws" := add_ws (at level 50): N_scope. 
 
 Definition quadruple {X : Type} : Type := X * X * X * X. 
 Definition q1st {X : Type} (v : quadruple) : X :=

@@ -4,24 +4,7 @@ Require Import Coq.Strings.BinaryString.
 Require Import Program Arith.
 Require Import Coq.ZArith.BinIntDef. 
 
-(* The p-th segment of n, of lenth en, divided into q parts 
-Definition segment (p : nat) (q : nat) (len : N) (n : N) :=*)
 
-Open Scope N. 
-
-(* https://en.cppreference.com/w/c/language/operator_precedence *)
-(* Bit-wise operation are below + -*)
-Infix "/\" := land : N_scope.
-Infix "\/" := lor : N_scope.
-(* ~ n with respect to word_size *)
-Definition neg_ws (n : N) : N := 
-  n $ mask_ws. 
-Notation "~ n" := (neg_ws n) (at level 75, right associativity) : N_scope. 
-
-Definition add_ws (m : N)(n : N) : N := 
-  (m + n) /\ mask_ws.  
-
-Infix "+ws" := add_ws (at level 50): N_scope. 
 
 Definition IV := 
   HexString.to_N("0x7380166f4914b2b9172442d7da8a0600a96f30bc163138aae38dee4db0fb0e4e").
@@ -37,8 +20,6 @@ Definition FF (j : nat) (X : N)(Y : N)(Z : N) : N :=
 Definition GG (j : nat) (X : N)(Y : N)(Z : N) : N :=
   if Nat.leb j 15 then X $ Y $ Z else
   (X /\ Y) \/ ((~ X) /\ Z). 
-
-(*Example fact : forall X Z : N, (~ X /\ Z) = (~ X) /\ Z.  /\ (Y /\ Z). *)
 
 Definition P0 (X : N) := X $ (X <<< 9) $ (X <<< 17).
 Definition P1 (X : N) := X $ (X <<< 15) $ (X <<< 23).
