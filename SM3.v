@@ -110,9 +110,18 @@ Definition Reg_aux (reg : N)(j : nat)(Bi : N) :=
   (shiftl ((Part_F reg) <<< 19) (1 * word_size)) \/
   (Part_G reg). 
 
+Fixpoint Reg_tail (k : nat)(j : nat)(Vi : N)(Bi : N)(acc : list N) : list N :=
+  match k with
+  | O => acc
+  | S k' => Reg_tail k' j Vi Bi ((Reg_aux (List.hd 0 acc) (j - k) Bi) :: acc)
+  end.
+
+Definition Reg (j : nat)(Vi : N)(Bi : N) : N :=
+  List.hd 0 (Reg_tail j j Vi Bi [Vi]). 
+
 
 (* j in [0, 64] Vi is of 256 bit *)
-Fixpoint Reg (j : nat) (Vi : N) (Bi : N) :=
+Fixpoint Reg_ntail (j : nat) (Vi : N) (Bi : N) :=
   match j with
   | O => Vi
   | S j' =>
@@ -122,10 +131,20 @@ Fixpoint Reg (j : nat) (Vi : N) (Bi : N) :=
 Definition CF (Vi : N) (Bi : N) :=
   (Reg 64 Vi Bi) $ Vi. 
 
-Fixpoint V (i : nat)(m : string)(l : N) : N :=
+Fixpoint V_tail (k : nat)(i : nat)(m : string)(length : N)(acc : list N) : list N :=
+  match k with
+  | O => acc
+  | S k' => V_tail k' i m length ((CF (List.hd 0 acc) (Block (i - k) m length)) :: acc)
+  end.
+
+Definition V(i : nat)(m : string)(length : N) : N :=
+  List.hd 0 (V_tail i i m length [IV]). 
+
+
+Fixpoint V_ntail (i : nat)(m : string)(length : N) : N :=
   match i with
   | O => IV
-  | S i' => CF (V i' m l) (Block i' m l)
+  | S i' => CF (V_ntail i' m length) (Block i' m length)
   end.
 
 Definition Hash (m : string) : N :=
