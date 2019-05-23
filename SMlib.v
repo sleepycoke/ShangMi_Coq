@@ -35,7 +35,7 @@ Definition shiftr_cyc (n : N) (t : N) : N :=
 Infix ">>>" := shiftr_cyc (at level 35). 
 
 Definition shiftl_cyc (n: N) (t : N) : N :=
-  shiftr_cyc n (word_size - t). 
+  shiftr_cyc n (word_size - (t mod word_size)). 
 
 Infix "<<<" := shiftl_cyc (at level 35). 
 Infix "$" := lxor (at level 50). 
