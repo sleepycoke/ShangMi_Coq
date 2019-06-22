@@ -1,8 +1,4 @@
 Require Import SMlib.
-Require Import Coq.ZArith.BinIntDef.  
-Require Import Coq.Strings.BinaryString. 
-Require Import Program Arith.
-Require Import Coq.ZArith.BinIntDef. 
 
 Definition IV := 
   HexString.to_N("0x7380166f4914b2b9172442d7da8a0600a96f30bc163138aae38dee4db0fb0e4e").
@@ -24,12 +20,12 @@ Definition P1 (X : N) := X $ (X <<< 15) $ (X <<< 23).
 
 Definition pad_k (l : N) :=
   Z.to_N (Z.modulo (Z.sub 447%Z (Z.of_N l)) 512). 
-
+ 
 Definition binaryStr (n : N) :=
-  substring 2 (length (BinaryString.of_N n)) (BinaryString.of_N n). 
+  substring 2 (String.length  (BinaryString.of_N n)) (BinaryString.of_N n). 
 
 Definition prePad64(s : string) :=
-  append (iter (64 - (N.of_nat (length s))) (fun s => append s "0"%string) ""%string) s. 
+  append (iter (64 - (N.of_nat (String.length s))) (fun s => String.append s "0"%string) ""%string) s. 
 
 Definition Padding (m : string) (l : N) : string :=
   append ( iter (pad_k l) (fun (s : string) => append s "0"%string) (append m "1"%string)
@@ -52,7 +48,7 @@ Fixpoint W_list_init_rec (j : nat)(Bi : N)(acc : list N) : list N :=
   end. 
 
 Definition W_list_init (j : nat)(Bi : N) : list N :=
-  List.rev (W_list_init_rec (j) Bi []). 
+  List.rev (W_list_init_rec j Bi []). 
 
 Definition W_list_aux (l' : list N) : list N :=
   (P1 ((List.nth 15 l' 0) $ (List.nth 8 l' 0) $ (List.nth 2 l' 0) <<< 15)
@@ -131,33 +127,33 @@ Fixpoint Reg_ntail (j : nat) (Vi : N) (Bi : N) :=
 Definition CF (Vi : N) (Bi : N) :=
   (Reg 64 Vi Bi) $ Vi. 
 
-Fixpoint V_tail (k : nat)(i : nat)(m : string)(length : N)(acc : list N) : list N :=
+Fixpoint V_tail (k : nat)(i : nat)(m : string)(len: N)(acc : list N) : list N :=
   match k with
   | O => acc
-  | S k' => V_tail k' i m length ((CF (List.hd 0 acc) (Block (i - k) m length)) :: acc)
+  | S k' => V_tail k' i m len((CF (List.hd 0 acc) (Block (i - k) m len)) :: acc)
   end.
 
-Definition V(i : nat)(m : string)(length : N) : N :=
-  List.hd 0 (V_tail i i m length [IV]). 
+Definition V(i : nat)(m : string)(len: N) : N :=
+  List.hd 0 (V_tail i i m len[IV]). 
 
 
-Fixpoint V_ntail (i : nat)(m : string)(length : N) : N :=
+Fixpoint V_ntail (i : nat)(m : string)(len : N) : N :=
   match i with
   | O => IV
-  | S i' => CF (V_ntail i' m length) (Block i' m length)
+  | S i' => CF (V_ntail i' m len) (Block i' m len)
   end.
 
 Definition Hash (m : string) : N :=
-  V (N.to_nat (n_of_B (N.of_nat (length m)))) m (N.of_nat (length m)). 
+  V (N.to_nat (n_of_B (N.of_nat (String.length m)))) m (N.of_nat (String.length m)). 
 
 Definition hex2bin_with_prefix (m_hex : string) :=
   BinaryString.of_N (HexString.to_N ("0x" ++ m_hex)). 
 
 Definition remove_prefix (s : string) (pre_len : nat) : string :=
-  substring pre_len (length s) s.  
+  substring pre_len (String.length s) s.  
 
 Definition pre_pad_0 (s : string)(mod_size : N) : string :=
-  Z.iter (Z.modulo (Z.opp (Z.of_nat (length s))) (Z.of_N mod_size)) (append "0") s. 
+  Z.iter (Z.modulo (Z.opp (Z.of_nat (String.length s))) (Z.of_N mod_size)) (append "0") s. 
 
 Definition hex2bin (m_hex : string) :=
   remove_prefix (hex2bin_with_prefix m_hex) 2. 

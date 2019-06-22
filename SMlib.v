@@ -1,11 +1,17 @@
 Require Export Coq.PArith.BinPosDef. 
+Require Export Coq.ZArith.BinIntDef.  
 Require Export Coq.Strings.BinaryString. 
 Require Export Coq.Strings.HexString. 
 Require Export Ascii String. 
 Require Export Coq.Strings.Ascii. 
 Require Export Coq.Strings.String. 
-Require Export Tables. 
+Require Export Coq.Lists.List.
+Export ListNotations.
 Require Export NArith.
+
+Require Export Tables. 
+Require Export Byte. 
+
 
 Export N. 
 Definition word_size := 32%N. 

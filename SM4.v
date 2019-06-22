@@ -64,11 +64,11 @@ Definition K_list (i : nat)(MK : N) :=
 
 Definition rk_ext (MK : N) (i : nat) : N := hd 0 (K_list (i + 1) MK). 
 
-Definition plain := to_N("0x0123456789abcdeffedcba9876543210"%string).
-Definition key := to_N("0x0123456789abcdeffedcba9876543210"%string).
+Definition plain := HexString.to_N("0x0123456789abcdeffedcba9876543210"%string).
+Definition key := HexString.to_N("0x0123456789abcdeffedcba9876543210"%string).
 
-Definition cyphertext:= of_N (SM4_enc 32 plain (rk_ext  key)).  
-Definition decypheredtext := of_N (SM4_dec 32 (to_N cyphertext) (rk_ext key)). 
+Definition cyphertext:= HexString.of_N (SM4_enc 32 plain (rk_ext  key)).  
+Definition decypheredtext := HexString.of_N (SM4_dec 32 (HexString.to_N cyphertext) (rk_ext key)). 
 Definition expCypherText := "0x681edf34d206965e86b3e94f536e4246"%string. 
 Compute cyphertext. 
 Compute decypheredtext. 
