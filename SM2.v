@@ -194,27 +194,133 @@ Compute BL2bL [xff].
 Compute BL2bL [x01; xff].
 
 (*4.2.5*)
-Definition Field2BL_a (alpha : N) :=
-  N2BL alpha. 
 
-Definition Field2BL_b (alpha : bL) :=
+Inductive field_type : Set :=
+  p : field_type | m : field_type .
+Definition Field2BL_p (alpha : N) : BL :=
+  N2BL alpha (N.to_nat (N.div (alpha + 7) 8)). 
+
+Definition Field2BL_m (alpha : bL) :=
   bL2BL alpha. 
 
 (*4.2.6*)
-Definition BL2Field_a (Bl : BL)(q : N) : option N :=
+Definition BL2Field_p (Bl : BL)(q : N) : option N :=
   (fun (alpha : N)  => if leb q alpha then None else Some alpha) (BL2N Bl).  
 
-Definition BL2Field_b (Bl : BL) : bL :=
+Definition BL2Field_m (Bl : BL) : bL :=
   BL2bL Bl. 
 
-Compute BL2Field_a [x07] 7. 
-Compute BL2Field_a [x06] 7. 
+Compute BL2Field_p [x07] 7. 
+Compute BL2Field_p [x06] 7. 
 
 (*4.2.7*)
-Definition Field2N_b (alpha : bL) : N :=
+Definition Field2N_m (alpha : bL) : N :=
   bL2N alpha. 
 
-(*4.2.8*)
+(*A.5.2*)
+Definition tide_p (yp : N) : bool :=
+  N.odd yp. 
+Print N. 
+Print positive.
+Compute (xI (xI (xO xH))). (*1011*) 
+(*B.1.1*)
+Fixpoint power_tail (g : N)(e : bL)(acc : N) : N :=
+  match e with
+  | [] => acc
+  | h :: tl =>
+      match h with
+      | true => power_tail g tl (N.mul (N.square acc) g)
+      | false => power_tail g tl (N.square acc)
+      end
+  end.
+Definition power (g : N)(a : positive)(q : positive) : N :=
+  let e := N.modulo (pos a) ((pos q) - 1) in
+  N.modulo (power_tail g (N2bL e) 1) (pos q). 
+
+Compute power 3 5 5. 
+
+
+
+
+(*B.1.4*)
+Definition sqrt (p : N)(g : N) : option N :=
+
+
+Definition recover_p (p : N)(a : N)(b : N)(xp : N)(y_tide : N) : option (N * N) :=
+  let alpha := (xp * xp * xp + a * xp + b) mod p in
+
+
+(*A.5.3*)
+
+Fixpoint neg_bL_tail (bl : bL)(acc : bL) : bL :=
+  match bl with
+  | h :: tl =>
+      neg_bL_tail tl (List.app acc [negb h])
+  | [] => acc
+  end. 
+
+Definition neg_bl (bl : bL) : bL :=
+  neg_bL_tail bl  []. 
+
+Compute neg_bl [true; false; true; true]. 
+(*
+Definition inv_m (bl : bL) :=
+  neg_bl bl. 
+
+Fixpoint mul_m_tail (x : bL)(y : bL)(acc : bL) : bL :=
+  match x, y with
+  | hx :: tlx, hy :: tly =>
+      mul_m_tail tlx tly (List.app acc [andb hx hy])
+  | _, _ => acc
+  end.
+    
+Definition mul_m (x : bL)(y : bL) : bL :=
+  mul_m_tail x y []. 
+
+Compute mul_m [true; true; false; false] [false; true; true; false]. 
+
+Print List.last. 
+
+Definition tide_m (xp : bL)(yp : bL) : bool :=
+  List.last (mul_m yp (inv_m xp)) false. 
+*)
+
+(*4.2.8 prime field case only*)
+Inductive cmp_type : Set := 
+  cmp : cmp_type | ucp : cmp_type | mix : cmp_type. 
+
+
+Open Scope list_scope. 
+Definition Point2BL_p (xp : N)(yp : N)(cp : cmp_type) : BL :=
+  let X1 := Field2BL_p xp in (* a *)
+  match cp with
+  | cmp => (* b *)
+      let yp_tide := tide_p yp in
+      match yp_tide with
+      | false => x02 :: X1
+      | true => x03 :: X1
+      end
+  | ucp => (* c *)
+      x04 :: (X1 ++ (Field2BL_p yp))
+  | mix => (* d *)
+      match tide_p yp with
+      | false => (x06 :: X1) ++ (Field2BL_p yp)
+      | true => (x07 :: X1) ++ (Field2BL_p yp)
+      end
+  end. 
+
+(*4.2.9 still only prime field case*)
+Definition BL2Point_p (a : N)(b : N)(S : BL)(cp : cmp_type) : option (N * N) :=
+  match cp with
+  | cmp => 
+      match S with
+      | [] => None
+      | PC :: X1 =>
+          match PC with
+          | x02 => 
+  
+  
+
 
 
 
