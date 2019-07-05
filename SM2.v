@@ -448,6 +448,17 @@ Definition BL2PointStep1_p (p : N)(a : N)(b : N)(S : BL)(cp : cmp_type) : option
       end
   end. 
 
+Definition BL2PointStep2_p (p : N)(a : N)(b : N)(point : N * N) : option (N * N) :=
+  let (xp, yp) := point in
+    if N.eqb ((N.square yp) mod p) (((power xp 3 p) + a * xp + b) mod p) then Some point
+    else None. 
+
+Definition BL2Point_p (p : N)(a : N)(b : N)(S : BL)(cp : cmp_type) : option (N * N) :=
+  match BL2PointStep1_p p a b S cp with
+  | None => None
+  | Some point => BL2PointStep2_p p a b point
+  end. 
+
             
 
   
