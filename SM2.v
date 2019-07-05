@@ -168,10 +168,14 @@ Fixpoint N2bL_tail (n : N)(k : nat)(acc : bL) : bL :=
 
 Compute N2bL_tail 254 8 []. 
 
+(* [] for 0 *)
 Definition N2bL (n : N) : bL :=
-  N2bL_tail n 8 [].
+  N2bL_tail n (N.to_nat (N.size n)) [].
 
 Compute N2bL 127. 
+Compute N2bL 3. 
+Compute N2bL 4. 
+Compute N2bL 0. 
 
 
 (*4.2.4*)
@@ -233,21 +237,116 @@ Fixpoint power_tail (g : N)(e : bL)(acc : N) : N :=
       | false => power_tail g tl (N.square acc)
       end
   end.
-Definition power (g : N)(a : positive)(q : positive) : N :=
-  let e := N.modulo (pos a) ((pos q) - 1) in
-  N.modulo (power_tail g (N2bL e) 1) (pos q). 
+Definition power (g : N)(a : N)(q : N) : N :=
+  let e := N.modulo a (q - 1) in
+  N.modulo (power_tail g (N2bL e) 1) q. 
+
+Definition inv_p (g : N)(q : N) : N :=
+  power g (q - 2) q. 
+
+Definition F_div (x : N)(y : N)(q : N) : N :=
+  (N.mul x (inv_p y q)) mod q. 
+
+Compute inv_p 7 11. 
+Compute F_div 7 2 11. 
 
 Compute power 3 5 5. 
+Compute power 0 1 5. 
+(*B.1.3*)
+Fixpoint Lucas_tail (X : N)(Delta : N)(k : bL)(p : N)(acc : N * N) : N * N :=
+  match k with
+  | [] => acc
+  | ki :: tl =>
+      match acc with (U0, V0) =>
+        let (U1, V1) := 
+            ((U0 * V0) mod p, (F_div ((N.square V0) + Delta * (N.square U0))) 2 p) in
+          match ki with
+          | false => Lucas_tail X Delta tl p (U1, V1)
+          | true => Lucas_tail X Delta tl p 
+              ((F_div (X * U1 + V1) 2 p), (F_div (X * V1 + Delta * U1) 2 p)) 
+          end
+      end
+  end.
 
+Compute N2bL 0. 
 
+(* X, Y > 0 *)
+Definition Lucas (X : N)(Y : N)(k : N)(p : N) :=
+  match N2bL k with
+  | true :: k' => (* k > 0 *)
+    Lucas_tail X (((N.square X) + 4 * (p - Y)) mod p) k' p (1, X)
+  | _ => (0, 2) (* k = 0 *)
+  end. 
 
+Fixpoint Lucas_naive (X : Z)(Y : Z)(k : nat)(p : Z) {struct k} : Z * Z :=
+  match k with
+  | O => (0%Z, 2%Z)
+  | S k' =>
+     match k' with
+     | O => (1%Z, X)
+     | S k'' =>
+        let L' := Lucas_naive X Y k' p in
+          let L'' := Lucas_naive X Y k'' p in
+           ( (Z.modulo (Z.sub (Z.mul X  (fst L'))  (Z.mul Y (fst L''))) p),
+            (Z.modulo (Z.sub (Z.mul X (snd L')) (Z.mul Y  (snd L''))) p))
+     end
+  end. 
+
+Compute Lucas 3 2 0 7.  
+Compute Lucas_naive 3 2 0 7. 
+Compute Lucas 3 2 1 7.  
+Compute Lucas_naive 3 2 1 7. 
+Compute Lucas 3 2 2 7.  
+Compute Lucas_naive 3 2 2 7. 
+Compute Lucas 5 2 15 7.  
+Compute Lucas_naive 5 2 15 7. 
+Compute Lucas 2 6 2 7.
+Compute Lucas_naive 2 6 2 7. 
+Compute Lucas 2 6 1 7.  
+Compute Lucas_naive 2 6 1 7. 
+Compute (((N.square 2) + 4 * (7 - 6)) mod 7). 
+Compute Z.modulo (-1) 7. 
 
 (*B.1.4*)
-Definition sqrt (p : N)(g : N) : option N :=
+Definition square_root (g : N)(p : N) : option N :=
+  if N.eqb g 0 then Some 0
+  else if N.eqb (N.modulo p 4) 3 then 
+    let u := N.div p 4 in
+      let y := power g (u + 1) p in
+        let z := N.modulo (N.square y) p in
+          if N.eqb z g then Some y else None
+  else if N.eqb (N.modulo p 8) 5 then
+    let u := (N.div p 8) in
+      let z := power g (N.double u + 1) p in
+        let t := N.modulo z p in
+        if N.eqb t 1 then Some (power g (u + 1) p)
+        else if N.eqb t (p - 1) then Some ((g * 2 * (power (g * 4) u p)) mod p)
+        else None 
+  else (* N.eqb (N.modulo p 8) 1 *)  
+    let u := N.div p 8 in
+      let Y := g in
+        let X := p / 2 (* TODO Should be random *) in
+          let (U, V) := Lucas X Y (4 * u + 1) p in
+            if N.eqb ((N.square V) mod p) (4 * Y mod p) then Some (V / 2 mod p)
+            else if (andb (N.eqb (U mod p) 1) (N.eqb (U mod p) (p - 1))) then None
+            else None. (* Should resample X *)
+      
+
+Compute square_root 0 5. 
+Compute square_root 2 13. 
+Compute square_root 4 5. 
+Compute square_root 12 13. 
 
 
-Definition recover_p (p : N)(a : N)(b : N)(xp : N)(y_tide : N) : option (N * N) :=
+Definition recover_p (p : N)(a : N)(b : N)(xp : N)(y_tide : bool) : option (N * N) :=
   let alpha := (xp * xp * xp + a * xp + b) mod p in
+    let beta := square_root alpha p in
+      match beta with
+      | None => None
+      | Some beta' =>
+          if Bool.eqb (odd beta') y_tide then Some (xp, beta')
+          else Some (xp, (p - beta'))
+      end.
 
 
 (*A.5.3*)
@@ -309,15 +408,48 @@ Definition Point2BL_p (xp : N)(yp : N)(cp : cmp_type) : BL :=
       end
   end. 
 
+Compute subList [1;2;3;4] 2. 
+
 (*4.2.9 still only prime field case*)
-Definition BL2Point_p (a : N)(b : N)(S : BL)(cp : cmp_type) : option (N * N) :=
+Definition BL2PointStep1_p (p : N)(a : N)(b : N)(S : BL)(cp : cmp_type) : option (N * N) :=
   match cp with
   | cmp => 
       match S with
       | [] => None
       | PC :: X1 =>
-          match PC with
-          | x02 => 
+          let xp := BL2N X1 in
+            match PC with
+            | x02 => (recover_p p a b xp false)
+            | x03 => (recover_p p a b xp true) 
+            | _ => None
+            end
+      end
+  | ucp =>
+      match S with
+      | [] => None
+      | PC :: X1Y1 =>
+          let (X1, Y1) := subList X1Y1 (Nat.div (List.length X1Y1)  2%nat) in
+            match PC with
+            | x04 => Some (BL2N X1, BL2N Y1)
+            | _ => None
+            end
+      end
+  | mix =>
+      match S with
+      | [] => None
+      | PC :: X1Y1 =>
+          let (X1, Y1) := subList X1Y1 (Nat.div (List.length X1Y1)  2%nat) in
+            let xp := BL2N X1 in
+              match PC with (* I choose e.2.2 TODO how to choose? *)
+              | x06 => (recover_p p a b xp false)
+              | x07 => (recover_p p a b xp true) 
+              | _ => None
+              end
+      end
+  end. 
+
+            
+
   
   
 
