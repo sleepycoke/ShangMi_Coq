@@ -307,7 +307,35 @@ Compute Lucas_naive 2 6 1 7.
 Compute (((N.square 2) + 4 * (7 - 6)) mod 7). 
 Compute Z.modulo (-1) 7. 
 
+(* Try each element x in l with func : option N. 
+* If func x is not None then return its value otherwise keep trying. 
+* If all None then return None. *)
+Fixpoint TryFunWithList (l : list N)(func : N -> option N) : option N :=
+  match l with
+  | [] => None
+  | x :: tl =>
+      match func x with
+      | Some y => Some y
+      | None => TryFunWithList tl func
+      end
+  end. 
+
+Fixpoint Nlist_tail (k : nat)(acc : list N) : list N :=
+  match k with
+  | O => acc
+  | S k' =>
+      Nlist_tail k' ((N.of_nat k') :: acc)
+  end.
+
+(*Generates [0; 1; 2; ... ; len - 1]*)
+Definition Nlist (len : N) : list N :=
+  Nlist_tail (N.to_nat len) []. 
+
+Compute Nlist 3. 
+
+
 (*B.1.4*)
+
 Definition square_root (g : N)(p : N) : option N :=
   if N.eqb g 0 then Some 0
   else if N.eqb (N.modulo p 4) 3 then 
@@ -325,11 +353,13 @@ Definition square_root (g : N)(p : N) : option N :=
   else (* N.eqb (N.modulo p 8) 1 *)  
     let u := N.div p 8 in
       let Y := g in
-        let X := p / 2 (* TODO Should be random *) in
+        TryFunWithList (Nlist p) (* Should provide a random sequence *)
+        (fun X =>
           let (U, V) := Lucas X Y (4 * u + 1) p in
             if N.eqb ((N.square V) mod p) (4 * Y mod p) then Some (V / 2 mod p)
             else if (andb (N.eqb (U mod p) 1) (N.eqb (U mod p) (p - 1))) then None
-            else None. (* Should resample X *)
+            else None 
+        ). 
       
 
 Compute square_root 0 5. 
@@ -439,6 +469,8 @@ Definition BL2PointStep1_p (p : N)(a : N)(b : N)(S : BL)(cp : cmp_type) : option
       | [] => None
       | PC :: X1Y1 =>
           let (X1, Y1) := subList X1Y1 (Nat.div (List.length X1Y1)  2%nat) in
+          let sampleList := Nlist p in
+          j
             let xp := BL2N X1 in
               match PC with (* I choose e.2.2 TODO how to choose? *)
               | x06 => (recover_p p a b xp false)
