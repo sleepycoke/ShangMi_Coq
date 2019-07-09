@@ -1,5 +1,5 @@
-Require Import SMlib.
-Require Import Coq.Strings.Ascii.
+Require Export SMlib.
+Require Export Coq.Strings.Ascii.
 
 (* ByteList is indeed a list of bytes*)
 Definition BL := list byte. 
@@ -470,7 +470,6 @@ Definition BL2PointStep1_p (p : N)(a : N)(b : N)(S : BL)(cp : cmp_type) : option
       | PC :: X1Y1 =>
           let (X1, Y1) := subList X1Y1 (Nat.div (List.length X1Y1)  2%nat) in
           let sampleList := Nlist p in
-          j
             let xp := BL2N X1 in
               match PC with (* I choose e.2.2 TODO how to choose? *)
               | x06 => (recover_p p a b xp false)
