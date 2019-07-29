@@ -1,4 +1,5 @@
-Require Import SMlib.
+Require Export SMlib.
+Require Export SM2_DataType. 
 
 Definition IV := 
   HexString.to_N("0x7380166f4914b2b9172442d7da8a0600a96f30bc163138aae38dee4db0fb0e4e").
@@ -18,25 +19,29 @@ Definition GG (j : nat) (X : N)(Y : N)(Z : N) : N :=
 Definition P0 (X : N) := X $ (X <<< 9) $ (X <<< 17).
 Definition P1 (X : N) := X $ (X <<< 15) $ (X <<< 23).
 
+(* 5.2 *)
 Definition pad_k (l : N) :=
   Z.to_N (Z.modulo (Z.sub 447%Z (Z.of_N l)) 512). 
  
+
+(*
 Definition binaryStr (n : N) :=
-  substring 2 (String.length  (BinaryString.of_N n)) (BinaryString.of_N n). 
+  substring 2 (String.length  (BinaryString.of_N n)) (BinaryString.of_N n).  *)
+  
 
-Definition prePad64(s : string) :=
-  append (iter (64 - (N.of_nat (String.length s))) (fun s => String.append s "0"%string) ""%string) s. 
+Definition prePad64(s : bL) :=
+  List.app(iter (64 - (N.of_nat (List.length s))) (fun s => List.app s [false]) []) s. 
 
-Definition Padding (m : string) (l : N) : string :=
-  append ( iter (pad_k l) (fun (s : string) => append s "0"%string) (append m "1"%string)
-  ) (prePad64 (binaryStr l)). 
+Definition Padding (m : bL) (l : N) : bL :=
+  List.app ( iter (pad_k l) (fun (s : bL) => List.app s [false]) (List.app m [true])
+  ) (prePad64 (N2bL l)). 
 
-Compute Padding "011000010110001001100011" 24. 
+Compute bL2bS (Padding (bS2bL "011000010110001001100011") 24). 
 
 Definition n_of_B (l : N) := div (l + (pad_k l) + 65) 512. 
 
-Definition Block (i : nat)(m : string)(l : N) : N :=
-  BinaryString.to_N ("0b" ++ (substring (i * 512) 512 (Padding m l))).
+Definition Block (i : nat)(m : bL)(l : N) : N :=
+  bL2N (subList (Nat.mul i 512%nat) 512 (Padding m l)).
 
 (* j <= 15 *)
 Fixpoint W_list_init_rec (j : nat)(Bi : N)(acc : list N) : list N :=
@@ -127,24 +132,21 @@ Fixpoint Reg_ntail (j : nat) (Vi : N) (Bi : N) :=
 Definition CF (Vi : N) (Bi : N) :=
   (Reg 64 Vi Bi) $ Vi. 
 
-Fixpoint V_tail (k : nat)(i : nat)(m : string)(len: N)(acc : list N) : list N :=
+Fixpoint V_tail (k : nat)(i : nat)(m : bL)(len: N)(acc : list N) : list N :=
   match k with
   | O => acc
   | S k' => V_tail k' i m len((CF (List.hd 0 acc) (Block (i - k) m len)) :: acc)
   end.
 
-Definition V(i : nat)(m : string)(len: N) : N :=
-  List.hd 0 (V_tail i i m len[IV]). 
-
-
-Fixpoint V_ntail (i : nat)(m : string)(len : N) : N :=
+Definition V(i : nat)(m : bL)(len: N) : N := List.hd 0 (V_tail i i m len[IV]).  
+Fixpoint V_ntail (i : nat)(m : bL)(len : N) : N :=
   match i with
   | O => IV
   | S i' => CF (V_ntail i' m len) (Block i' m len)
   end.
 
-Definition Hash (m : string) : N :=
-  V (N.to_nat (n_of_B (N.of_nat (String.length m)))) m (N.of_nat (String.length m)). 
+Definition Hash (m : bL) : N :=
+  V (N.to_nat (n_of_B (N.of_nat (List.length m)))) m (N.of_nat (List.length m)). 
 
 Definition hex2bin_with_prefix (m_hex : string) :=
   BinaryString.of_N (HexString.to_N ("0x" ++ m_hex)). 
@@ -161,14 +163,43 @@ Definition hex2bin (m_hex : string) :=
 Definition bin2hex (m_bin : string) :=
   remove_prefix (HexString.of_N (BinaryString.to_N ("0b" ++ m_bin))) 2. 
 
+Compute Ascii.eqb "0" "0". 
+
+Print string. 
+
+Compute String "0" "0". 
+
+Fixpoint bin2bL_tail (m_bin : string)(acc : bL) : bL :=
+  match m_bin with
+  | "" => acc
+  | String h m_bin' => bin2bL_tail m_bin' ((Ascii.eqb h "1") :: acc)
+  end. 
+
+Definition bin2bL (m_bin : string) : bL :=
+  List.rev (bin2bL_tail m_bin []). 
+
+Fixpoint bL2bin_tail (m : bL)(acc : string) : string :=
+  match m with
+  | [] => acc
+  | true :: tl => bL2bin_tail tl (String.append acc "1")
+  | false :: tl => bL2bin_tail tl (String.append acc "0")
+  end. 
+
+Definition bL2bin (m : bL) : string :=
+  (bL2bin_tail m ""). 
+
+Compute bL2bin [true; true; false; true]. 
+
+Compute bin2bL "0011001". 
+    
 Definition Hash_hex (m_hex : string) :=
-  Hash (pre_pad_0 (hex2bin m_hex) 4).  
+  Hash (bin2bL (pre_pad_0 (hex2bin m_hex) 4)). 
 
 Definition exp_m := "616263".  
-Definition exp_padded := bin2hex (Padding (hex2bin exp_m) (6 * 4)). 
+Definition exp_padded := bin2hex (bL2bin (Padding (bin2bL(hex2bin exp_m)) (6 * 4))). 
 Compute exp_padded. 
 
-Definition B0 := (Block 0 (hex2bin exp_m) (6 * 4)).
+Definition B0 := (Block 0 (bin2bL (hex2bin exp_m)) (6 * 4)).
 
 Compute HexString.of_N B0. 
 Compute HexString.of_N (W 67 B0).  (* Correct. *)
@@ -179,7 +210,7 @@ Compute HexString.of_N (W' 63 B0). (* Correct. *)
 Compute HexString.of_N (W' 1 B0). (* Correct. *) 
 Compute hex2bin exp_m. 
 Compute n_of_B 24.
-Compute HexString.of_N (V 1 "011000010110001001100011" 24). 
+Compute HexString.of_N (V 1 (bin2bL "011000010110001001100011") 24). 
 
 Compute HexString.of_N IV. 
 Compute HexString.of_N (Reg 0 IV B0). 
@@ -188,7 +219,7 @@ Compute HexString.of_N (Reg 64 IV B0). (*Correct*)
 Compute HexString.of_N ((Reg 64 IV B0) $ IV). (*Correct*)
 
 (* "0x66c7f0f462eeedd9d1f2d46bdc10e4e24167c4875cf2f7a2297da02b8f4ba8e0" *)
-Compute HexString.of_N (Hash "011000010110001001100011"). (* Correct *) 
+Compute HexString.of_N (Hash (bin2bL "011000010110001001100011")). (* Correct *) 
 Compute HexString.of_N (Hash_hex exp_m). (* Correct *) 
 
 Definition exp_m2 := "61626364616263646162636461626364616263646162636461626364616263646162636461626364616263646162636461626364616263646162636461626364".

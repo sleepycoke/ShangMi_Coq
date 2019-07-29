@@ -114,29 +114,50 @@ Compute bL2Byte [true;true;true] 4.
 Print list. 
 
 (* returns the prefix of length k * the rest *)
-Fixpoint subList_tail (A : Type)(l : list A)(len : nat)(acc : list A * list A) : list A * list A :=
+Fixpoint partList_tail (A : Type)(l : list A)(len : nat)(acc : list A * list A) : list A * list A :=
   match len with
   | O => acc
   | S len' =>
       match l with
       | [] => acc
       | h :: tl =>
-          subList_tail A tl len' ((List.app (fst acc) [h]), List.tl (snd acc))
+          partList_tail A tl len' ((List.app (fst acc) [h]), List.tl (snd acc))
       end
   end.
 
-Definition subList {A} (l : list A)(len : nat) :=
-  subList_tail A l len ([], l). 
+Definition partList {A} (l : list A)(len : nat) :=
+  partList_tail A l len ([], l). 
 
-Compute subList [1;2;3] 0. 
-Compute subList [1;2;3] 3. 
-Compute subList [1;2;3] 4. 
+Compute partList [1;2;3] 0. 
+Compute partList [1;2;3] 3. 
+Compute partList [1;2;3] 4. 
 
-Definition subListBack {A} (l : list A)(backLen : nat) :=
-  subList l ((List.length l) - backLen).
+Definition partListBack {A} (l : list A)(backLen : nat) :=
+  partList l ((List.length l) - backLen).
 
-Compute subListBack [1;2;3] 4. 
-Compute subListBack [1;2;3] 2. 
+Compute partListBack [1;2;3] 4. 
+Compute partListBack [1;2;3] 2. 
+
+Fixpoint subList_tail {A} (start : nat)(length : nat)(l : list A)(acc : list A) :=
+  match l with
+  | [] => acc
+  | h :: tl =>
+    match start with
+    | S start' => subList_tail start' length tl acc
+    | O =>
+       match length with
+       | O => acc
+       | S length' =>
+          subList_tail start length' tl (acc ++ [h])
+       end
+    end
+  end.  
+
+Definition subList {A} (start : nat)(length : nat)(l : list A) :=
+  subList_tail start length l [].
+
+Compute subList 1 2 [1;2;3]. 
+Compute subList 0 2 [1;2;3]. 
 
 (*4.2.3*)
 Fixpoint bL2BL_tail (s : bL)(k : nat)(acc : BL) : BL :=
@@ -144,7 +165,7 @@ Fixpoint bL2BL_tail (s : bL)(k : nat)(acc : BL) : BL :=
   | O => acc 
   | S k' =>
       (fun sl => bL2BL_tail (fst sl) k' 
-      (List.app [bL2Byte (snd sl) 8] acc)) (subListBack s 8)
+      (List.app [bL2Byte (snd sl) 8] acc)) (partListBack s 8)
   end.
 
 
@@ -438,7 +459,7 @@ Definition Point2BL_p (xp : N)(yp : N)(cp : cmp_type) : BL :=
       end
   end. 
 
-Compute subList [1;2;3;4] 2. 
+Compute partList [1;2;3;4] 2. 
 
 (*4.2.9 still only prime field case*)
 Definition BL2PointStep1_p (p : N)(a : N)(b : N)(S : BL)(cp : cmp_type) : option (N * N) :=
@@ -458,7 +479,7 @@ Definition BL2PointStep1_p (p : N)(a : N)(b : N)(S : BL)(cp : cmp_type) : option
       match S with
       | [] => None
       | PC :: X1Y1 =>
-          let (X1, Y1) := subList X1Y1 (Nat.div (List.length X1Y1)  2%nat) in
+          let (X1, Y1) := partList X1Y1 (Nat.div (List.length X1Y1)  2%nat) in
             match PC with
             | x04 => Some (BL2N X1, BL2N Y1)
             | _ => None
@@ -468,7 +489,7 @@ Definition BL2PointStep1_p (p : N)(a : N)(b : N)(S : BL)(cp : cmp_type) : option
       match S with
       | [] => None
       | PC :: X1Y1 =>
-          let (X1, Y1) := subList X1Y1 (Nat.div (List.length X1Y1)  2%nat) in
+          let (X1, Y1) := partList X1Y1 (Nat.div (List.length X1Y1)  2%nat) in
           let sampleList := Nlist p in
             let xp := BL2N X1 in
               match PC with (* I choose e.2.2 TODO how to choose? *)
