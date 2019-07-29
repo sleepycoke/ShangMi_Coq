@@ -1,4 +1,5 @@
 Require Export SM2_DataType. 
+Require Export SM3. 
 
 (* TODO RANDOMLY sample a number in [low, high] *)
 Definition SampleN (low : N)(high : N)(seed : N) : N :=
@@ -78,4 +79,41 @@ Definition ProPrimTest (T : N)(u : N) : bool :=
   end.
 
 Compute map (ProPrimTest_debug 999) (NInterval 3 99). (* 100% Correct *)
+
+(* From C.2 Example 1 *)
+Definition constant_a := HexString.to_N "0xBB8E5E8FBC115E139FE6A814FE48AAA6F0ADA1AA5DF91985". 
+Definition constant_p := HexString.to_N "0xBDB6F4FE3E8B1D9E0DA8C0D46F4C318CEFE4AFE3B6B8551F". 
+ 
+Compute constant_a. 
+(* D.1.1 method 2, true if this tuple is valid*)
+Definition CheckSEED (SEED : bL)(p : N) : option (bL * N * N) :=
+  (*if Nat.leb (List.length SEED) 191%nat then None else*)
+  let (a,b) := (constant_a, (Hash SEED) mod p) in 
+    if (4 * (power a 3 p) + 27 * (square b) =? 0) then None
+    else Some (SEED, a, b). 
+
+Fixpoint GenPara_tail (seedl : list bL)(p : N) : option (bL * N * N) :=
+  match seedl with
+  | [] => None
+  | h :: tl =>
+      match CheckSEED h p with
+      | Some tuple => Some tuple
+      | None => GenPara_tail tl p
+      end
+  end. 
+
+Definition constant_seedlist := map 
+  (fun x => N2bL_len x 192) [0; 1; 2 ^ 90; 2 ^ 191]. 
+Compute constant_seedlist. 
+
+Definition GenPara (p : N) : option (bL * N * N) :=
+  GenPara_tail constant_seedlist p. 
+
+Definition DisplayPara (para : option (bL * N * N)) :=
+  match para with
+  | None => ("", "", "")
+  | Some (SEED, a, b) => (bin2hex (bL2bS SEED), HexString.of_N a, HexString.of_N b)
+  end. 
+
+Compute DisplayPara (GenPara constant_p). 
 

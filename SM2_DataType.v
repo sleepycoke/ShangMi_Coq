@@ -190,8 +190,14 @@ Fixpoint N2bL_tail (n : N)(k : nat)(acc : bL) : bL :=
 Compute N2bL_tail 254 8 []. 
 
 (* [] for 0 *)
+Definition N2bL_len (n : N)(len : nat) : bL :=
+  N2bL_tail n len []. 
+
+Compute N2bL_len 127 2. 
+Compute N2bL_len 3 4. 
+
 Definition N2bL (n : N) : bL :=
-  N2bL_tail n (N.to_nat (N.size n)) [].
+  N2bL_len n (N.to_nat (N.size n)).
 
 Compute N2bL 127. 
 Compute N2bL 3. 
