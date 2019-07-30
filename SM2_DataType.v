@@ -224,10 +224,55 @@ Compute BL2bL [].
 Compute BL2bL [xff].
 Compute BL2bL [x01; xff].
 
+Definition N2bS (n : N) : string :=
+  bL2bS (N2bL n).
+
+Definition N2bS_len (n : N)(len : nat) : string :=
+  bL2bS (N2bL_len n len).
+
+Compute N2bS 6. 
+
+Fixpoint hS2bS_tail (m_hex : string)(acc : string) : string :=
+  match m_hex with
+  | "" => acc
+  | String h tl =>
+      match HexString.ascii_to_digit h with
+      | None => ""
+      | Some v => hS2bS_tail tl (acc ++ N2bS_len v 4)
+      end
+  end. 
+
+Definition hS2bS (m_hex : string) : string :=
+  hS2bS_tail m_hex "".
+
+Definition hS2N (m_hex : string) : N :=
+  HexString.Raw.to_N m_hex 0. 
+
+Definition N2hS (n : N) : string :=
+  match n with
+  | Npos p => HexString.Raw.of_pos p ""
+  | N0 => ""
+  end.  
+
+Fixpoint bL2hS_tail (bl : bL)(hSLen : nat)(acc : string) : string :=
+  match hSLen with
+  | O => acc
+  | S len' =>
+  let (pre, suf) := partListBack bl 16 in
+    match suf with
+    | [] => acc
+    | _ => bL2hS_tail pre len' (acc ++ (N2hS (bL2N suf)))
+    end
+  end.
+
+Definition bS2hS (m_bin : string) : string :=
+  let bl := bS2bL m_bin in
+    bL2hS_tail bl (Nat.div (Nat.add (String.length m_bin) 15%nat) 16%nat) "".
+
 (*4.2.5*)
 
 Inductive field_type : Set :=
-  p : field_type | m : field_type .
+  pri : field_type | ext : field_type .
 Definition Field2BL_p (alpha : N) : BL :=
   N2BL alpha (N.to_nat (N.div (alpha + 7) 8)). 
 

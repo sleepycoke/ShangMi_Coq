@@ -112,7 +112,7 @@ Definition GenPara (p : N) : option (bL * N * N) :=
 Definition DisplayPara (para : option (bL * N * N)) :=
   match para with
   | None => ("", "", "")
-  | Some (SEED, a, b) => (bin2hex (bL2bS SEED), HexString.of_N a, HexString.of_N b)
+  | Some (SEED, a, b) => (bS2hS (bL2bS SEED), HexString.of_N a, HexString.of_N b)
   end. 
 
 Compute DisplayPara (GenPara constant_p). 
