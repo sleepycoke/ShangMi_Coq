@@ -85,20 +85,23 @@ Definition constant_a := HexString.to_N "0xBB8E5E8FBC115E139FE6A814FE48AAA6F0ADA
 Definition constant_p := HexString.to_N "0xBDB6F4FE3E8B1D9E0DA8C0D46F4C318CEFE4AFE3B6B8551F". 
  
 Compute constant_a. 
+(* true if passed the test, i.e. not singular *)
+Definition SingTest (a b p : N) : bool :=
+ negb (4 * (power a 3 p) + 27 * (square b) =? 0). 
 (* D.1.1 method 2, true if this tuple is valid*)
 Definition CheckSEED (SEED : bL)(p : N) : option (bL * N * N) :=
   (*if Nat.leb (List.length SEED) 191%nat then None else*)
   let (a,b) := (constant_a, (Hash SEED) mod p) in 
-    if (4 * (power a 3 p) + 27 * (square b) =? 0) then None
+    if negb (SingTest a b p) then None
     else Some (SEED, a, b). 
 
-Fixpoint GenPara_tail (seedl : list bL)(p : N) : option (bL * N * N) :=
+Fixpoint GenSab_tail (seedl : list bL)(p : N) : option (bL * N * N) :=
   match seedl with
   | [] => None
   | h :: tl =>
       match CheckSEED h p with
       | Some tuple => Some tuple
-      | None => GenPara_tail tl p
+      | None => GenSab_tail tl p
       end
   end. 
 
@@ -106,14 +109,110 @@ Definition constant_seedlist := map
   (fun x => N2bL_len x 192) [0; 1; 2 ^ 90; 2 ^ 191]. 
 Compute constant_seedlist. 
 
-Definition GenPara (p : N) : option (bL * N * N) :=
-  GenPara_tail constant_seedlist p. 
+Definition GenSab (p : N) : option (bL * N * N) :=
+  GenSab_tail constant_seedlist p. 
 
-Definition DisplayPara (para : option (bL * N * N)) :=
+Definition DisplaySab (para : option (bL * N * N)) :=
   match para with
   | None => ("", "", "")
   | Some (SEED, a, b) => (bS2hS (bL2bS SEED), HexString.of_N a, HexString.of_N b)
   end. 
 
-Compute DisplayPara (GenPara constant_p). 
+Compute DisplaySab (GenSab constant_p). 
 
+(* D.2.1 method 2 *)
+Definition VeriSab (SEED : bL)(b p : N) : bool :=
+  b =? (Hash SEED) mod p. 
+
+Definition constant_T := 999. 
+
+(* Test whether (xG, yG) is on the elliptic-curve defined by a b q *)
+Definition OnCurveTest (xG yG a b p : N) : bool :=
+  (square yG) mod p =? (xG ^ 3 + a * xG + b) mod p.  
+
+Print nat. 
+
+(* Prime field element: O or coordinated point *)
+Inductive FEp : Set :=
+  InfO : FEp | Cop : N * N -> FEp. 
+
+(* 3.2.3.1 also A.1.2.2 *)
+Definition pf_double (P1 : FEp)(p : N)(a : N) :=
+  match P1 with
+  | InfO => InfO
+  | Cop (x1, y1) =>
+      let lambda := F_div (3 * (square x1) + a) (double y1) p in
+      let x3 := F_sub (square lambda) ((double x1) mod p) p in
+      let y3 := F_sub (lambda * (F_sub x1 x3 p)) y1 p in
+        Cop (x3, y3)
+  end. 
+
+Definition pf_add (P1 P2 : FEp)(p a : N):=
+  match P1, P2 with
+  | InfO, _ => P2
+  | _, InfO => P1
+  | Cop (x1, y1), Cop (x2, y2) =>
+      match x1 =? x2, y1 + y2 =? p with
+      | true, true => InfO
+      | true, false => pf_double P1 p a
+      | false, _ => 
+        let lambda := F_div (F_sub y2  y1 p) (F_sub x2 x1 p) p in
+          let x3 := ((square lambda) + 2 * p - x1 - x2) mod p in
+          let y3 := F_sub (lambda * (F_sub x1 x3 p)) y1 p in
+            Cop (x3, y3)
+      end
+  end. 
+
+(* A.3.2 method 1*)
+Fixpoint pf_mul_tail (P : FEp)(kl : bL)(p : N)(a : N)(acc : FEp) : FEp :=
+  match kl with
+  | [] => acc
+  | false :: tl =>
+      pf_mul_tail P tl p a (pf_double acc p a)
+  | true :: tl =>
+      pf_mul_tail P tl p a (pf_add P (pf_double acc p a) p a)
+  end. 
+
+Definition pf_mul (P : FEp)(k p a: N) : FEp :=
+  pf_mul_tail P (N2bL k) p a InfO. 
+
+Fixpoint pf_mul_naive (P : FEp)(k : nat)(p a : N) : FEp :=
+  match k with
+  | O => InfO
+  | S k' => 
+      pf_add P (pf_mul_naive P k' p a) p a
+  end. 
+
+(* Identical *)
+Compute map (fun x => pf_mul (Cop (1, 2)) x 17 3) (Nlist 9). 
+Compute map (fun x => pf_mul_naive (Cop (1, 2)) (N.to_nat x) 17 3) (Nlist 9). 
+
+(* Example 3 *)
+Compute pf_add (Cop (10, 2)) (Cop (9, 6)) 19 1. (* Correct *)
+Compute pf_mul (Cop (10, 2)) 2 19 1. (* Correct *)
+(*
+(* A.4.2.1 *)
+Fixpoint MOV_Test_tail (i : nat)(q n : N)(t' : N) : bool :=
+
+
+
+Definition MOV_Test (B q n : N) : bool :=
+
+(* 5.2.2 returns None if valid, otherwise Some error message*)
+Definition VeriSysPara (p a b xG yG n: N)(SEED : bL) : option string :=
+  if even p then Some "p is even." else
+  if negb (ProPrimTest p constant_T) then Some "p is a composite." else
+  if p <=? a then Some "a >= p" else
+  if p <=? b then Some "b >= p" else
+  if p <=? xG then Some "xG >= p" else
+  if p <=? yG then Some "yG >= p" else
+  if (List.length SEED) <? 192 then Some "SEED is shorter than 192." else
+  if negb (VeriSab SEED b p) then Some "Failed in VeriSab." else
+  if negb (SingTest a b p) then Some "Failed in SingTest." else
+  if negb (OnCurveTest xG yG a b p) then Some "Failed in OnCurveTest." else
+  if negb (ProbPrimTest n constant_T) then Some "n is a composite." else
+  if n <=? N.shiftl 1 191 then Some "n <= 2 ^ 192." else
+  if n <=? 4 * (square_root p) then Some "n <= 4 p ^ 1/2." else
+  if 
+
+*)

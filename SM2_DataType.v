@@ -316,6 +316,9 @@ Definition power (g : N)(a : N)(q : N) : N :=
 Definition inv_p (g : N)(q : N) : N :=
   power g (q - 2) q. 
 
+Definition F_sub (x y q : N) :=
+  (q + x - y) mod q.
+
 Definition F_div (x : N)(y : N)(q : N) : N :=
   (N.mul x (inv_p y q)) mod q. 
 
