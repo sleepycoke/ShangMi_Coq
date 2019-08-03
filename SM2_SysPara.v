@@ -136,6 +136,15 @@ Print nat.
 Inductive FEp : Set :=
   InfO : FEp | Cop : N * N -> FEp. 
 
+Definition pf_eqb (P1 P2 : FEp) : bool :=
+  match P1, P2 with
+  | InfO, InfO => true
+  | InfO, _ => false
+  | _, InfO => false
+  | Cop (x1, y1), Cop (x2, y2) =>
+      andb (x1 =? x2) (y1 =? y2)
+  end.
+
 (* 3.2.3.1 also A.1.2.2 *)
 Definition pf_double (P1 : FEp)(p : N)(a : N) :=
   match P1 with
@@ -190,29 +199,55 @@ Compute map (fun x => pf_mul_naive (Cop (1, 2)) (N.to_nat x) 17 3) (Nlist 9).
 (* Example 3 *)
 Compute pf_add (Cop (10, 2)) (Cop (9, 6)) 19 1. (* Correct *)
 Compute pf_mul (Cop (10, 2)) 2 19 1. (* Correct *)
-(*
-(* A.4.2.1 *)
-Fixpoint MOV_Test_tail (i : nat)(q n : N)(t' : N) : bool :=
 
+Compute negb (3 =? 2). 
 
+(* A.4.2.1, true means pass *)
+(* j = B - i + 1 *)
+Fixpoint MOV_Test_tail (j : nat)(q n : N)(acc : list (bool * N)) : list (bool * N)  :=
+  match j with
+  | O => acc (* i = B + 1, break *) 
+  | S j' =>
+      match acc with
+      | [] => [] (*which will not happen*)
+      | (b_old, t_old) :: tl =>
+        let t := (t_old * q) mod n in
+        let b := andb b_old (negb (t =? 1)) in
+          MOV_Test_tail j' q n ((b, t) :: acc)
+      end
+  end. 
 
-Definition MOV_Test (B q n : N) : bool :=
+(* n is a prime and q is a prime exponent *)
+Definition MOV_Test (B : nat)(q n : N) : bool :=
+  fst (List.hd (false, 0) (MOV_Test_tail B q n [(true, 1)])). 
+
+Definition constant_B := 27%N. 
+
+(* A.4.2.2, true means pass *)
+Definition Anomalous_Curve_Test (p order: N) : bool :=
+  negb (p =? order). 
 
 (* 5.2.2 returns None if valid, otherwise Some error message*)
-Definition VeriSysPara (p a b xG yG n: N)(SEED : bL) : option string :=
+Definition VeriSysPara (p a b xG yG n : N)(SEED : bL) : option string :=
   if even p then Some "p is even." else
   if negb (ProPrimTest p constant_T) then Some "p is a composite." else
   if p <=? a then Some "a >= p" else
   if p <=? b then Some "b >= p" else
   if p <=? xG then Some "xG >= p" else
   if p <=? yG then Some "yG >= p" else
-  if (List.length SEED) <? 192 then Some "SEED is shorter than 192." else
+  if (N.of_nat (List.length SEED)) <? 192 then Some "SEED is shorter than 192." else
   if negb (VeriSab SEED b p) then Some "Failed in VeriSab." else
   if negb (SingTest a b p) then Some "Failed in SingTest." else
   if negb (OnCurveTest xG yG a b p) then Some "Failed in OnCurveTest." else
-  if negb (ProbPrimTest n constant_T) then Some "n is a composite." else
+  if negb (ProPrimTest n constant_T) then Some "n is a composite." else
   if n <=? N.shiftl 1 191 then Some "n <= 2 ^ 192." else
-  if n <=? 4 * (square_root p) then Some "n <= 4 p ^ 1/2." else
-  if 
+  if square n <=? 16 * p then Some "n <= 4 p ^ 1/2." else
+  if negb (pf_eqb (pf_mul (Cop (xG, yG)) n p a) InfO) then Some "[n]G != O." else
+  (* TODO need to understand these 
+  if andb (negb (h =? 0)) (negb (h =? (F_div (square((square_root p) + 1) n p))))
+    then Some "h != h'." else
+  if negb (MOV_Test constant_B p  and Anomalous *)
+  None. 
 
-*)
+
+
