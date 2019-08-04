@@ -89,19 +89,19 @@ Compute constant_a.
 Definition SingTest (a b p : N) : bool :=
  negb (4 * (power a 3 p) + 27 * (square b) =? 0). 
 (* D.1.1 method 2, true if this tuple is valid*)
-Definition CheckSEED (SEED : bL)(p : N) : option (bL * N * N) :=
+Definition CheckSEED (SEED : bL)(a p : N) : option (bL * N * N) :=
   (*if Nat.leb (List.length SEED) 191%nat then None else*)
-  let (a,b) := (constant_a, (Hash SEED) mod p) in 
+  let b := (Hash SEED) mod p in 
     if negb (SingTest a b p) then None
     else Some (SEED, a, b). 
 
-Fixpoint GenSab_tail (seedl : list bL)(p : N) : option (bL * N * N) :=
+Fixpoint GenSab_tail (seedl : list bL)(a p : N) : option (bL * N * N) :=
   match seedl with
   | [] => None
   | h :: tl =>
-      match CheckSEED h p with
+      match CheckSEED h a p with
       | Some tuple => Some tuple
-      | None => GenSab_tail tl p
+      | None => GenSab_tail tl a p
       end
   end. 
 
@@ -109,8 +109,8 @@ Definition constant_seedlist := map
   (fun x => N2bL_len x 192) [0; 1; 2 ^ 90; 2 ^ 191]. 
 Compute constant_seedlist. 
 
-Definition GenSab (p : N) : option (bL * N * N) :=
-  GenSab_tail constant_seedlist p. 
+Definition GenSab (a p : N) : option (bL * N * N) :=
+  GenSab_tail constant_seedlist a p. 
 
 Definition DisplaySab (para : option (bL * N * N)) :=
   match para with
@@ -118,7 +118,7 @@ Definition DisplaySab (para : option (bL * N * N)) :=
   | Some (SEED, a, b) => (bS2hS (bL2bS SEED), HexString.of_N a, HexString.of_N b)
   end. 
 
-Compute DisplaySab (GenSab constant_p). 
+Compute DisplaySab (GenSab constant_a constant_p). 
 
 (* D.2.1 method 2 *)
 Definition VeriSab (SEED : bL)(b p : N) : bool :=
@@ -228,26 +228,56 @@ Definition Anomalous_Curve_Test (p order: N) : bool :=
   negb (p =? order). 
 
 (* 5.2.2 returns None if valid, otherwise Some error message*)
-Definition VeriSysPara (p a b xG yG n : N)(SEED : bL) : option string :=
+(* Quick tests for large inputs *)
+Definition VeriSysPara_Quick (p a b xG yG n : N)(SEED : bL) : option string :=
   if even p then Some "p is even." else
-  if negb (ProPrimTest p constant_T) then Some "p is a composite." else
   if p <=? a then Some "a >= p" else
   if p <=? b then Some "b >= p" else
   if p <=? xG then Some "xG >= p" else
   if p <=? yG then Some "yG >= p" else
-  if (N.of_nat (List.length SEED)) <? 192 then Some "SEED is shorter than 192." else
-  if negb (VeriSab SEED b p) then Some "Failed in VeriSab." else
+  let SEED_len := (N.of_nat (List.length SEED)) in
+  if andb (0 <? SEED_len) (SEED_len <? 192) then Some "SEED is shorter than 192." else
+  if andb (0 <? SEED_len ) (negb (VeriSab SEED b p)) then Some "Failed in VeriSab." else
   if negb (SingTest a b p) then Some "Failed in SingTest." else
   if negb (OnCurveTest xG yG a b p) then Some "Failed in OnCurveTest." else
-  if negb (ProPrimTest n constant_T) then Some "n is a composite." else
   if n <=? N.shiftl 1 191 then Some "n <= 2 ^ 192." else
   if square n <=? 16 * p then Some "n <= 4 p ^ 1/2." else
-  if negb (pf_eqb (pf_mul (Cop (xG, yG)) n p a) InfO) then Some "[n]G != O." else
-  (* TODO need to understand these 
-  if andb (negb (h =? 0)) (negb (h =? (F_div (square((square_root p) + 1) n p))))
-    then Some "h != h'." else
-  if negb (MOV_Test constant_B p  and Anomalous *)
   None. 
 
+(* These tests are quite time consuming *)
+Definition VeriSysPara (p a b xG yG n : N)(SEED : bL) : option string :=
+  match VeriSysPara_Quick p a b xG yG n SEED with
+  | Some msg => Some msg
+  | None =>
+    if negb (pf_eqb (pf_mul (Cop (xG, yG)) n p a) InfO) then Some "[n]G != O." else
+    if negb (ProPrimTest p constant_T) then Some "p is a composite." else
+    if negb (ProPrimTest n constant_T) then Some "n is a composite." else
+    (* TODO need to understand these 
+    if andb (negb (h =? 0)) (negb (h =? (F_div (square((square_root p) + 1) n p))))
+      then Some "h != h'." else
+    if negb (MOV_Test constant_B p  and Anomalous *)
+    None
+  end.
 
+(* C.2 *)
+(* Example 1 *)
+Timeout 60 Compute 
+let p := hS2N "BDB6F4FE3E8B1D9E0DA8C0D46F4C318CEFE4AFE3B6B8551F" in
+let a := hS2N "BB8E5E8FBC115E139FE6A814FE48AAA6F0ADA1AA5DF91985" in
+let b := hS2N "1854BEBDC31B21B7AEFC80AB0ECD10D5B1B3308E6DBF11C1" in
+let xG := hS2N "4AD5F7048DE709AD51236DE65E4D4B482C836DC6E4106640" in
+let yG := hS2N "02BB3A02D4AAADACAE24817A4CA3A1B014B5270432DB27D2" in
+let n := hS2N "BDB6F4FE3E8B1D9E0DA8C0D40FC962195DFAE76F56564677" in
+  VeriSysPara_Quick p a b xG yG n []
+. (* None *)
 
+(* Example 2 *)
+Timeout 60 Compute 
+let p := hS2N "8542D69E4C044F18E8B92435BF6FF7DE457283915C45517D722EDB8B08F1DFC3" in
+let a := hS2N "787968B4FA32C3FD2417842E73BBFEFF2F3C848B6831D7E0EC65228B3937E498" in
+let b := hS2N "63E4C6D3B23B0C849CF84241484BFE48F61D59A5B16BA06E6E12D1DA27C5249A" in
+let xG := hS2N "421DEBD61B62EAB6746434EBC3CC315E32220B3BADD50BDC4C4E6C147FEDD43D" in
+let yG := hS2N "0680512BCBB42C07D47349D2153B70C4E5D7FDFCBFA36EA1A85841B9E46E09A2" in
+let n := hS2N "8542D69E4C044F18E8B92435BF6FF7DD297720630485628D5AE74EE7C32E79B7" in
+  VeriSysPara_Quick p a b xG yG n []
+. (* None *)
