@@ -93,6 +93,13 @@ Definition N2BL_len (x : N)(k : nat) : BL :=
 
 Compute N2BL_len 1025 4.
 
+Definition N2BL (x : N) : BL :=
+  N2BL_len x (N.to_nat (N.div (N.add (N.size x) 7) 8)). 
+
+Compute N2BL 1025 .
+Compute N2BL 256 .
+Compute N2BL 255 .
+
 Print bool. 
 
 (* Transform the first k(<= 8) bits into an N *)  
@@ -283,9 +290,13 @@ Fixpoint bL2hS_tail (bl : bL)(hSLen : nat)(acc : string) : string :=
     end
   end.
 
+Definition bL2hS (bl : bL) : string :=
+  bL2hS_tail bl (Nat.div (Nat.add (length bl) 15%nat) 16%nat) "".
+
+Compute bL2hS [true; false]. 
+
 Definition bS2hS (m_bin : string) : string :=
-  let bl := bS2bL m_bin in
-    bL2hS_tail bl (Nat.div (Nat.add (String.length m_bin) 15%nat) 16%nat) "".
+  bL2hS (bS2bL m_bin). 
 
 (*4.2.5*)
 
