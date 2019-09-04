@@ -1,6 +1,18 @@
 Require Export SMlib.
 Require Export Coq.Strings.Ascii.
 
+Fixpoint RepChar_tail (s : string)(old : ascii)(new acc : string) : string :=
+  match s with
+  | "" => acc
+  | String h t => 
+      RepChar_tail t old new (acc ++
+        if Ascii.eqb h old then new else (String h "")
+      )
+  end. 
+
+Definition RepChar (s : string)(old : ascii)(new : string) : string :=
+  RepChar_tail s old new "". 
+
 (* ByteList is indeed a list of bytes*)
 Definition BL := list byte. 
 (* BitList is indeed a list of bool*)
@@ -72,10 +84,10 @@ Fixpoint N2BL_tail (x : N)(k : nat)(acc : BL) : BL :=
 Compute N2BL_tail 1025 3 []. 
 
 (*4.2.1*)
-Definition N2BL (x : N)(k : nat) : BL :=
+Definition N2BL_len (x : N)(k : nat) : BL :=
   N2BL_tail x k [].
 
-Compute N2BL 1025 4.
+Compute N2BL_len 1025 4.
 
 Print bool. 
 
@@ -245,8 +257,9 @@ Fixpoint hS2bS_tail (m_hex : string)(acc : string) : string :=
 Definition hS2bS (m_hex : string) : string :=
   hS2bS_tail m_hex "".
 
+Print HexString.Raw.to_N. 
 Definition hS2N (m_hex : string) : N :=
-  HexString.Raw.to_N m_hex 0. 
+  HexString.Raw.to_N (RepChar m_hex " "%char ""%string) 0. 
 
 Definition N2hS (n : N) : string :=
   match n with
@@ -274,7 +287,7 @@ Definition bS2hS (m_bin : string) : string :=
 Inductive field_type : Set :=
   pri : field_type | ext : field_type .
 Definition Field2BL_p (alpha : N) : BL :=
-  N2BL alpha (N.to_nat (N.div (alpha + 7) 8)). 
+  N2BL_len alpha (N.to_nat (N.div (alpha + 7) 8)). 
 
 Definition Field2BL_m (alpha : bL) :=
   bL2BL alpha. 
