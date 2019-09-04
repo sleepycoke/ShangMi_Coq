@@ -78,12 +78,16 @@ Fixpoint N2BL_tail (x : N)(k : nat)(acc : BL) : BL :=
   match k with
   | O => acc
   | S k' => 
-      N2BL_tail (N.div x 256) k'(N2Byte (N.modulo x 256) :: acc)
+      N2BL_tail (N.div x 256) k' (N2Byte (N.modulo x 256) :: acc)
   end.
 
 Compute N2BL_tail 1025 3 []. 
+Compute N2BL_tail (256*256 + 1025) 3 []. 
+Compute N2BL_tail (2 * 256*256 + 1025) 3 []. 
+Compute N2BL_tail (128 * 256*256 + 1025) 3 []. 
+Compute N2BL_tail (256 * 256*256 + 1025) 3 []. 
 
-(*4.2.1*)
+(*4.2.1 trunk from right*)
 Definition N2BL_len (x : N)(k : nat) : BL :=
   N2BL_tail x k [].
 
@@ -201,11 +205,12 @@ Fixpoint N2bL_tail (n : N)(k : nat)(acc : bL) : bL :=
 
 Compute N2bL_tail 254 8 []. 
 
-(* [] for 0 *)
+(* [] for 0, trunk from right. *)
 Definition N2bL_len (n : N)(len : nat) : bL :=
   N2bL_tail n len []. 
 
 Compute N2bL_len 127 2. 
+Compute N2bL_len (1024 + 127) 4. 
 Compute N2bL_len 3 4. 
 
 Definition N2bL (n : N) : bL :=
