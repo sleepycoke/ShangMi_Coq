@@ -273,6 +273,9 @@ Print HexString.Raw.to_N.
 Definition hS2N (m_hex : string) : N :=
   HexString.Raw.to_N (RepChar m_hex " "%char ""%string) 0. 
 
+Definition hS2bL (m_hex : string) : bL :=
+  N2bL (hS2N m_hex). 
+
 Definition N2hS (n : N) : string :=
   match n with
   | Npos p => HexString.Raw.of_pos p ""
