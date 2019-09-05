@@ -1,4 +1,4 @@
-Require Export SM2_DataType. 
+Require Export ECalg. 
 Require Export SM3. 
 
 (* TODO RANDOMLY sample a number in [low, high] *)
