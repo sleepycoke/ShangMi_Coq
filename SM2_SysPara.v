@@ -77,8 +77,9 @@ Definition ProPrimTest (T : N)(u : N) : bool :=
   match ProPrimTest_debug T u with
   | (result, _, _, _, _, _, _) => result
   end.
-
+(*
 Compute map (ProPrimTest_debug 999) (NInterval 3 99). (* 100% Correct *)
+*)
 
 (* From C.2 Example 1 *)
 Definition constant_a := HexString.to_N "0xBB8E5E8FBC115E139FE6A814FE48AAA6F0ADA1AA5DF91985". 

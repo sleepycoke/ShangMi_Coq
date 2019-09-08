@@ -255,7 +255,7 @@ Definition N2bS_len (n : N)(len : nat) : string :=
   bL2bS (N2bL_len n len).
 
 Compute N2bS 6. 
-
+Definition rmsp (s : string) := (RepChar s " "%char ""%string). 
 Fixpoint hS2bS_tail (m_hex : string)(acc : string) : string :=
   match m_hex with
   | "" => acc
@@ -267,14 +267,28 @@ Fixpoint hS2bS_tail (m_hex : string)(acc : string) : string :=
   end. 
 
 Definition hS2bS (m_hex : string) : string :=
-  hS2bS_tail m_hex "".
+  hS2bS_tail (rmsp m_hex) "".
 
 Print HexString.Raw.to_N. 
 Definition hS2N (m_hex : string) : N :=
-  HexString.Raw.to_N (RepChar m_hex " "%char ""%string) 0. 
+  HexString.Raw.to_N (rmsp m_hex) 0. 
 
-Definition hS2bL (m_hex : string) : bL :=
-  N2bL (hS2N m_hex). 
+(*
+Definition hChar2bL (m_hex : string) : bL :=
+  let rawbl := N2bL (hS2N m_hex) in
+    List.app
+    match (Nat.modulo (List.length rawbl) 4) with
+    | 1%nat => [false; false; false] 
+    | 2%nat => [false; false] 
+    | 3%nat => [false]
+    | _ => [false; false; false; false]
+    end
+    rawbl. 
+    *)
+Definition hS2bL (hs : string) :=
+  bS2bL (hS2bS hs). 
+
+Compute hS2bL "04F". 
 
 Definition N2hS (n : N) : string :=
   match n with
@@ -282,21 +296,28 @@ Definition N2hS (n : N) : string :=
   | N0 => ""
   end.  
 
+Definition N2hChar (n : N) : string :=
+  match n with
+  | Npos p => HexString.Raw.of_pos p ""
+  | N0 => "0"
+  end. 
+
 Fixpoint bL2hS_tail (bl : bL)(hSLen : nat)(acc : string) : string :=
   match hSLen with
   | O => acc
   | S len' =>
-  let (pre, suf) := partListBack bl 16 in
+  let (pre, suf) := partListBack bl 4 in
     match suf with
     | [] => acc
-    | _ => bL2hS_tail pre len' (acc ++ (N2hS (bL2N suf)))
+    | _ => bL2hS_tail pre len' ((N2hChar (bL2N suf)) ++ acc)
     end
   end.
 
 Definition bL2hS (bl : bL) : string :=
-  bL2hS_tail bl (Nat.div (Nat.add (length bl) 15%nat) 16%nat) "".
+  bL2hS_tail bl (Nat.div (Nat.add (length bl) 3%nat) 4%nat) "".
 
 Compute bL2hS [true; false]. 
+Compute bL2hS [false; false; false; false; false; false; true; false]. 
 
 Definition bS2hS (m_bin : string) : string :=
   bL2hS (bS2bL m_bin). 
