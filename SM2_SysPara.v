@@ -92,7 +92,7 @@ Definition SingTest (a b p : N) : bool :=
 (* D.1.1 method 2, true if this tuple is valid*)
 Definition CheckSEED (SEED : bL)(a p : N) : option (bL * N * N) :=
   (*if Nat.leb (List.length SEED) 191%nat then None else*)
-  let b := (Hash SEED) mod p in 
+  let b := (HashN SEED) mod p in 
     if negb (SingTest a b p) then None
     else Some (SEED, a, b). 
 
@@ -123,7 +123,7 @@ Compute DisplaySab (GenSab constant_a constant_p).
 
 (* D.2.1 method 2 *)
 Definition VeriSab (SEED : bL)(b p : N) : bool :=
-  b =? (Hash SEED) mod p. 
+  b =? (HashN SEED) mod p. 
 
 Definition constant_T := 999. 
 
