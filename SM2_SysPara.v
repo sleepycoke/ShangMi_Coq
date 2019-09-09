@@ -260,6 +260,9 @@ Definition VeriSysPara (p a b xG yG n : N)(SEED : bL) : option string :=
     None
   end.
 
+(*
+Module tests. 
+
 (* C.2 *)
 (* Example 1 *)
 Timeout 60 Compute 
@@ -282,3 +285,6 @@ let yG := hS2N "0680512BCBB42C07D47349D2153B70C4E5D7FDFCBFA36EA1A85841B9E46E09A2
 let n := hS2N "8542D69E4C044F18E8B92435BF6FF7DD297720630485628D5AE74EE7C32E79B7" in
   VeriSysPara_Quick p a b xG yG n []
 . (* None *)
+
+End tests. 
+*)

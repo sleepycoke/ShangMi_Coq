@@ -322,6 +322,18 @@ Compute bL2hS [false; false; false; false; false; false; true; false].
 Definition bS2hS (m_bin : string) : string :=
   bL2hS (bS2bL m_bin). 
 
+Fixpoint str2bL_tail (s : string)(acc : bL) :=
+  match s with
+  | "" => acc
+  | String c tl =>
+      str2bL_tail tl (List.app acc (N2bL_len (N_of_ascii c) 8))
+  end. 
+
+Definition str2bL (s : string) :=
+  str2bL_tail s [].
+
+Compute str2bL "". 
+Compute bL2hS (str2bL "ALICE"). 
 (*4.2.5*)
 
 Inductive field_type : Set :=

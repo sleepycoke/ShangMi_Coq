@@ -7,18 +7,19 @@ Print N.
 Print positive.
 Compute (xI (xI (xO xH))). (*1011*) 
 (*B.1.1*)
-Fixpoint power_tail (g : N)(e : bL)(acc : N) : N :=
+Fixpoint power_tail (g : N)(e : bL)(q : N)(acc : N) : N :=
   match e with
   | [] => acc
   | h :: tl =>
+      power_tail g tl q 
       match h with
-      | true => power_tail g tl (N.mul (N.square acc) g)
-      | false => power_tail g tl (N.square acc)
+      | true => (N.mul (N.square acc) g) mod q
+      | false => (N.square acc) mod q
       end
   end.
 Definition power (g : N)(a : N)(q : N) : N :=
   let e := N.modulo a (q - 1) in
-  N.modulo (power_tail g (N2bL e) 1) q. 
+  power_tail g (N2bL e) q 1. 
 
 Definition inv_p (g : N)(q : N) : N :=
   power g (q - 2) q. 
