@@ -10,9 +10,6 @@ Open Scope list.
 Definition Z_A (ENTL_A ID_A a b xG yG xA yA : bL) :=
   Hash (ENTL_A ++ ID_A ++ a ++ b ++ xG ++ yG ++ xA ++ yA).
 
-Print pf_mul.
-Print FEp. 
-
 Definition TrySigWithk (k e n dA xG yG p a : N) : option (N * N) :=
   match pf_mul (Cop (xG, yG)) k p a with
   | InfO => None
@@ -45,6 +42,30 @@ Definition SigWithList (klist : list N)(n dA xG yG p a Z_A M : bL)
         | Some (r, s) => Some (M, ((N2bL r), (N2bL s)))
      end. 
 
+(* true if x \in [lower, upper] *)
+Definition inRange (x lower upper : N) : bool :=
+  andb (leb lower x) (leb x upper). 
+
+(* None if passed, otherwise Some error message *)
+Definition VeriSig (n p a xG yG xA yA : N)(r'bL s'bL Z_A M' : bL) : option string :=
+  let (r', s') := ((bL2N r'bL), (bL2N s'bL)) in
+  if negb (inRange r' 1 (n - 1)) then Some "r' out of range" else
+  if negb (inRange s' 1 (n - 1)) then Some "s' out of range" else
+  let e' := HashN (Z_A ++ M') in
+  let t := F_add r' s' n in
+  if t =? 0 then Some "t = 0" else 
+  let G := Cop (xG, yG) in
+  let PA := Cop (xA, yA) in
+  match pf_add (pf_mul G s' p a) (pf_mul PA t p a) p a with
+  | InfO => Some "s'G + tPA = InfO"
+  | Cop (x1', y1') => 
+      let R := F_add e' x1' n in
+      if R =? r' then None else Some "R != r'"
+  end. 
+
+  
+
+(*
 Module A_1. 
 Definition IDa := hS2bL "414C 49434531 32334059 41484F4F 2E434F4D".
 Definition ENTLa := hS2bL "0090". 
@@ -53,7 +74,6 @@ Compute bL2hS (ENTL IDa).  (*TODO wrong, supposed to be 0090*)
 
 Compute bL2bS ENTLa. 
 
-Module A_2_1. 
 Definition pIn := hS2bL 
   "8542D69E 4C044F18 E8B92435 BF6FF7DE 45728391 5C45517D 722EDB8B 08F1DFC3".
 Definition aIn := hS2bL
@@ -92,8 +112,8 @@ Definition x1t := hS2bL "110FCDA5 7615705D 5E7B9324 AC4B856D 23E6D918 8B2AE477 5
 
 Definition y1t := hS2bL "1C65D68A 4A08601D F24B431E 0CAB4EBE 084772B3 817E8581 1A8510B2 DF7ECA1A". 
 
-Definition Pin := Cop ((bL2N xGIn), (bL2N yGIn)). 
-Definition kG := pf_mul Pin (bL2N kt) (bL2N pIn) (bL2N aIn).  
+Definition GIn := Cop ((bL2N xGIn), (bL2N yGIn)). 
+Definition kG := pf_mul GIn (bL2N kt) (bL2N pIn) (bL2N aIn).  
 
 (* Time Compute kG. TODO is that possible to make it faster?  
   Cop
@@ -118,6 +138,50 @@ Compute N2hS st. (*Correct*)
 Time Compute SigWithList [bL2N kt] nIn dAIn xGIn yGIn pIn aIn ZAt MIn.  
   *)
 
-End A_2_1. 
-End A_1. 
+Definition tt := F_add rt st nN.
 
+Definition x0't := hS2N "7DEACE5F D121BC38 5A3C6317 249F413D 28C17291 A60DFD83 B835A453 92D22B0A". 
+
+Definition y0't := hS2N "2E49D5E5 279E5FA9 1E71FD8F 693A64A3 C4A94611 15A4FC9D 79F34EDC 8BDDEBD0". 
+
+(*
+Time Compute pf_mul GIn st (bL2N pIn) (bL2N aIn).  
+Cop
+         (56953972629032959544647951044806105100227418879105314443365623701807475862282,
+         20936847120531059614594560449863630384405530616210027663248420985042997472208)
+     : FEp
+Finished transaction in 641.294 secs (640.154u,0.485s) (successful)
+Correct! 
+*)
+Definition x00't := hS2N "1657FA75 BF2ADCDC 3C1F6CF0 5AB7B45E 04D3ACBE 8E4085CF A669CB25 64F17A9F". 
+
+Definition y00't := hS2N "19F0115F 21E16D2F 5C3A485F 8575A128 BBCDDF80 296A62F6 AC2EB842 DD058E50". 
+
+Definition P_At := Cop (bL2N xAIn, bL2N yAIn). 
+(*
+Time Compute pf_mul P_At tt (bL2N pIn) (bL2N aIn). 
+   = Cop
+         (10106326974500318093811212845647691935066743080403682598448107247190051748511,
+         11731984404579341477271988893658593900522406460222700443798045098506979741264)
+     : FEp
+Finished transaction in 623.69 secs (621.976u,0.888s) (successful)
+Correct! 
+*)
+Definition x1't := hS2N "110FCDA5 7615705D 5E7B9324 AC4B856D 23E6D918 8B2AE477 59514657 CE25D112". 
+Definition y1't := hS2N
+  "1C65D68A 4A08601D F24B431E 0CAB4EBE 084772B3 817E8581 1A8510B2 DF7ECA1A". 
+Print pf_add. 
+Definition P1t := pf_add (Cop (x0't, y0't)) (Cop (x00't, y00't)) (bL2N pIn) (bL2N aIn).
+(*Compute P1t. Correct*)
+Compute N2hS (F_add (bL2N et) x1't nN).  (*Correct*)
+
+(*
+Time Compute VeriSig nN (bL2N pIn) (bL2N aIn) (bL2N xGIn)
+  (bL2N yGIn) (bL2N xAIn) (bL2N yAIn) (N2bL rt) (N2bL st) ZAt MIn. 
+= None
+     : option string
+Finished transaction in 1247.005 secs (1245.699u,0.693s) (successful)
+Correct! 
+*)
+End A_1. 
+*)
