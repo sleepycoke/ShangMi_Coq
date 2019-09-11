@@ -24,6 +24,16 @@ Definition power (g : N)(a : N)(q : N) : N :=
 Definition inv_p (g : N)(q : N) : N :=
   power g (q - 2) q. 
 
+(*TODO rename *)
+Definition F_inv (g q : N) :=
+  inv_p g q. 
+
+Definition F_add (x y q : N) :=
+  (x + y) mod q. 
+
+Definition F_mul (x y q : N) :=
+  (x * y) mod q. 
+
 Definition F_sub (x y q : N) :=
   (q + x - y) mod q.
 

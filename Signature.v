@@ -10,23 +10,40 @@ Open Scope list.
 Definition Z_A (ENTL_A ID_A a b xG yG xA yA : bL) :=
   Hash (ENTL_A ++ ID_A ++ a ++ b ++ xG ++ yG ++ xA ++ yA).
 
-(*
-Definition TrySigWithk (k, e, n, dA, xG, yG, p, a : N) : Some (N * N) :=
+Print pf_mul.
+Print FEp. 
+
+Definition TrySigWithk (k e n dA xG yG p a : N) : option (N * N) :=
   match pf_mul (Cop (xG, yG)) k p a with
   | InfO => None
-  | Cop (x1, y1) =>
-      let r := (e + x1) mod n in
-        (* Should I use mod eq here ?*)
+  | Cop (x1, y1) => 
+      let r := F_add e x1 n in
         if orb (N.eqb r 0) (N.eqb (r + k) n) then None else
-        let s := 
-          *)
+        let s := F_mul (F_inv (F_add 1 dA n) n) (F_sub k (F_mul r dA n) n) n in
+          if N.eqb s 0 then None else
+          Some (r, s)
+  end. 
 
+Fixpoint TrySigWithList (klist : list N)(e n dA xG yG p a : N) : option (N * N) :=
+  match klist with
+  | [] => None
+  | h :: tl =>
+      match TrySigWithk h e n dA xG yG p a with
+      | None => TrySigWithList tl e n dA xG yG p a
+      | Some (r, s) => Some (r, s)
+      end 
+  end. 
 
-
-
-
-
-
+(* 6.1 *)
+(* TODO How to generate klist? *)
+Definition SigWithList (klist : list N)(n dA xG yG p a Z_A M : bL) 
+   : option (bL * (bL * bL)) :=
+   let e := HashN (Z_A ++ M) in
+     match TrySigWithList klist e (bL2N n) (bL2N dA) (bL2N xG) (bL2N yG)
+        (bL2N p) (bL2N a) with
+        | None => None
+        | Some (r, s) => Some (M, ((N2bL r), (N2bL s)))
+     end. 
 
 Module A_1. 
 Definition IDa := hS2bL "414C 49434531 32334059 41484F4F 2E434F4D".
@@ -78,15 +95,29 @@ Definition y1t := hS2bL "1C65D68A 4A08601D F24B431E 0CAB4EBE 084772B3 817E8581 1
 Definition Pin := Cop ((bL2N xGIn), (bL2N yGIn)). 
 Definition kG := pf_mul Pin (bL2N kt) (bL2N pIn) (bL2N aIn).  
 
-(* Takes forever TODO
-  Time Compute kG. 
+(* Time Compute kG. TODO is that possible to make it faster?  
+  Cop
+         (7717240450715166391686062596461402834004556820190931887479426615912677363986,
+         12844692015861483985796897070387313459524129685989174230708833771946472557082)
+     : FEp
+Finished transaction in 618.101 secs (617.552u,0.299s) (successful)
+Correct! 
 *)
-
 Definition rt := ((bL2N et) + (bL2N x1t)) mod (bL2N nIn). 
 Compute N2hS rt. (* Correct *) 
 
 Definition factor1 := inv_p (1 + (bL2N dAIn)) (bL2N nIn).
-Compute N2hS factor1. (*Correct should be inverse on field n*)
+Compute N2hS factor1. (*Correct, should be inverse on field n*)
+
+Definition factor2 := F_sub (bL2N kt) (F_mul rt (bL2N dAIn) (bL2N nIn)) (bL2N nIn). 
+Definition nN := bL2N nIn. 
+Definition st := F_mul factor1 factor2 nN.
+
+Compute N2hS st. (*Correct*) 
+(* Correct Finished transaction in 615.163 secs 
+Time Compute SigWithList [bL2N kt] nIn dAIn xGIn yGIn pIn aIn ZAt MIn.  
+  *)
+
 End A_2_1. 
 End A_1. 
 
