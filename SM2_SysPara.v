@@ -107,7 +107,7 @@ Fixpoint GenSab_tail (seedl : list bL)(a p : N) : option (bL * N * N) :=
   end. 
 
 Definition constant_seedlist := map 
-  (fun x => N2bL_len x 192) [0; 1; 2 ^ 90; 2 ^ 191]. 
+  (fun x => N2bL_len 192 x) [0; 1; 2 ^ 90; 2 ^ 191]. 
 Compute constant_seedlist. 
 
 Definition GenSab (a p : N) : option (bL * N * N) :=

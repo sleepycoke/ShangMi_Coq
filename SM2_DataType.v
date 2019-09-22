@@ -74,27 +74,21 @@ Definition N2Byte (n : N) : byte :=
 Compute N2Byte 256. 
 Compute N2Byte 255. 
 
-Fixpoint N2BL_tail (x : N)(k : nat)(acc : BL) : BL :=
+Fixpoint N2BL_tail (k : nat)(x : N)(acc : BL) : BL :=
   match k with
   | O => acc
   | S k' => 
-      N2BL_tail (N.div x 256) k' (N2Byte (N.modulo x 256) :: acc)
+      N2BL_tail k' (N.div x 256) (N2Byte (N.modulo x 256) :: acc)
   end.
 
-Compute N2BL_tail 1025 3 []. 
-Compute N2BL_tail (256*256 + 1025) 3 []. 
-Compute N2BL_tail (2 * 256*256 + 1025) 3 []. 
-Compute N2BL_tail (128 * 256*256 + 1025) 3 []. 
-Compute N2BL_tail (256 * 256*256 + 1025) 3 []. 
-
 (*4.2.1 trunk from right*)
-Definition N2BL_len (x : N)(k : nat) : BL :=
-  N2BL_tail x k [].
+Definition N2BL_len (k : nat)(x : N) : BL :=
+  N2BL_tail k x [].
 
-Compute N2BL_len 1025 4.
+Compute N2BL_len 4 1025.
 
 Definition N2BL (x : N) : BL :=
-  N2BL_len x (N.to_nat (N.div (N.add (N.size x) 7) 8)). 
+  N2BL_len (N.to_nat (N.div (N.add (N.size x) 7) 8)) x. 
 
 Compute N2BL 1025 .
 Compute N2BL 256 .
@@ -213,15 +207,11 @@ Fixpoint N2bL_tail (n : N)(k : nat)(acc : bL) : bL :=
 Compute N2bL_tail 254 8 []. 
 
 (* [] for 0, trunk from right. *)
-Definition N2bL_len (n : N)(len : nat) : bL :=
+Definition N2bL_len (len : nat)(n : N) : bL :=
   N2bL_tail n len []. 
 
-Compute N2bL_len 127 2. 
-Compute N2bL_len (1024 + 127) 4. 
-Compute N2bL_len 3 4. 
-
 Definition N2bL (n : N) : bL :=
-  N2bL_len n (N.to_nat (N.size n)).
+  N2bL_len (N.to_nat (N.size n)) n.
 
 Compute N2bL 127. 
 Compute N2bL 3. 
@@ -252,7 +242,7 @@ Definition N2bS (n : N) : string :=
   bL2bS (N2bL n).
 
 Definition N2bS_len (n : N)(len : nat) : string :=
-  bL2bS (N2bL_len n len).
+  bL2bS (N2bL_len len n).
 
 Compute N2bS 6. 
 Definition rmsp (s : string) := (RepChar s " "%char ""%string). 
@@ -326,7 +316,7 @@ Fixpoint str2bL_tail (s : string)(acc : bL) :=
   match s with
   | "" => acc
   | String c tl =>
-      str2bL_tail tl (List.app acc (N2bL_len (N_of_ascii c) 8))
+      str2bL_tail tl (List.app acc (N2bL_len 8 (N_of_ascii c)))
   end. 
 
 Definition str2bL (s : string) :=
@@ -339,7 +329,7 @@ Compute bL2hS (str2bL "ALICE").
 Inductive field_type : Set :=
   pri : field_type | ext : field_type .
 Definition Field2BL_p (alpha : N) : BL :=
-  N2BL_len alpha (N.to_nat (N.div (alpha + 7) 8)). 
+  N2BL_len (N.to_nat (N.div (alpha + 7) 8)) alpha. 
 
 Definition Field2BL_m (alpha : bL) :=
   bL2BL alpha. 

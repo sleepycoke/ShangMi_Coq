@@ -150,7 +150,7 @@ Definition HashN (m : bL) : N :=
 
 (*TODO Consider refactor SM3 with bL *)
 Definition Hash (m : bL) : bL :=
-  N2bL_len (HashN m) 256. 
+  N2bL_len 256 (HashN m). 
 
 (*
 Definition hex2bin_with_prefix (m_hex : string) :=

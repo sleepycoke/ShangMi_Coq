@@ -3,7 +3,7 @@ Require Export SM2_SysPara.
 (*5.5 trunk from right *)
 (*TODO I really cannot understand its definition *)
 Definition ENTL (ID : bL) :=
-  N2bL_len (N.of_nat (List.length (ID))) 16. 
+  N2bL_len 16 (N.of_nat (List.length (ID))). 
 
 Open Scope list. 
 
