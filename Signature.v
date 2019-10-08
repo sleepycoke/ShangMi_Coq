@@ -7,7 +7,7 @@ Definition ENTL (ID : bL) :=
 
 Open Scope list. 
 
-Definition Z_A (ENTL_A ID_A a b xG yG xA yA : bL) :=
+Definition ComputeZ (ENTL_A ID_A a b xG yG xA yA : bL) :=
   Hash (ENTL_A ++ ID_A ++ a ++ b ++ xG ++ yG ++ xA ++ yA).
 
 Definition TrySigWithk (k e n dA xG yG p a : N) : option (N * N) :=
