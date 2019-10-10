@@ -61,11 +61,6 @@ Definition ComputeTide (w2 x p : N) : N :=
 Definition ComputeW (n : N) : N :=
   (div_ceil_N (N.size (n - 1)) 2) - 1.
 
-Check (bL * bL)%type. 
-Check option nat. 
-Check option. 
-Print list. 
-Print option.
 Inductive optErr (A : Type) : Type :=
 | Normal : A -> optErr A
 | Error : string -> optErr A. 
@@ -73,9 +68,9 @@ Inductive optErr (A : Type) : Type :=
 Arguments Normal {A} _.
 Arguments Error {A}.
 
-Print optErr.
-Check optErr. 
-
+Definition N2BbL (n : N) : bL := BL2bL (N2BL n). 
+Definition OnCurve (x y p a b : N) : bool := 
+  ((N.square y) mod p =? ((power x 3 p) + a * x + b) mod p). 
 (*B1 - B9*)
 Definition ComputeRBKBSB (rB a b p dB n h : N)(G RA PA : FEp)(ZA ZB : bL)(klen : nat)(hash_v : bL -> bL)(v : nat) : optErr (FEp * bL * bL) :=
   let RB := ComputeR G rB p a in 
@@ -91,23 +86,22 @@ Definition ComputeRBKBSB (rB a b p dB n h : N)(G RA PA : FEp)(ZA ZB : bL)(klen :
       match RA with
       | InfO => Error "RA = InfO"
       | Cop (x1, y1) => 
-          if negb ((N.square y1) mod n =? ((power x1 3 n) + a * x1 + b) mod n) then Error "RA is not on the curve" else 
+          if negb (OnCurve x1 y1 p a b) then Error "RA is not on the curve" else 
         let x1_tide := ComputeTide w2 x1 p in
         (* B6 *)
-        match pf_mul (pf_add PA (pf_mul RA x1_tide p a) p a)
-        (F_mul h tB n) p a with
+        let V := pf_mul (pf_add PA (pf_mul RA x1_tide p a) p a) (F_mul h tB n) p a in
+        match V with
         | InfO => Error "V = InfO"
         | Cop (xV, yV) =>
             (* B7 *)
-            let KB := KDF ((N2bL xV) ++ (N2bL yV) ++ ZA ++ ZB) klen hash_v v in
+            let KB := KDF ((N2BbL xV) ++ (N2BbL yV) ++ ZA ++ ZB) klen hash_v v in
             (* B8 *)
-            let SB := hash_v 
-              ((hS2bL "02") ++ (N2bL yV) ++ (hash_v (N2bL xV) ++ ZA ++ ZB ++ (N2bL x1) ++ (N2bL y1) ++ (N2bL x2) ++ (N2bL y2))) in
+            let SB := hash_v ((hS2bL "02") ++ (N2BbL yV) ++ (hash_v ((N2BbL xV) ++ ZA ++ ZB ++ (N2BbL x1) ++ (N2BbL y1) ++ (N2BbL x2) ++ (N2BbL y2)))) in 
             Normal (RB, KB, SB)
         end
       end
   end.
-             
+
 Module test. 
 Definition p := hS2N "8542D69E 4C044F18 E8B92435 BF6FF7DE 45728391 5C45517D 722EDB8B 08F1DFC3". 
 Definition a := hS2N"787968B4 FA32C3FD 2417842E 73BBFEFF 2F3C848B 6831D7E0 EC65228B 3937E498". 
@@ -130,7 +124,9 @@ Definition ZB := hS2bL "6B4B6D0E 276691BD 4A11BF72 F4FB501A E309FDAC B72FA6CC 33
 
 (*Test of A1-A3*)
 Definition rA := hS2N"83A2C9C8 B96E5AF7 0BD480B4 72409A9A 327257F1 EBB73F5B 073354B2 48668563". 
+Definition x1bL := hS2bL "6CB56338 16F4DD56 0B1DEC45 8310CBCC 6856C095 05324A6D 23150C40 8F162BF0". 
 Definition x1 := hS2N"6CB56338 16F4DD56 0B1DEC45 8310CBCC 6856C095 05324A6D 23150C40 8F162BF0". 
+Definition y1bL := hS2bL "0D6FCF62 F1036C0A 1B6DACCF 57399223 A65F7D7B F2D9637E 5BBBEB85 7961BF1A". 
 Definition y1 := hS2N"0D6FCF62 F1036C0A 1B6DACCF 57399223 A65F7D7B F2D9637E 5BBBEB85 7961BF1A". 
 
 (*Time Compute ComputeR G rA p a.
@@ -139,7 +135,9 @@ Compute (x1, y1). Correct *)
 (* Test of B1-B9 *)
 
 Definition rB := hS2N "33FE2194 0342161C 55619C4A 0C060293 D543C80A F19748CE 176D8347 7DE71C80". 
+Definition x2bL := hS2bL "1799B2A2 C7782953 00D9A232 5C686129 B8F2B533 7B3DCF45 14E8BBC1 9D900EE5".
 Definition x2 := hS2N "1799B2A2 C7782953 00D9A232 5C686129 B8F2B533 7B3DCF45 14E8BBC1 9D900EE5".
+Definition y2bL := hS2bL "54C9288C 82733EFD F7808AE7 F27D0E73 2F7C73A7 D9AC98B7 D8740A91 D0DB3CF4". 
 Definition y2 := hS2N "54C9288C 82733EFD F7808AE7 F27D0E73 2F7C73A7 D9AC98B7 D8740A91 D0DB3CF4". 
 
 (* Time Compute ComputeR G r p a.       
@@ -172,31 +170,55 @@ Compute RA1.
 Compute pf_add PA RA0 p a. Correct *)
 Definition xVbL := hS2bL "47C82653 4DC2F6F1 FBF28728 DD658F21 E174F481 79ACEF29 00F8B7F5 66E40905". 
 Definition yVbL := hS2bL "2AF86EFE 732CF12A D0E09A1F 2556CC65 0D9CCCE3 E249866B BB5C6846 A4C4A295". 
-Definition V := Cop (bL2N xVbL, bL2N yVbL). 
+Definition xV := bL2N xVbL. 
+Definition yV := bL2N yVbL. 
+Definition V := Cop (xV, yV). 
 (*
 Compute V. 
 Time Compute pf_mul RA1 (h * tB) p a. Correct *)
 
 Definition Z := xVbL ++ yVbL ++ ZA ++ ZB. 
+Definition Z_short := (N2bL xV) ++ (N2bL yV) ++ ZA ++ ZB. 
 Definition klen := 128%nat. 
  
 Definition KB := hS2bL "55B0AC62 A6B927BA 23703832 C853DED4". 
-(*Compute bL2hS (KDF Z klen Hash constant_v).*) (*Correct*)
+Compute bL2hS (KDF Z klen Hash constant_v). (*Correct*)
+Compute bL2hS (KDF Z_short klen Hash constant_v). (*Incorrect*)
 
-Check ComputeRBKBSB rB a b p dB n h G RA PA ZA ZB klen Hash constant_v. 
 Definition SB := hS2bL "284C8F19 8F141B50 2E81250F 1581C7E9 EEB4CA69 90F9E02D F388B454 71F5BC5C". 
+
+(*
+Compute bL2hS (Hash(hS2bL "02" ++ (N2hbL yV) ++
+  (Hash((N2hbL xV) ++ ZA ++ ZB ++ (N2hbL x1) ++ (N2hbL y1) 
+    ++ (N2hbL x2) ++ (N2hbL y2))))). (* Incorrect *)
+
+Compute bL2hS (Hash(hS2bL "02" ++ (yVbL) ++
+  (Hash((xVbL) ++ ZA ++ ZB ++ (N2hbL x1) ++ (y1bL) 
+    ++ (N2hbL x2) ++ (N2hbL y2))))). (* Correct So we need to convert into BL*)
+
+
+Compute bL2hS (Hash(hS2bL "02" ++ (yVbL) ++
+  (Hash((xVbL) ++ ZA ++ ZB ++ (N2BbL x1) ++ (N2BbL y1)
+    ++ (N2BbL x2) ++ (N2BbL y2))))). (* Correct So we need to convert into BL*)
+*)
+(*
 Compute (RB, bL2hS KB, bL2hS SB). 
 
-
-Time Check 
+Time Compute 
   match ComputeRBKBSB rB a b p dB n h G RA PA ZA ZB klen Hash constant_v with
   | Normal (r, k, s) =>
       Normal (r, bL2hS k, bL2hS s)
   | Error str => Error str
-  end. 
-
-
-
+  end.
+*)
+(*
+= Normal
+         (Cop
+            (10674756017693886118013130470205571129066026050907705581236911766144132583141,
+            38349695398999244294516177264660271811914762859380595053573598523959505796340),
+         "55b0ac62a6b927ba23703832c853ded4",
+         "284c8f198f141b502e81250f1581c7e9eeb4ca6990f9e02df388b45471f5bc5c")
+Correct *)
 
 Definition Z2 := hS2bL "00 83E628CF 701EE314 1E8873FE 55936ADF 24963F5D C9C64805 66C80F8A 1D8CC51B 01 524C647F 0C0412DE FD468BDA 3AE0E5A8 0FCC8F5C 990FEE11 60292923 2DCD9F36".
 (*983BCF 106AB2DC C92F8AEA C6C60BF2 98BB0117*)

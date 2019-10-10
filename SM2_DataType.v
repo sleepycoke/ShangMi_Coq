@@ -220,6 +220,8 @@ Compute N2bL 0.
 
 
 (*4.2.4*)
+(*2019-10-09, realized that I need to keep preceding 0s 
+* And it is only used in KeyEx.v yet. *)
 Fixpoint BL2bL_tail (M : BL)(k : nat)(acc : bL) : bL :=
   match k with
   | O => acc
@@ -227,7 +229,7 @@ Fixpoint BL2bL_tail (M : BL)(k : nat)(acc : bL) : bL :=
       match M with
       | [] => acc
       | h :: tl =>
-          BL2bL_tail tl k' (List.app acc (N2bL (Byte.to_N h)))
+          BL2bL_tail tl k' (List.app acc (N2bL_len 8 (Byte.to_N h)))
       end
   end.
 
@@ -236,7 +238,6 @@ Definition BL2bL (M : BL) : bL :=
 
 Compute BL2bL [].
 Compute BL2bL [xff].
-Compute BL2bL [x01; xff].
 
 Definition N2bS (n : N) : string :=
   bL2bS (N2bL n).
@@ -309,6 +310,7 @@ Definition bL2hS (bl : bL) : string :=
 Compute bL2hS [true; false]. 
 Compute bL2hS [false; false; false; false; false; false; true; false]. 
 
+Compute bL2hS (BL2bL [x01; xff]).
 Definition bS2hS (m_bin : string) : string :=
   bL2hS (bS2bL m_bin). 
 
