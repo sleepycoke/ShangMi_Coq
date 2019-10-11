@@ -155,7 +155,10 @@ Definition ComputeKAS1SA (rA a b p dA n h : N) (PB RA RB : FEp)(ZA ZB SB : bL)(k
       end
   end. 
 
-        
+(* B10 *)
+Definition VeriS2eqSA (ZA ZB SA: bL)(xV yV x1 y1 x2 y2 : N)(hash_v : bL -> bL) : bool :=
+  let S2 := ComputeS "03" ZA ZB xV yV x1 y1 x2 y2 hash_v in
+    bLeqb S2 SA. 
 
 
 Module test. 
