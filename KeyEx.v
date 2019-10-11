@@ -33,11 +33,11 @@ Fixpoint ComputeHaList (j : nat)(i : N)(Z : bL)(hash_v : bL -> bL)
       ComputeHaList j' (i + 1) Z hash_v HaList
   end. 
 
-(* K = K' || Ha! *)
-Fixpoint ComputeK' (HaList' : list bL)(acc : bL) : bL :=
+(* K = k || Ha! *)
+Fixpoint Computek (HaList' : list bL)(acc : bL) : bL :=
   match HaList' with
   | [] => acc
-  | h :: tl => ComputeK' tl (acc ++ h)
+  | h :: tl => Computek tl (acc ++ h)
   end. 
 
 Definition KDF (Z : bL)(klen : nat)(hash_v : bL -> bL)(v : nat) : bL :=
@@ -48,14 +48,15 @@ Definition KDF (Z : bL)(klen : nat)(hash_v : bL -> bL)(v : nat) : bL :=
     let HaiEx := 
       if Nat.eqb (Nat.modulo klen v) 0 then HaLast
       else subList 0 (klen - v * (Nat.div klen v)) HaLast in
-      (ComputeK' tl []) ++ HaiEx
+      (Computek tl []) ++ HaiEx
   end. 
 
 (* A1 - A3 *)
 Definition ComputeR (G : FEp)(r p a: N) : FEp :=
   pf_mul G r p a. 
 
-Definition ComputeTide (w2 x p : N) : N :=
+Definition ComputeTide (w x p : N) : N :=
+      let w2 := N.shiftl 1 w in
       F_add w2 (N.land x (w2 - 1) ) p. 
 
 Definition ComputeW (n : N) : N :=
@@ -71,7 +72,15 @@ Arguments Error {A}.
 Definition N2BbL (n : N) : bL := BL2bL (N2BL n). 
 Definition OnCurve (x y p a b : N) : bool := 
   ((N.square y) mod p =? ((power x 3 p) + a * x + b) mod p). 
+
 (*B1 - B9*)
+Definition ComputeV (P R : FEp)(x_tide p a h t n : N) : FEp :=
+  pf_mul (pf_add P (pf_mul R x_tide p a) p a) (F_mul h t n) p a. 
+Definition ComputeK (x y : N)(ZA ZB : bL)(klen : nat)(hash_v : bL -> bL)(v : nat) : bL :=
+  KDF ((N2BbL x) ++ (N2BbL y) ++ ZA ++ ZB) klen hash_v v. 
+Definition ComputeS (prehS : string)(ZA ZB : bL)(x y x1 y1 x2 y2 : N)(hash_v : bL -> bL) : bL :=
+  hash_v ((hS2bL prehS) ++ (N2BbL y) ++ (hash_v ((N2BbL x) ++ ZA ++ ZB ++ (N2BbL x1) ++ (N2BbL y1) ++ (N2BbL x2) ++ (N2BbL y2)))). 
+Definition ComputeT (d x_tide r n : N) : N := F_add d (x_tide * r) n. 
 Definition ComputeRBKBSB (rB a b p dB n h : N)(G RA PA : FEp)(ZA ZB : bL)(klen : nat)(hash_v : bL -> bL)(v : nat) : optErr (FEp * bL * bL) :=
   let RB := ComputeR G rB p a in 
   match RB with
@@ -79,28 +88,75 @@ Definition ComputeRBKBSB (rB a b p dB n h : N)(G RA PA : FEp)(ZA ZB : bL)(klen :
   | Cop (x2, y2) =>
       (* w2 := 2^w < n by definiton of w *)
       let w := ComputeW n in
-      let w2 := N.shiftl 1 w in
-      let x2_tide := ComputeTide w2 x2 p in
-      let tB := F_add dB (x2_tide * rB) n in
+      let x2_tide := ComputeTide w x2 p in
+      let tB := ComputeT dB x2_tide rB n in
       (* B5 *)
       match RA with
       | InfO => Error "RA = InfO"
       | Cop (x1, y1) => 
           if negb (OnCurve x1 y1 p a b) then Error "RA is not on the curve" else 
-        let x1_tide := ComputeTide w2 x1 p in
+        let x1_tide := ComputeTide w x1 p in
         (* B6 *)
-        let V := pf_mul (pf_add PA (pf_mul RA x1_tide p a) p a) (F_mul h tB n) p a in
+        let V := ComputeV PA RA x1_tide p a h tB n in
         match V with
         | InfO => Error "V = InfO"
         | Cop (xV, yV) =>
             (* B7 *)
-            let KB := KDF ((N2BbL xV) ++ (N2BbL yV) ++ ZA ++ ZB) klen hash_v v in
+            let KB := ComputeK xV yV ZA ZB klen hash_v v in
             (* B8 *)
-            let SB := hash_v ((hS2bL "02") ++ (N2BbL yV) ++ (hash_v ((N2BbL xV) ++ ZA ++ ZB ++ (N2BbL x1) ++ (N2BbL y1) ++ (N2BbL x2) ++ (N2BbL y2)))) in 
+            let SB := ComputeS "02" ZA ZB xV yV x1 x2 y1 y2 hash_v in
             Normal (RB, KB, SB)
         end
       end
   end.
+
+Print Bool.eqb. 
+
+Fixpoint bLeqb (bl1 bl2 : bL) : bool :=
+  match bl1, bl2 with
+  | [], [] => true
+  | h1 :: t1, h2 :: t2 => 
+      if Bool.eqb h1 h2 then bLeqb t1 t2
+        else false
+  | _, _ => false
+  end. 
+
+Compute bLeqb [] [].
+Compute bLeqb [true] [].
+Compute bLeqb [true] [true].
+Compute bLeqb [false] [true].
+Compute bLeqb [true; false] [true].
+Compute bLeqb [true; false] [true; false].
+Compute bLeqb [] [true].
+
+(* A4-A10 *)
+Definition ComputeKAS1SA (rA a b p dA n h : N) (PB RA RB : FEp)(ZA ZB SB : bL)(klen : nat)(hash_v : bL -> bL)(v : nat) : optErr (bL * bL * bL) :=
+  match RA with
+  | InfO => Error "RA = InfO"
+  | Cop (x1, y1) =>
+      let w := ComputeW n in
+      let x1_tide := ComputeTide w x1 p in
+      let tA := ComputeT dA x1_tide rA n in
+      match RB with
+      | InfO => Error "RB = InfO" (*RB cannot be InfO since rB < n*)
+      | Cop (x2, y2) =>
+        if negb (OnCurve x2 y2 p a b) then Error "RB is not on curve"
+        else let x2_tide := ComputeTide w x2 p in
+        let U := ComputeV PB RB x2_tide p a h tA n in  
+        match U with
+        | InfO => Error "U = InfO"
+        | Cop (xU, yU) =>
+            let KA := ComputeK xU yU ZA ZB klen hash_v v in
+            let S1 := ComputeS "02" ZA ZB xU yU x1 y1 x2 y2 hash_v in
+            if negb (bLeqb S1 SB) then Error "S1 != SB"
+            else let SA := ComputeS "03" ZA ZB xU yU x1 y1 x2 y2 hash_v in
+              Normal (KA, S1, SA)
+        end
+      end
+  end. 
+
+        
+
 
 Module test. 
 Definition p := hS2N "8542D69E 4C044F18 E8B92435 BF6FF7DE 45728391 5C45517D 722EDB8B 08F1DFC3". 
