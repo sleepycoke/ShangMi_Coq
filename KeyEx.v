@@ -104,13 +104,11 @@ Definition ComputeRBKBSB (rB a b p dB n h : N)(G RA PA : FEp)(ZA ZB : bL)(klen :
             (* B7 *)
             let KB := ComputeK xV yV ZA ZB klen hash_v v in
             (* B8 *)
-            let SB := ComputeS "02" ZA ZB xV yV x1 x2 y1 y2 hash_v in
+            let SB := ComputeS "02" ZA ZB xV yV x1 y1 x2 y2 hash_v in
             Normal (RB, KB, SB)
         end
       end
   end.
-
-Print Bool.eqb. 
 
 Fixpoint bLeqb (bl1 bl2 : bL) : bool :=
   match bl1, bl2 with
@@ -120,14 +118,6 @@ Fixpoint bLeqb (bl1 bl2 : bL) : bool :=
         else false
   | _, _ => false
   end. 
-
-Compute bLeqb [] [].
-Compute bLeqb [true] [].
-Compute bLeqb [true] [true].
-Compute bLeqb [false] [true].
-Compute bLeqb [true; false] [true].
-Compute bLeqb [true; false] [true; false].
-Compute bLeqb [] [true].
 
 (* A4-A10 *)
 Definition ComputeKAS1SA (rA a b p dA n h : N) (PB RA RB : FEp)(ZA ZB SB : bL)(klen : nat)(hash_v : bL -> bL)(v : nat) : optErr (bL * bL * bL) :=
@@ -202,9 +192,7 @@ Definition y2 := hS2N "54C9288C 82733EFD F7808AE7 F27D0E73 2F7C73A7 D9AC98B7 D87
 (* Time Compute ComputeR G r p a.       
 Compute (x2, y2). Correct *)
 
-Definition w2 := N.shiftl 1 127.
-
-(*Compute N2hS (ComputeTide w2 x2 p). Correct*)
+(*Compute N2hS (ComputeTide w x2 p). Correct*)
 Definition x2_tide := hS2N "B8F2B533 7B3DCF45 14E8BBC1 9D900EE5".
 Definition tB := hS2N "2B2E11CB F03641FC 3D939262 FC0B652A 70ACAA25 B5369AD3 8B375C02 65490C9F". 
 (*Compute N2hS (F_add dB (x2_tide * rB) n).  Correct *)
@@ -241,10 +229,12 @@ Definition Z_short := (N2bL xV) ++ (N2bL yV) ++ ZA ++ ZB.
 Definition klen := 128%nat. 
  
 Definition KB := hS2bL "55B0AC62 A6B927BA 23703832 C853DED4". 
-Compute bL2hS (KDF Z klen Hash constant_v). (*Correct*)
-Compute bL2hS (KDF Z_short klen Hash constant_v). (*Incorrect*)
+(* Compute bL2hS (KDF Z klen Hash constant_v). (*Correct*) *)
+(* Compute bL2hS (KDF Z_short klen Hash constant_v). (*Incorrect*) *)
 
 Definition SB := hS2bL "284C8F19 8F141B50 2E81250F 1581C7E9 EEB4CA69 90F9E02D F388B454 71F5BC5C". 
+
+(* Compute bL2hS (ComputeS "02" ZA ZB xV yV x1 y1 x2 y2 Hash). (*Correct*) *)
 
 (*
 Compute bL2hS (Hash(hS2bL "02" ++ (N2hbL yV) ++
@@ -278,6 +268,27 @@ Time Compute
          "55b0ac62a6b927ba23703832c853ded4",
          "284c8f198f141b502e81250f1581c7e9eeb4ca6990f9e02df388b45471f5bc5c")
 Correct *)
+Definition KA := hS2bL "55B0AC62 A6B927BA 23703832 C853DED4". 
+Definition S1 := hS2bL "284C8F19 8F141B50 2E81250F 1581C7E9 EEB4CA69 90F9E02D F388B454 71F5BC5C". 
+Definition SA := hS2bL "23444DAF 8ED75343 66CB901C 84B3BDBB 63504F40 65C1116C 91A4C006 97E6CF7A". 
+
+Definition result3 := ComputeKAS1SA rA a b p dA n h PB RA RB ZA ZB SB klen Hash constant_v.  
+
+(*
+Time Compute match result3 with
+| Error err => Error err
+| Normal (ka, s1, sa) => Normal (bL2hS ka, bL2hS s1, bL2hS sa)
+end. 
+= Normal
+         ("55b0ac62a6b927ba23703832c853ded4",
+         "284c8f198f141b502e81250f1581c7e9eeb4ca6990f9e02df388b45471f5bc5c",
+         "23444daf8ed7534366cb901c84b3bdbb63504f4065c1116c91a4c00697e6cf7a")
+     : optErr (string * string * string)
+Finished transaction in 919.87 secs (918.127u,0.839s) (successful)
+Correct. 
+*)
+(* Compute VeriS2eqSA ZA ZB SA xV yV x1 y1 x2 y2 Hash. 
+* = true Correct. *)
 
 Definition Z2 := hS2bL "00 83E628CF 701EE314 1E8873FE 55936ADF 24963F5D C9C64805 66C80F8A 1D8CC51B 01 524C647F 0C0412DE FD468BDA 3AE0E5A8 0FCC8F5C 990FEE11 60292923 2DCD9F36".
 (*983BCF 106AB2DC C92F8AEA C6C60BF2 98BB0117*)
