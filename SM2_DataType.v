@@ -331,7 +331,7 @@ Compute bL2hS (str2bL "ALICE").
 Inductive field_type : Set :=
   pri : field_type | ext : field_type .
 Definition Field2BL_p (alpha : N) : BL :=
-  N2BL_len (N.to_nat (N.div (alpha + 7) 8)) alpha. 
+  N2BL_len (N.to_nat (N.div ((N.size alpha) + 7) 8)) alpha. 
 
 Definition Field2BL_m (alpha : bL) :=
   bL2BL alpha. 
