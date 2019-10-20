@@ -5,7 +5,7 @@ Require Export SM3.
 Definition SampleN (low : N)(high : N)(seed : N) : N :=
   low + (seed mod (high + 1 - low)). 
 
-Compute map (SampleN 10 20) (Nlist 15). 
+(*Compute map (SampleN 10 20) (Nlist 15). *)
 
 (* false if composite *)
 Fixpoint TryFunb (l : list N)(func : N -> bool) : bool :=
@@ -61,12 +61,10 @@ Definition Decom (m : N) : N * N :=
       end
   end. 
 
-Compute Decom 6. 
-Compute Decom 24. 
-
 
 (*B.1.10 u is odd and T is positive. If returns true then u is a ProbPrime.
-* If Returns false then u is a composite.  *)
+If Returns false then u is a composite.  *)
+(* TODO NInterval is too long in memory *)
 Definition ProPrimTest (T : N)(u : N) : bool :=
   let m := u - 1 in
   let (v, w) := Decom m in (
@@ -114,7 +112,6 @@ Compute map (ProPrimTest_debug 999) (NInterval 3 99). (* 100% Correct *)
 Definition constant_a := HexString.to_N "0xBB8E5E8FBC115E139FE6A814FE48AAA6F0ADA1AA5DF91985". 
 Definition constant_p := HexString.to_N "0xBDB6F4FE3E8B1D9E0DA8C0D46F4C318CEFE4AFE3B6B8551F". 
  
-Compute constant_a. 
 (* true if passed the test, i.e. not singular *)
 Definition SingTest (a b p : N) : bool :=
  negb (4 * (power a 3 p) + 27 * (square b) =? 0). 
@@ -137,7 +134,6 @@ Fixpoint GenSab_tail (seedl : list bL)(a p : N) : option (bL * N * N) :=
 
 Definition constant_seedlist := map 
   (fun x => N2bL_len 192 x) [0; 1; 2 ^ 90; 2 ^ 191]. 
-Compute constant_seedlist. 
 
 Definition GenSab (a p : N) : option (bL * N * N) :=
   GenSab_tail constant_seedlist a p. 
@@ -148,7 +144,6 @@ Definition DisplaySab (para : option (bL * N * N)) :=
   | Some (SEED, a, b) => (bS2hS (bL2bS SEED), HexString.of_N a, HexString.of_N b)
   end. 
 
-Compute DisplaySab (GenSab constant_a constant_p). 
 
 (* D.2.1 method 2 *)
 Definition VeriSab (SEED : bL)(b p : N) : bool :=
@@ -240,11 +235,13 @@ Definition a := hS2N "787968B4 FA32C3FD 2417842E 73BBFEFF 2F3C848B 6831D7E0 EC65
 Definition x2 := hS2N "64D20D27 D0632957 F8028C1E 024F6B02 EDF23102 A566C932 AE8BD613 A8E865FE".
 Definition y2 := hS2N "64D20D27 D0632957 F8028C1E 024F6B02 EDF23102 A566C932 AE8BD613 A8E865FE".
 Definition P2 := Cop (x2, y2). 
+(*
 Time Compute pf_double_sqr P2 p 2.  (* 25 68 1.9s *)
 Time Compute pf_double P2 p 2. (* 1.681 secs originally *)
 Time Compute pf_double_mul P2 p 2. (* 1.607 secs *)
 Locate Pos.square. 
 Print Pos.square. 
+*)
 
 Definition pf_add (P1 P2 : FEp)(p a : N):=
   match P1, P2 with
@@ -357,7 +354,7 @@ Definition VeriSysPara (p a b xG yG n h order: N)(SEED : bL) : option string :=
     if negb (Anomalous_Curve_Test p order) then Some "Failed in Anomalous Curve Test" else
     None
   end.
-
+(*
 Module tests. 
 
 (* C.2 *)
@@ -389,3 +386,4 @@ let order := 1 in (*There is no way for me to know it, just assign it to test*)
 . (* None *)
 
 End tests. 
+*)
