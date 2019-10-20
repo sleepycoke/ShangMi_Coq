@@ -8,6 +8,16 @@ Definition SampleN (low : N)(high : N)(seed : N) : N :=
 Compute map (SampleN 10 20) (Nlist 15). 
 
 (* false if composite *)
+Fixpoint TryFunb (l : list N)(func : N -> bool) : bool :=
+  match l with
+  | [] => true
+  | j :: tl =>
+      match func j with
+      | false => false (* b.5 *)
+      | true => TryFunb tl func (* b.6 *)
+      end
+  end. 
+(*
 Fixpoint TryFunb (l : list N)(func : N -> (bool * N)) : (bool * N * N) :=
   match l with
   | [] => (true, 0, 0)
@@ -17,14 +27,14 @@ Fixpoint TryFunb (l : list N)(func : N -> (bool * N)) : (bool * N * N) :=
       | (true, i) => TryFunb tl func (* b.6 *)
       end
   end. 
-
-Fixpoint TryFunb4 (l : list N)(b : N)(u : N)(func : N -> N -> option bool) : (bool * N) :=
+*)
+Fixpoint TryFunb4 (l : list N)(b : N)(u : N)(func : N -> N -> option bool) : bool :=
   match l with
-  | [] => (false, 0) (* b.5 *)
+  | [] => false (* b.5 *)
   | i :: tl =>
       let b2 := (N.square b) mod u in
         match func i b2 with
-        | Some result => (result, i)
+        | Some result => result
         | None => TryFunb4 tl b2 u func
         end
   end.
@@ -57,6 +67,24 @@ Compute Decom 24.
 
 (*B.1.10 u is odd and T is positive. If returns true then u is a ProbPrime.
 * If Returns false then u is a composite.  *)
+Definition ProPrimTest (T : N)(u : N) : bool :=
+  let m := u - 1 in
+  let (v, w) := Decom m in (
+  TryFunb (NInterval 1 T) 
+  (fun j =>
+    let a := SampleN 2 m j in
+    let b := (a ^ w) mod u in
+    if orb (N.eqb b 1) (N.eqb b m) then true (* b.3 *) else
+      TryFunb4 (NInterval 1 (v - 1)) b u (* b.4 *)
+      (fun i b2 =>
+          if N.eqb b2 m then Some true else (* b.4.2 *)
+          if N.eqb b2 1 then Some false else (* b.4.3 *)
+          None (* b.4.4 *)
+      ))
+  ). 
+
+
+(*
 Definition ProPrimTest_debug (T : N)(u : N) : (bool * N * N * N * N * N * N) :=
   let m := u - 1 in
   let (v, w) := Decom m in (
@@ -77,6 +105,7 @@ Definition ProPrimTest (T : N)(u : N) : bool :=
   match ProPrimTest_debug T u with
   | (result, _, _, _, _, _, _) => result
   end.
+*)
 (*
 Compute map (ProPrimTest_debug 999) (NInterval 3 99). (* 100% Correct *)
 *)
@@ -253,6 +282,7 @@ Fixpoint pf_mul_naive (P : FEp)(k : nat)(p a : N) : FEp :=
       pf_add P (pf_mul_naive P k' p a) p a
   end. 
 
+(*
 (* Identical *)
 Compute map (fun x => pf_mul (Cop (1, 2)) x 17 3) (Nlist 9). 
 Compute map (fun x => pf_mul_naive (Cop (1, 2)) (N.to_nat x) 17 3) (Nlist 9). 
@@ -262,6 +292,7 @@ Compute pf_add (Cop (10, 2)) (Cop (9, 6)) 19 1. (* Correct *)
 Compute pf_mul (Cop (10, 2)) 2 19 1. (* Correct *)
 
 Compute negb (3 =? 2). 
+*)
 
 (* A.4.2.1, true means pass *)
 (* j = B - i + 1 *)
@@ -282,15 +313,22 @@ Fixpoint MOV_Test_tail (j : nat)(q n : N)(acc : list (bool * N)) : list (bool * 
 Definition MOV_Test (B : nat)(q n : N) : bool :=
   fst (List.hd (false, 0) (MOV_Test_tail B q n [(true, 1)])). 
 
-Definition constant_B := 27%N. 
+Definition constant_B := 27%nat. 
 
 (* A.4.2.2, true means pass *)
 Definition Anomalous_Curve_Test (p order: N) : bool :=
   negb (p =? order). 
 
+(* floor(2*sqrt(p)) *)
+Definition floor2sqrt(p : N) : N :=
+  let r2 := N.double (N.sqrt p) in
+  if r2 =? N.sqrt (p * 4) then r2 else r2 + 1. 
+
+Definition Computeh' (p n : N) : N :=
+  N.div (p + 1 + (floor2sqrt p)) n. 
 (* 5.2.2 returns None if valid, otherwise Some error message*)
 (* Quick tests for large inputs *)
-Definition VeriSysPara_Quick (p a b xG yG n : N)(SEED : bL) : option string :=
+Definition VeriSysPara_Quick (p a b xG yG n h order : N)(SEED : bL) : option string :=
   if even p then Some "p is even." else
   if p <=? a then Some "a >= p" else
   if p <=? b then Some "b >= p" else
@@ -303,48 +341,51 @@ Definition VeriSysPara_Quick (p a b xG yG n : N)(SEED : bL) : option string :=
   if negb (OnCurveTest xG yG a b p) then Some "Failed in OnCurveTest." else
   if n <=? N.shiftl 1 191 then Some "n <= 2 ^ 192." else
   if square n <=? 16 * p then Some "n <= 4 p ^ 1/2." else
+  if negb (h =? Computeh' p n) then Some "h != h'." else
   None. 
 
+
 (* These tests are quite time consuming *)
-Definition VeriSysPara (p a b xG yG n : N)(SEED : bL) : option string :=
-  match VeriSysPara_Quick p a b xG yG n SEED with
+Definition VeriSysPara (p a b xG yG n h order: N)(SEED : bL) : option string :=
+  match VeriSysPara_Quick p a b xG yG n h order SEED with
   | Some msg => Some msg
   | None =>
     if negb (pf_eqb (pf_mul (Cop (xG, yG)) n p a) InfO) then Some "[n]G != O." else
     if negb (ProPrimTest p constant_T) then Some "p is a composite." else
     if negb (ProPrimTest n constant_T) then Some "n is a composite." else
-    (* TODO need to understand these 
-    if andb (negb (h =? 0)) (negb (h =? (F_div (square((square_root p) + 1) n p))))
-      then Some "h != h'." else
-    if negb (MOV_Test constant_B p  and Anomalous *)
+    if negb (MOV_Test constant_B p n) then Some "Failed in MOV test" else 
+    if negb (Anomalous_Curve_Test p order) then Some "Failed in Anomalous Curve Test" else
     None
   end.
 
-(*
 Module tests. 
 
 (* C.2 *)
 (* Example 1 *)
-Timeout 60 Compute 
+Time Compute 
 let p := hS2N "BDB6F4FE3E8B1D9E0DA8C0D46F4C318CEFE4AFE3B6B8551F" in
 let a := hS2N "BB8E5E8FBC115E139FE6A814FE48AAA6F0ADA1AA5DF91985" in
 let b := hS2N "1854BEBDC31B21B7AEFC80AB0ECD10D5B1B3308E6DBF11C1" in
 let xG := hS2N "4AD5F7048DE709AD51236DE65E4D4B482C836DC6E4106640" in
 let yG := hS2N "02BB3A02D4AAADACAE24817A4CA3A1B014B5270432DB27D2" in
 let n := hS2N "BDB6F4FE3E8B1D9E0DA8C0D40FC962195DFAE76F56564677" in
-  VeriSysPara_Quick p a b xG yG n []
+let h := 1 in (*By Hasse Thm*)
+let order := 1 in (*There is no way for me to know it, just assign it to test*)
+  VeriSysPara p a b xG yG n h order []
+
 . (* None *)
 
 (* Example 2 *)
-Timeout 60 Compute 
+Time Compute 
 let p := hS2N "8542D69E4C044F18E8B92435BF6FF7DE457283915C45517D722EDB8B08F1DFC3" in
 let a := hS2N "787968B4FA32C3FD2417842E73BBFEFF2F3C848B6831D7E0EC65228B3937E498" in
 let b := hS2N "63E4C6D3B23B0C849CF84241484BFE48F61D59A5B16BA06E6E12D1DA27C5249A" in
 let xG := hS2N "421DEBD61B62EAB6746434EBC3CC315E32220B3BADD50BDC4C4E6C147FEDD43D" in
 let yG := hS2N "0680512BCBB42C07D47349D2153B70C4E5D7FDFCBFA36EA1A85841B9E46E09A2" in
 let n := hS2N "8542D69E4C044F18E8B92435BF6FF7DD297720630485628D5AE74EE7C32E79B7" in
-  VeriSysPara_Quick p a b xG yG n []
+let h := 1 in (*By Hasse Thm*)
+let order := 1 in (*There is no way for me to know it, just assign it to test*)
+  VeriSysPara p a b xG yG n h order []
 . (* None *)
 
 End tests. 
-*)
