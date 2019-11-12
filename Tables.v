@@ -48,3 +48,5 @@ Definition CKlist :=
 Definition CK (n : N) : N :=
   HexString.to_N ("0x" ++ (nth (N.to_nat n) CKlist "")). 
 
+Definition constant_v := 256%nat. (*According to the examples. *)
+

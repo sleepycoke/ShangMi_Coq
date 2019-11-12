@@ -36,8 +36,6 @@ Definition Padding (m : bL) (l : N) : bL :=
   List.app ( iter (pad_k l) (fun (s : bL) => List.app s [false]) (List.app m [true])
   ) (prePad64 (N2bL l)). 
 
-Compute bL2bS (Padding (bS2bL "011000010110001001100011") 24). 
-
 Definition n_of_B (l : N) := div (l + (pad_k l) + 65) 512. 
 
 Definition Block (i : nat)(m : bL)(l : N) : N :=
@@ -68,13 +66,14 @@ Fixpoint W_list (j : nat)(l : list N) :=
 
 Definition W (j : nat)(Bi : N) :=
   List.nth (67 - j)%nat (W_list 52 (W_list_init 16 Bi)) 0. 
-
+(*
 Definition Bitest := HexString.to_N "0x1111222233334444555566667777888899990000aaaabbbbccccddddeeeeffff1111222233334444555566667777888899990000aaaabbbbccccdd1deeeeffff". 
 Compute HexString.of_N (W 0 Bitest).  
 Compute HexString.of_N (W 1 Bitest).  
 Compute HexString.of_N (W 15 Bitest).  
 Compute HexString.of_N (W 14 Bitest).  
 Compute List.map HexString.of_N (W_list 52 (W_list_init 16 Bitest)). 
+*)
 (* j <= 63 *)
 Definition W' (j : nat) (Bi : N) :=
   (W j Bi) $ (W (j + 4) Bi). 
@@ -192,12 +191,13 @@ Definition pre_pad_0 (s : string)(mod_size : N) : string :=
 Definition Hash_hex (m_hex : string) :=
   HashN (bS2bL (pre_pad_0 (hS2bS m_hex) 4)). 
 
+(*
 Definition exp_m := "616263".  
 Definition exp_padded := bS2hS (bL2bS (Padding (bS2bL(hS2bS exp_m)) (6 * 4))). 
-Compute exp_padded. 
 
 Definition B0 := (Block 0 (bS2bL (hS2bS exp_m)) (6 * 4)).
 
+(*
 Compute HexString.of_N B0. 
 Compute HexString.of_N (W 67 B0).  (* Correct. *)
 Compute HexString.of_N (W 0  B0).  (* Correct. *)
@@ -222,4 +222,5 @@ Compute HexString.of_N (Hash_hex exp_m). (* Correct *)
 Definition exp_m2 := "61626364616263646162636461626364616263646162636461626364616263646162636461626364616263646162636461626364616263646162636461626364".
 (*debe9ff9 2275b8a1 38604889 c18e5a4d 6fdb70e5 387e5765 293dcba3 9c0c5732*)
 Compute HexString.of_N (Hash_hex exp_m2). (* Correct *) 
-
+*)
+*)

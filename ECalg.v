@@ -1,11 +1,12 @@
 Require Export SM2_DataType. 
+
+
+
   
 (*A.5.2*)
 Definition tide_p (yp : N) : bool :=
   N.odd yp. 
-Print N. 
-Print positive.
-Compute (xI (xI (xO xH))). (*1011*) 
+
 (*B.1.1*)
 Fixpoint power_tail (g : N)(e : bL)(q : N)(acc : N) : N :=
   match e with
@@ -40,11 +41,6 @@ Definition F_sub (x y q : N) :=
 Definition F_div (x : N)(y : N)(q : N) : N :=
   (N.mul x (inv_p y q)) mod q. 
 
-Compute inv_p 7 11. 
-Compute F_div 7 2 11. 
-
-Compute power 3 5 5. 
-Compute power 0 1 5. 
 (*B.1.3*)
 Fixpoint Lucas_tail (X : N)(Delta : N)(k : bL)(p : N)(acc : N * N) : N * N :=
   match k with
@@ -61,7 +57,8 @@ Fixpoint Lucas_tail (X : N)(Delta : N)(k : bL)(p : N)(acc : N * N) : N * N :=
       end
   end.
 
-Compute N2bL 0. 
+Definition OnCurve (x y p a b : N) : bool := 
+  ((N.square y) mod p =? ((power x 3 p) + a * x + b) mod p). 
 
 (* X, Y > 0 *)
 Definition Lucas (X : N)(Y : N)(k : N)(p : N) :=
@@ -84,21 +81,6 @@ Fixpoint Lucas_naive (X : Z)(Y : Z)(k : nat)(p : Z) {struct k} : Z * Z :=
             (Z.modulo (Z.sub (Z.mul X (snd L')) (Z.mul Y  (snd L''))) p))
      end
   end. 
-
-Compute Lucas 3 2 0 7.  
-Compute Lucas_naive 3 2 0 7. 
-Compute Lucas 3 2 1 7.  
-Compute Lucas_naive 3 2 1 7. 
-Compute Lucas 3 2 2 7.  
-Compute Lucas_naive 3 2 2 7. 
-Compute Lucas 5 2 15 7.  
-Compute Lucas_naive 5 2 15 7. 
-Compute Lucas 2 6 2 7.
-Compute Lucas_naive 2 6 2 7. 
-Compute Lucas 2 6 1 7.  
-Compute Lucas_naive 2 6 1 7. 
-Compute (((N.square 2) + 4 * (7 - 6)) mod 7). 
-Compute Z.modulo (-1) 7. 
 
 (* Try each element x in l with func : option N. 
 * If func x is not None then return its value otherwise keep trying. 
@@ -123,8 +105,6 @@ Fixpoint Nlist_tail (k : nat)(acc : list N) : list N :=
 (*Generates [0; 1; 2; ... ; len - 1]*)
 Definition Nlist (len : N) : list N :=
   Nlist_tail (N.to_nat len) []. 
-
-Compute Nlist 3. 
 
 
 (*B.1.4*)
@@ -153,12 +133,7 @@ Definition square_root (g : N)(p : N) : option N :=
             else if (andb (N.eqb (U mod p) 1) (N.eqb (U mod p) (p - 1))) then None
             else None 
         ). 
-      
-
-Compute square_root 0 5. 
-Compute square_root 2 13. 
-Compute square_root 4 5. 
-Compute square_root 12 13. 
+    
 
 
 Definition recover_p (p : N)(a : N)(b : N)(xp : N)(y_tide : bool) : option (N * N) :=
@@ -185,7 +160,6 @@ Fixpoint neg_bL_tail (bl : bL)(acc : bL) : bL :=
 Definition neg_bl (bl : bL) : bL :=
   neg_bL_tail bl  []. 
 
-Compute neg_bl [true; false; true; true]. 
 Definition inv_m (bl : bL) :=
   neg_bl bl. 
 
@@ -198,10 +172,6 @@ Fixpoint mul_m_tail (x : bL)(y : bL)(acc : bL) : bL :=
     
 Definition mul_m (x : bL)(y : bL) : bL :=
   mul_m_tail x y []. 
-
-Compute mul_m [true; true; false; false] [false; true; true; false]. 
-
-Print List.last. 
 
 Definition tide_m (xp : bL)(yp : bL) : bool :=
   List.last (mul_m yp (inv_m xp)) false. 
@@ -230,8 +200,6 @@ Definition Point2BL_p (xp : N)(yp : N)(cp : cmp_type) : BL :=
       | true => (x07 :: X1) ++ (Field2BL_p yp)
       end
   end. 
-
-Compute partList [1;2;3;4] 2. 
 
 (*4.2.9 still only prime field case*)
 Definition BL2PointStep1_p (p : N)(a : N)(b : N)(S : BL)(cp : cmp_type) : option (N * N) :=

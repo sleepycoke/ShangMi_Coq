@@ -68,3 +68,70 @@ Definition add_ws (m : N)(n : N) : N :=
   (m + n) /\ mask_ws.  
 
 Infix "+ws" := add_ws (at level 50): N_scope. 
+
+(* Replace old with acc within s *)
+Fixpoint RepChar_tail (s : string)(old : ascii)(new acc : string) : string :=
+  match s with
+  | "" => acc
+  | String h t => 
+      RepChar_tail t old new (acc ++
+        if Ascii.eqb h old then new else (String h "")
+      )
+  end. 
+
+Definition RepChar (s : string)(old : ascii)(new : string) : string :=
+  RepChar_tail s old new "". 
+
+
+(* returns the prefix of length k * the rest *)
+Fixpoint partList_tail (A : Type)(l : list A)(len : nat)(acc : list A * list A) : list A * list A :=
+  match len with
+  | O => acc
+  | S len' =>
+      match l with
+      | [] => acc
+      | h :: tl =>
+          partList_tail A tl len' ((List.app (fst acc) [h]), List.tl (snd acc))
+      end
+  end.
+
+Definition partList {A} (l : list A)(len : nat) :=
+  partList_tail A l len ([], l). 
+
+Definition partListBack {A} (l : list A)(backLen : nat) :=
+  partList l ((List.length l) - backLen).
+
+Fixpoint subList_tail {A} (start : nat)(length : nat)(l : list A)(acc : list A) :=
+  match l with
+  | [] => acc
+  | h :: tl =>
+    match start with
+    | S start' => subList_tail start' length tl acc
+    | O =>
+       match length with
+       | O => acc
+       | S length' =>
+          subList_tail start length' tl (acc ++ [h])
+       end
+    end
+  end.  
+
+Definition subList {A} (start : nat)(length : nat)(l : list A) :=
+  subList_tail start length l [].
+
+
+(* ceil(x/y) *)
+Definition div_ceil_nat (x : nat)(y : nat) : nat :=
+  Nat.div (x + y - 1%nat) y. 
+Definition div_ceil_N (x : N)(y : N) : N :=
+  N.div (x + y - 1%N) y. 
+
+
+Inductive optErr (A : Type) : Type :=
+| Normal : A -> optErr A
+| Error : string -> optErr A. 
+
+Arguments Normal {A} _.
+Arguments Error {A}.
+
+

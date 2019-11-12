@@ -1,22 +1,6 @@
 Require Export Signature. 
 
-Definition constant_v := 256%nat. (*According to the examples. *)
 
-(* ceil(x/y) *)
-Definition div_ceil_nat (x : nat)(y : nat) : nat :=
-  Nat.div (x + y - 1%nat) y. 
-Definition div_ceil_N (x : N)(y : N) : N :=
-  N.div (x + y - 1%N) y. 
-
-(*
-Fixpoint f (n : N) :=
-  match n with
-  | 0 => 1
-  | _ => f(pred n)
-  end.   
-
-Compute f 5. 
-*)
 (* TODO Should we imp a general hash_v here? ignored for now *)
 (* j = ceil(klen/v) - i, from ceil(klen/v) - 1 to 0 *)
 (* i from 1 to ceil(klen/v), ct = N2bL_len 32 i*)
@@ -62,17 +46,6 @@ Definition ComputeTide (w x p : N) : N :=
 Definition ComputeW (n : N) : N :=
   (div_ceil_N (N.size (n - 1)) 2) - 1.
 
-Inductive optErr (A : Type) : Type :=
-| Normal : A -> optErr A
-| Error : string -> optErr A. 
-
-Arguments Normal {A} _.
-Arguments Error {A}.
-
-Definition N2BbL (n : N) : bL := BL2bL (N2BL n). 
-Definition OnCurve (x y p a b : N) : bool := 
-  ((N.square y) mod p =? ((power x 3 p) + a * x + b) mod p). 
-
 (*B1 - B9*)
 Definition ComputeV (P R : FEp)(x_tide p a h t n : N) : FEp :=
   pf_mul (pf_add P (pf_mul R x_tide p a) p a) (F_mul h t n) p a. 
@@ -110,14 +83,7 @@ Definition ComputeRBKBSB (rB a b p dB n h : N)(G RA PA : FEp)(ZA ZB : bL)(klen :
       end
   end.
 
-Fixpoint bLeqb (bl1 bl2 : bL) : bool :=
-  match bl1, bl2 with
-  | [], [] => true
-  | h1 :: t1, h2 :: t2 => 
-      if Bool.eqb h1 h2 then bLeqb t1 t2
-        else false
-  | _, _ => false
-  end. 
+
 
 (* A4-A10 *)
 Definition ComputeKAS1SA (rA a b p dA n h : N) (PB RA RB : FEp)(ZA ZB SB : bL)(klen : nat)(hash_v : bL -> bL)(v : nat) : optErr (bL * bL * bL) :=

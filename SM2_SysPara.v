@@ -42,8 +42,6 @@ Fixpoint TryFunb4 (l : list N)(b : N)(u : N)(func : N -> N -> option bool) : boo
 Fixpoint NInterval (low : N)(high : N) : list N :=
   map (N.add low) (Nlist (high + 1 - low)).
 
-Print N. 
-
 (* Returns (v, w) so that m = 2 ^ v * w and w is odd *)
 Fixpoint Decom_tail (n : positive)(v : N) : N * positive :=
   match n with
@@ -155,11 +153,7 @@ Definition constant_T := 999.
 Definition OnCurveTest (xG yG a b p : N) : bool :=
   (square yG) mod p =? (xG ^ 3 + a * xG + b) mod p.  
 
-Print nat. 
 
-(* Prime field element: O or coordinated point *)
-Inductive FEp : Set :=
-  InfO : FEp | Cop : N * N -> FEp. 
 
 Definition pf_eqb (P1 P2 : FEp) : bool :=
   match P1, P2 with
@@ -170,9 +164,6 @@ Definition pf_eqb (P1 P2 : FEp) : bool :=
       andb (x1 =? x2) (y1 =? y2)
   end.
 
-Print Pos.square. 
-Check N.modulo. 
-Check Pos.add.
 Open Scope positive_scope. 
 Fixpoint F_sqr_pos (n q : positive) : N :=
   match n with
@@ -229,7 +220,6 @@ Definition pf_double_sqr (P1 : FEp)(p : N)(a : N) :=
         Cop (x3, y3)
   end. 
 
-Locate hS2N. 
 Definition p := hS2N "8542D69E 4C044F18 E8B92435 BF6FF7DE 45728391 5C45517D 722EDB8B 08F1DFC3". 
 Definition a := hS2N "787968B4 FA32C3FD 2417842E 73BBFEFF 2F3C848B 6831D7E0 EC65228B 3937E498". 
 Definition x2 := hS2N "64D20D27 D0632957 F8028C1E 024F6B02 EDF23102 A566C932 AE8BD613 A8E865FE".

@@ -63,6 +63,7 @@ Definition K_list (i : nat)(MK : N) :=
   K_list_rec i i (K_list_init MK). 
 
 Definition rk_ext (MK : N) (i : nat) : N := hd 0 (K_list (i + 1) MK). 
+(*
 
 Definition plain := HexString.to_N("0x0123456789abcdeffedcba9876543210"%string).
 Definition key := HexString.to_N("0x0123456789abcdeffedcba9876543210"%string).
@@ -75,4 +76,4 @@ Compute decypheredtext.
 
 Example self_test : expCypherText = cyphertext.
 Proof. reflexivity. Qed. 
-
+*)

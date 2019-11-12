@@ -1,14 +1,8 @@
 Require Export KeyEx.
 
 (*A2 - A5 *)
-Fixpoint All0bL (bl : bL) : bool :=
-  match bl with
-  | [] => true
-  | true :: tl => false
-  | false :: tl =>
-      All0bL tl
-  end. 
-Print Point2BL_p.
+
+
 (* A1 - A8 *)
 Definition TryComputeTwithK (k p a h : N)(cp : cmp_type)(G PB : FEp)
  (klen : nat)(hash_v : bL -> bL)(v : nat) : optErr (option (bL * bL * bL * bL)) :=
@@ -33,20 +27,6 @@ Definition TryComputeTwithK (k p a h : N)(cp : cmp_type)(G PB : FEp)
     end
   end. 
 
-(* a and b should be of the same length *)
-Fixpoint bLXOR_tail (a b acc : bL) : bL :=
-  match a, b with
-  | ha :: ta, hb :: tb =>
-       bLXOR_tail ta tb ((xorb ha hb) :: acc)
-  | [], _ => acc
-  | _, [] => acc
-  end. 
-
-Definition bLXOR (a b : bL) :=
-  rev (bLXOR_tail a b []).
-
-Definition M := hS2bL "656E63 72797074 696F6E20 7374616E 64617264". 
-Definition t := hS2bL "983BCF 106AB2DC C92F8AEA C6C60BF2 98BB0117". 
 Fixpoint ComputeCwithklist (M : bL)(klist : list N)(p a h : N)(cp : cmp_type)
   (G PB : FEp)(hash_v : bL -> bL)(v : nat) : optErr bL :=
   match klist with
