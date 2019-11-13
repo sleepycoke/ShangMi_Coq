@@ -1,8 +1,10 @@
-SOURCES = $(wildcard *.v) $(wildcard CCompLib/*.v)
+SOURCES = $(wildcard *.v) 
 OBJECTS = $(SOURCES:.v=.vo)
-MAPPINGS = -R . CertSM -R ./CCompLib CCompLib
+MAPPINGS = -R . CertSM  
 
-all: $(OBJECTS)
+all: $(OBJECTS) .depend
+
+-include .depend
 
 .depend: $(SOURCES)
 	coqdep $(MAPPINGS) $^ > $@
@@ -13,10 +15,8 @@ all: $(OBJECTS)
 ./CCompLib/%.vo: ./CCompLib/%.v
 	coqc -Q ./CCompLib CCompLib $<
 
--include .depend
 
 clean:
 	rm -f .depend
 	rm -f *.glob *.log *.vo CCompLib/*.glob CCompLib/*.log CCompLib/*.vo 
-
 
