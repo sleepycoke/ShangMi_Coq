@@ -12,10 +12,6 @@ all: $(OBJECTS) .depend
 ./%.vo: ./%.v
 	coqc -R . CertSM $<
 
-./CCompLib/%.vo: ./CCompLib/%.v
-	coqc -Q ./CCompLib CCompLib $<
-
-
 clean:
 	rm -f .depend
 	rm -f *.glob *.log *.vo CCompLib/*.glob CCompLib/*.log CCompLib/*.vo 
