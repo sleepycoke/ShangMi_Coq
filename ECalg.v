@@ -1,45 +1,10 @@
-Require Export SM2_DataType. 
-
-
-
+Require Export ECDef. 
   
 (*A.5.2*)
 Definition tide_p (yp : N) : bool :=
   N.odd yp. 
 
-(*B.1.1*)
-Fixpoint power_tail (g : N)(e : bL)(q : N)(acc : N) : N :=
-  match e with
-  | [] => acc
-  | h :: tl =>
-      power_tail g tl q 
-      match h with
-      | true => (N.mul (N.square acc) g) mod q
-      | false => (N.square acc) mod q
-      end
-  end.
-Definition power (g : N)(a : N)(q : N) : N :=
-  let e := N.modulo a (q - 1) in
-  power_tail g (N2bL e) q 1. 
 
-Definition inv_p (g : N)(q : N) : N :=
-  power g (q - 2) q. 
-
-(*TODO rename *)
-Definition F_inv (g q : N) :=
-  inv_p g q. 
-
-Definition F_add (x y q : N) :=
-  (x + y) mod q. 
-
-Definition F_mul (x y q : N) :=
-  (x * y) mod q. 
-
-Definition F_sub (x y q : N) :=
-  (q + x - y) mod q.
-
-Definition F_div (x : N)(y : N)(q : N) : N :=
-  (N.mul x (inv_p y q)) mod q. 
 
 (*B.1.3*)
 Fixpoint Lucas_tail (X : N)(Delta : N)(k : bL)(p : N)(acc : N * N) : N * N :=
@@ -57,8 +22,6 @@ Fixpoint Lucas_tail (X : N)(Delta : N)(k : bL)(p : N)(acc : N * N) : N * N :=
       end
   end.
 
-Definition OnCurve (x y p a b : N) : bool := 
-  ((N.square y) mod p =? ((power x 3 p) + a * x + b) mod p). 
 
 (* X, Y > 0 *)
 Definition Lucas (X : N)(Y : N)(k : N)(p : N) :=

@@ -270,7 +270,3 @@ Definition BL2Field_m (Bl : BL) : bL :=
 Definition Field2N_m (alpha : bL) : N :=
   bL2N alpha. 
 
-(* Prime field element: O or coordinated point *)
-Inductive FEp : Set :=
-  InfO : FEp | Cop : N * N -> FEp. 
-

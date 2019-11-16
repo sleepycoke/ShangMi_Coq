@@ -1,18 +1,18 @@
 SOURCES = $(wildcard *.v) 
 OBJECTS = $(SOURCES:.v=.vo)
-MAPPINGS = -R . CertSM  
+MAPPINGS = -R . ""  
 
 all: $(OBJECTS) .depend
-
--include .depend
 
 .depend: $(SOURCES)
 	coqdep $(MAPPINGS) $^ > $@
 
-./%.vo: ./%.v
-	coqc -R . CertSM $<
+-include .depend
 
+./%.vo: ./%.v
+	coqc $(MAPPINGS) $<
+
+.PHONY: clean
 clean:
 	rm -f .depend
-	rm -f *.glob *.log *.vo CCompLib/*.glob CCompLib/*.log CCompLib/*.vo 
-
+	rm -f *.glob *.log *.vo 
