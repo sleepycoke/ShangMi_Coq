@@ -1,8 +1,17 @@
 Require Export DataTypes.
 
 Open Scope list_scope. 
+
+Fixpoint remove0heads (x : bL) : bL :=
+  match x with
+  | false :: t => remove0heads t
+  | _ => x
+  end. 
+
+Compute remove0heads [false; false; true; true; false]. 
+
 Definition bf_add (x y : bL) : bL :=
-  bLXOR x y.
+  remove0heads (bLXOR x y).
 
 Compute bL2bS (bf_add (bS2bL "") (bS2bL "10011")). 
 Compute bL2bS (bf_add (bS2bL "") (bS2bL "")). 
@@ -33,7 +42,7 @@ Compute bL2bS (bf_mul_raw (bS2bL "10011")(bS2bL "")).
 
 (* Returns (quotient, remainder) *)
 Fixpoint bf_mod_tail (x y r : bL)(ly lr : nat) : bL :=
-  let r' := if negb (Nat.leb (length y) (length r)) then bf_add r y else r in
+  let r' := if (Nat.leb (length y) (length r)) then bf_add r y else r in
     match x with
     | [] => r'
     | hx :: tx =>
@@ -43,6 +52,6 @@ Fixpoint bf_mod_tail (x y r : bL)(ly lr : nat) : bL :=
 Definition bf_mod (x y : bL) : bL :=
   bf_mod_tail x y [] (length y) 0. 
   
-Compute bf_mod (bS2bL "110011101") (bS2bL "1101"). 
+Compute bL2bS (bf_mod (bS2bL "110011101") (bS2bL "100101")). 
 
 Close Scope list_scope. 
