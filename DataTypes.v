@@ -236,17 +236,27 @@ Fixpoint All0bL (bl : bL) : bool :=
       All0bL tl
   end. 
 
-(* a and b should be of the same length *)
 Fixpoint bLXOR_tail (a b acc : bL) : bL :=
   match a, b with
   | ha :: ta, hb :: tb =>
        bLXOR_tail ta tb ((xorb ha hb) :: acc)
-  | [], _ => acc
-  | _, [] => acc
+  | [], _ => List.app (rev b) acc
+  | _, [] => List.app (rev a) acc 
   end. 
 
+(* a and b are aligned to the right and 
+ keep the overhead to the left of the result *)
 Definition bLXOR (a b : bL) :=
-  rev (bLXOR_tail a b []).
+  (bLXOR_tail (rev a) (rev b) []).
+
+(*
+Compute bLXOR (bS2bL "111") (bS2bL "1"). 
+Compute bLXOR (bS2bL "110") (bS2bL "1"). 
+Compute bLXOR (bS2bL "011") (bS2bL "1"). 
+Compute bLXOR (bS2bL "11111101") (bS2bL "111"). 
+Compute bLXOR (bS2bL "111") (bS2bL "11111101"). 
+Compute bLXOR (bS2bL "111001") (bS2bL "11111101"). 
+*)
 
 (*4.2.5*)
 Inductive field_type : Set :=
