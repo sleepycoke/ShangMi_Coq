@@ -1,4 +1,4 @@
-Require Export SM2_DataType. 
+Require Export DataTypes. 
 
 (* Prime field element: O or coordinated point *)
 Inductive FEp : Set :=

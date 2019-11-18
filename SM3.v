@@ -1,5 +1,5 @@
 Require Export SMlib.
-Require Export SM2_DataType. 
+Require Export DataTypes. 
 
 Definition IV := 
   HexString.to_N("0x7380166f4914b2b9172442d7da8a0600a96f30bc163138aae38dee4db0fb0e4e").

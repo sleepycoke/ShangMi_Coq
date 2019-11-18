@@ -1,4 +1,4 @@
-Require Export SM2_SysPara.
+Require Export SysPara.
 
 (*5.5 trunk from right *)
 (*TODO I really cannot understand its definition *)

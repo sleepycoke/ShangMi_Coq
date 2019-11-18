@@ -1,8 +1,6 @@
 Require Export SMlib.
 Require Export Coq.Strings.Ascii.
 
-
-
 (* ByteList is indeed a list of bytes*)
 Definition BL := list byte. 
 (* BitList is indeed a list of bool*)
