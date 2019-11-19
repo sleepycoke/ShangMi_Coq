@@ -41,16 +41,16 @@ Compute bL2bS (bf_mul_raw (bS2bL "") (bS2bL "10011")).
 Compute bL2bS (bf_mul_raw (bS2bL "10011")(bS2bL "")). 
 
 (* Returns (quotient, remainder) *)
-Fixpoint bf_mod_tail (x y r : bL)(ly lr : nat) : bL :=
-  let r' := if (Nat.leb (length y) (length r)) then bf_add r y else r in
+Fixpoint bf_mod_tail (x y r : bL)(ly : nat) : bL :=
+  let r' := if (Nat.leb (ly) (length r)) then bf_add r y else r in
     match x with
     | [] => r'
     | hx :: tx =>
-        bf_mod_tail tx y (r' ++ [hx]) (length r') ly
+        bf_mod_tail tx y (r' ++ [hx]) ly 
     end.  
 
 Definition bf_mod (x y : bL) : bL :=
-  bf_mod_tail x y [] (length y) 0. 
+  bf_mod_tail x y [] (length y). 
   
 Compute bL2bS (bf_mod (bS2bL "110011101") (bS2bL "100101")). 
 
