@@ -2,16 +2,16 @@ Require Export DataTypes.
 
 Open Scope list_scope. 
 
-Fixpoint remove0heads (x : bL) : bL :=
+Fixpoint removeleading0s (x : bL) : bL :=
   match x with
-  | false :: t => remove0heads t
+  | false :: t => removeleading0s t
   | _ => x
   end. 
 
-Compute remove0heads [false; false; true; true; false]. 
+Compute removeleading0s [false; false; true; true; false]. 
 
 Definition bf_bL_add (x y : bL) : bL :=
-  remove0heads (bLXOR x y).
+  removeleading0s (bLXOR x y).
 
 Compute bL2bS (bf_bL_add (bS2bL "") (bS2bL "10011")). 
 Compute bL2bS (bf_bL_add (bS2bL "") (bS2bL "")). 
