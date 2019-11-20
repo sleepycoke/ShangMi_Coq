@@ -120,6 +120,8 @@ Definition N2bL_len (len : nat)(n : N) : bL :=
 Definition N2bL (n : N) : bL :=
   N2bL_len (N.to_nat (N.size n)) n.
 
+Definition bS2N (bs : string) : N :=
+  bL2N (bS2bL bs). 
 
 
 (*4.2.4*)
