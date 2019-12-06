@@ -4,28 +4,7 @@ Require Export DataTypes.
 Inductive FEp : Set :=
   InfO : FEp | Cop : N * N -> FEp. 
 
-(*B.1.1*)
-Fixpoint power_tail (g : N)(e : bL)(q : N)(acc : N) : N :=
-  match e with
-  | [] => acc
-  | h :: tl =>
-      power_tail g tl q 
-      match h with
-      | true => (N.mul (N.square acc) g) mod q
-      | false => (N.square acc) mod q
-      end
-  end.
-
-Definition power (g : N)(a : N)(q : N) : N :=
-  let e := N.modulo a (q - 1) in
-  power_tail g (N2bL e) q 1. 
-
-Definition inv_p (g : N)(q : N) : N :=
-  power g (q - 2) q. 
-
 (*TODO rename *)
-Definition F_inv (g q : N) :=
-  inv_p g q. 
 
 Definition F_add (x y q : N) :=
   (x + y) mod q. 
@@ -36,14 +15,44 @@ Definition F_mul (x y q : N) :=
 Definition F_sub (x y q : N) :=
   (q + x - y) mod q.
 
+Definition F_sq (x q : N) :=
+  (N.square x) mod q. 
 
+(*B.1.1*)
+Fixpoint power_tail (g : N)(e : bL)(q : N)(sq md : N -> N -> N)
+  (mp : N -> N -> N -> N)(acc : N) : N :=
+  match e with
+  | [] => acc
+  | h :: tl =>
+      power_tail g tl q sq md mp
+      match h with
+      | true => (mp (sq acc q) g q) 
+      | false => (sq acc q)
+      end
+  end.
+
+Definition power' (g : N)(a : N)(q : N)(sq md : N -> N -> N)
+  (mp : N -> N -> N -> N)  : N :=
+  let e := md a (q - 1) in
+  power_tail g (N2bL e) q sq md mp 1. 
+
+Definition power (g : N)(a : N)(q : N) : N :=
+  power' g a q F_sq N.modulo F_mul. 
+
+Definition inv_p (g : N)(q : N) : N :=
+  power g (q - 2) q. 
+
+Definition F_inv (g q : N) :=
+  inv_p g q. 
+  
 Definition F_div (x : N)(y : N)(q : N) : N :=
   (N.mul x (inv_p y q)) mod q. 
 
-
-(* Test whether (x, y) is on the elliptic-curve defined by a b q *)
+(* Test whether (x, y) is on the elliptic-curve defined by a b p *)
 Definition OnCurve (x y p a b : N) : bool := 
   ((N.square y) mod p =? ((power x 3 p) + a * x + b) mod p). 
+
+Compute OnCurve 2 4 7 1 6. 
 
 Definition pf_eqb (P1 P2 : FEp) : bool :=
   match P1, P2 with
