@@ -28,42 +28,6 @@ Definition bf_bL_double (x : bL) : bL :=
     | _ => x ++ [false]
   end.   
 
-
-Fixpoint bf_bL_mul_tail (x y acc : bL) : bL :=
-  let acc' := bf_bL_double acc in
-    match y with
-    | [] => acc
-    | false :: t =>
-        bf_bL_mul_tail x t acc'
-    | true :: t =>
-        bf_bL_mul_tail x t (bf_bL_add acc' x)
-    end. 
-
-Open Scope positive_scope. 
-Fixpoint bf_mul_pos (x : positive)(y : N) : N :=
-  match x with
-  | 1 => y
-  | p~0 => N.double (bf_mul_pos p y) 
-  | p~1 => bf_add y (N.double (bf_mul_pos p y))
-  end. 
-Close Scope positive_scope. 
-
-Definition bf_mul (x y : N) : N :=
-  match x with
-  | 0 => 0
-  | Npos p => bf_mul_pos p y
-  end.
-
-Definition bf_bL_mul_raw (x y : bL) : bL :=
-  bf_bL_mul_tail x y [].
-
-Compute bL2bS (bf_bL_mul_raw (bS2bL "11011") (bS2bL "10011")). 
-Compute N2bS (bf_mul (bS2N "11011") (bS2N "10011")). 
-Compute bL2bS (bf_bL_mul_raw (bS2bL "") (bS2bL "10011")). 
-Compute N2bS (bf_mul (bS2N "") (bS2N "10011")). 
-Compute bL2bS (bf_bL_mul_raw (bS2bL "10011")(bS2bL "")). 
-Compute N2bS (bf_mul (bS2N "10011")(bS2N "")). 
-
 (* Returns remainder *)
 Fixpoint bf_bL_mod_tail (x y r : bL)(ly : nat) : bL :=
   let r' := if (Nat.leb (ly) (length r)) then bf_bL_add r y else r in
@@ -99,8 +63,54 @@ Definition bf_mod (x y : N) : N :=
       bf_mod_pos xp yp (size_nat y)
   end. 
 
+Fixpoint bf_bL_mul_tail (x y acc : bL) : bL :=
+  let acc' := bf_bL_double acc in
+    match y with
+    | [] => acc
+    | false :: t =>
+        bf_bL_mul_tail x t acc'
+    | true :: t =>
+        bf_bL_mul_tail x t (bf_bL_add acc' x)
+    end. 
+
+Open Scope positive_scope. 
+Fixpoint bf_mul_pos (x : positive)(y : N) : N :=
+  match x with
+  | 1 => y
+  | p~0 => N.double (bf_mul_pos p y) 
+  | p~1 => bf_add y (N.double (bf_mul_pos p y))
+  end. 
 Close Scope positive_scope. 
+
+Definition bf_mul (x y g : N) : N :=
+  match x with
+  | 0 => 0
+  | Npos p => bf_mod (bf_mul_pos p y) g
+  end.
+
+Definition bf_bL_mul_raw (x y : bL) : bL :=
+  bf_bL_mul_tail x y [].
+
+(*
+Compute bL2bS (bf_bL_mul_raw (bS2bL "11011") (bS2bL "10011")). 
+Compute N2bS (bf_mul (bS2N "11011") (bS2N "10011")). 
+Compute bL2bS (bf_bL_mul_raw (bS2bL "") (bS2bL "10011")). 
+Compute N2bS (bf_mul (bS2N "") (bS2N "10011")). 
+Compute bL2bS (bf_bL_mul_raw (bS2bL "10011")(bS2bL "")). 
+Compute N2bS (bf_mul (bS2N "10011")(bS2N "")). 
+*)
+Compute N2bS (bf_mul (bS2N "11011") (bS2N "10011") (bS2N "100101")). 
+
+Close Scope positive_scope. 
+
+(* Test whether (x, y) is on the elliptic-curve defined by a b g *)
+(*
+Definition OnCurve2m (x y g a b : N) : bool := 
+  ((N.square y) mod p =? ((power x 3 p) + a * x + b) mod p). 
+*)
+
 
 Compute bL2bS (bf_bL_mod (bS2bL "110011101") (bS2bL "100101")). 
 Compute N2bS (bf_mod (bS2N "110011101") (bS2N "100101")). 
+
 Close Scope list_scope. 
