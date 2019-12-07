@@ -1,8 +1,8 @@
 Require Export DataTypes. 
 
 (* Prime field element: O or coordinated point *)
-Inductive FEp : Set :=
-  InfO : FEp | Cop : N * N -> FEp. 
+Inductive GE : Set :=
+  InfO : GE | Cop : N * N -> GE. 
 
 (*TODO rename *)
 
@@ -54,7 +54,7 @@ Definition OnCurve (x y p a b : N) : bool :=
 
 Compute OnCurve 2 4 7 1 6. 
 
-Definition pf_eqb (P1 P2 : FEp) : bool :=
+Definition pf_eqb (P1 P2 : GE) : bool :=
   match P1, P2 with
   | InfO, InfO => true
   | InfO, _ => false
@@ -91,7 +91,7 @@ Definition F_sqr (n q : N) :=
     end
   end. 
 (* 3.2.3.1 also A.1.2.2 *)
-Definition pf_double (P1 : FEp)(p : N)(a : N) :=
+Definition pf_double (P1 : GE)(p : N)(a : N) :=
   match P1 with
   | InfO => InfO
   | Cop (x1, y1) =>
@@ -100,7 +100,7 @@ Definition pf_double (P1 : FEp)(p : N)(a : N) :=
       let y3 := F_sub (lambda * (F_sub x1 x3 p)) y1 p in
         Cop (x3, y3)
   end. 
-Definition pf_double_mul (P1 : FEp)(p : N)(a : N) :=
+Definition pf_double_mul (P1 : GE)(p : N)(a : N) :=
   match P1 with
   | InfO => InfO
   | Cop (x1, y1) =>
@@ -109,7 +109,7 @@ Definition pf_double_mul (P1 : FEp)(p : N)(a : N) :=
       let y3 := F_sub (lambda * (F_sub x1 x3 p)) y1 p in
         Cop (x3, y3)
   end. 
-Definition pf_double_sqr (P1 : FEp)(p : N)(a : N) :=
+Definition pf_double_sqr (P1 : GE)(p : N)(a : N) :=
   match P1 with
   | InfO => InfO
   | Cop (x1, y1) =>
@@ -134,7 +134,7 @@ Locate Pos.square.
 Print Pos.square. 
 *)
 
-Definition pf_add (P1 P2 : FEp)(p a : N):=
+Definition pf_add (P1 P2 : GE)(p a : N):=
   match P1, P2 with
   | InfO, _ => P2
   | _, InfO => P1
@@ -151,7 +151,7 @@ Definition pf_add (P1 P2 : FEp)(p a : N):=
   end. 
 
 (* A.3.2 method 1*)
-Fixpoint pf_mul_tail (P : FEp)(kl : bL)(p : N)(a : N)(acc : FEp) : FEp :=
+Fixpoint pf_mul_tail (P : GE)(kl : bL)(p : N)(a : N)(acc : GE) : GE :=
   match kl with
   | [] => acc
   | false :: tl =>
@@ -160,10 +160,10 @@ Fixpoint pf_mul_tail (P : FEp)(kl : bL)(p : N)(a : N)(acc : FEp) : FEp :=
       pf_mul_tail P tl p a (pf_add P (pf_double acc p a) p a)
   end. 
 
-Definition pf_mul (P : FEp)(k p a: N) : FEp :=
+Definition pf_mul (P : GE)(k p a: N) : GE :=
   pf_mul_tail P (N2bL k) p a InfO. 
 
-Fixpoint pf_mul_naive (P : FEp)(k : nat)(p a : N) : FEp :=
+Fixpoint pf_mul_naive (P : GE)(k : nat)(p a : N) : GE :=
   match k with
   | O => InfO
   | S k' => 

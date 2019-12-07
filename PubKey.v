@@ -4,7 +4,7 @@ Require Export KeyEx.
 
 
 (* A1 - A8 *)
-Definition TryComputeTwithK (k p a h : N)(cp : cmp_type)(G PB : FEp)
+Definition TryComputeTwithK (k p a h : N)(cp : cmp_type)(G PB : GE)
  (klen : nat)(hash_v : bL -> bL)(v : nat) : optErr (option (bL * bL * bL * bL)) :=
   let C1 := pf_mul G k p a in
   match C1 with
@@ -28,7 +28,7 @@ Definition TryComputeTwithK (k p a h : N)(cp : cmp_type)(G PB : FEp)
   end. 
 
 Fixpoint ComputeCwithklist (M : bL)(klist : list N)(p a h : N)(cp : cmp_type)
-  (G PB : FEp)(hash_v : bL -> bL)(v : nat) : optErr bL :=
+  (G PB : GE)(hash_v : bL -> bL)(v : nat) : optErr bL :=
   match klist with
   | [] => Error "klist depleted"
   | k :: tl =>

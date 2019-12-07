@@ -36,7 +36,7 @@ Definition KDF (Z : bL)(klen : nat)(hash_v : bL -> bL)(v : nat) : bL :=
   end. 
 
 (* A1 - A3 *)
-Definition ComputeR (G : FEp)(r p a: N) : FEp :=
+Definition ComputeR (G : GE)(r p a: N) : GE :=
   pf_mul G r p a. 
 
 Definition ComputeTide (w x p : N) : N :=
@@ -47,14 +47,14 @@ Definition ComputeW (n : N) : N :=
   (div_ceil_N (N.size (n - 1)) 2) - 1.
 
 (*B1 - B9*)
-Definition ComputeV (P R : FEp)(x_tide p a h t n : N) : FEp :=
+Definition ComputeV (P R : GE)(x_tide p a h t n : N) : GE :=
   pf_mul (pf_add P (pf_mul R x_tide p a) p a) (F_mul h t n) p a. 
 Definition ComputeK (x y : N)(ZA ZB : bL)(klen : nat)(hash_v : bL -> bL)(v : nat) : bL :=
   KDF ((N2BbL x) ++ (N2BbL y) ++ ZA ++ ZB) klen hash_v v. 
 Definition ComputeS (prehS : string)(ZA ZB : bL)(x y x1 y1 x2 y2 : N)(hash_v : bL -> bL) : bL :=
   hash_v ((hS2bL prehS) ++ (N2BbL y) ++ (hash_v ((N2BbL x) ++ ZA ++ ZB ++ (N2BbL x1) ++ (N2BbL y1) ++ (N2BbL x2) ++ (N2BbL y2)))). 
 Definition ComputeT (d x_tide r n : N) : N := F_add d (x_tide * r) n. 
-Definition ComputeRBKBSB (rB a b p dB n h : N)(G RA PA : FEp)(ZA ZB : bL)(klen : nat)(hash_v : bL -> bL)(v : nat) : optErr (FEp * bL * bL) :=
+Definition ComputeRBKBSB (rB a b p dB n h : N)(G RA PA : GE)(ZA ZB : bL)(klen : nat)(hash_v : bL -> bL)(v : nat) : optErr (GE * bL * bL) :=
   let RB := ComputeR G rB p a in 
   match RB with
   | InfO => Error "RB = InfO" (* impossible since rB < n *)
@@ -86,7 +86,7 @@ Definition ComputeRBKBSB (rB a b p dB n h : N)(G RA PA : FEp)(ZA ZB : bL)(klen :
 
 
 (* A4-A10 *)
-Definition ComputeKAS1SA (rA a b p dA n h : N) (PB RA RB : FEp)(ZA ZB SB : bL)(klen : nat)(hash_v : bL -> bL)(v : nat) : optErr (bL * bL * bL) :=
+Definition ComputeKAS1SA (rA a b p dA n h : N) (PB RA RB : GE)(ZA ZB SB : bL)(klen : nat)(hash_v : bL -> bL)(v : nat) : optErr (bL * bL * bL) :=
   match RA with
   | InfO => Error "RA = InfO"
   | Cop (x1, y1) =>
