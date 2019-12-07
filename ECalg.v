@@ -76,15 +76,15 @@ Definition square_root (g : N)(p : N) : option N :=
   if N.eqb g 0 then Some 0
   else if N.eqb (N.modulo p 4) 3 then 
     let u := N.div p 4 in
-      let y := power g (u + 1) p in
+      let y := P_power g (u + 1) p in
         let z := N.modulo (N.square y) p in
           if N.eqb z g then Some y else None
   else if N.eqb (N.modulo p 8) 5 then
     let u := (N.div p 8) in
-      let z := power g (N.double u + 1) p in
+      let z := P_power g (N.double u + 1) p in
         let t := N.modulo z p in
-        if N.eqb t 1 then Some (power g (u + 1) p)
-        else if N.eqb t (p - 1) then Some ((g * 2 * (power (g * 4) u p)) mod p)
+        if N.eqb t 1 then Some (P_power g (u + 1) p)
+        else if N.eqb t (p - 1) then Some ((g * 2 * (P_power (g * 4) u p)) mod p)
         else None 
   else (* N.eqb (N.modulo p 8) 1 *)  
     let u := N.div p 8 in
@@ -205,7 +205,7 @@ Definition BL2PointStep1_p (p : N)(a : N)(b : N)(S : BL)(cp : cmp_type) : option
 
 Definition BL2PointStep2_p (p : N)(a : N)(b : N)(point : N * N) : option (N * N) :=
   let (xp, yp) := point in
-    if N.eqb ((N.square yp) mod p) (((power xp 3 p) + a * xp + b) mod p) then Some point
+    if N.eqb ((N.square yp) mod p) (((P_power xp 3 p) + a * xp + b) mod p) then Some point
     else None. 
 
 Definition BL2Point_p (p : N)(a : N)(b : N)(S : BL)(cp : cmp_type) : option (N * N) :=

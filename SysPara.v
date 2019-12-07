@@ -112,7 +112,7 @@ Definition constant_p := HexString.to_N "0xBDB6F4FE3E8B1D9E0DA8C0D46F4C318CEFE4A
  
 (* true if passed the test, i.e. not singular *)
 Definition SingTest (a b p : N) : bool :=
- negb (4 * (power a 3 p) + 27 * (square b) =? 0). 
+ negb (4 * (P_power a 3 p) + 27 * (square b) =? 0). 
 (* D.1.1 method 2, true if this tuple is valid*)
 Definition CheckSEED (SEED : bL)(a p : N) : option (bL * N * N) :=
   (*if Nat.leb (List.length SEED) 191%nat then None else*)

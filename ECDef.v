@@ -9,15 +9,54 @@ Inductive GE : Set :=
 Definition P_add (x y q : N) :=
   (x + y) mod q. 
 
+Definition B_add (x y : N) : N :=
+  N.lxor x y.
+
 Definition P_mul (x y q : N) :=
   (x * y) mod q. 
+
+Open Scope positive_scope. 
+Fixpoint B_mod_pos (x y : positive)(ly : nat) : N :=
+  match x with
+  | 1 => 
+    match y with
+    | 1 => 0
+    | _ => 1
+    end
+  | p~0 | p~1 =>
+      let r'2 := N.double (B_mod_pos p y ly) in 
+      let r := if even (Npos x) then r'2 else (r'2 + 1)%N in
+      if (Nat.eqb (size_nat r) ly) then B_add r (Npos y) else r
+  end. 
+
+Definition B_mod (x y : N) : N :=
+  match x, y with
+  | N0, _ => N0
+  | _, N0 => x
+  | pos xp, pos yp => 
+      B_mod_pos xp yp (size_nat y)
+  end. 
+
+Open Scope positive_scope. 
+Fixpoint B_mul_pos (x : positive)(y : N) : N :=
+  match x with
+  | 1 => y
+  | p~0 => N.double (B_mul_pos p y) 
+  | p~1 => B_add y (N.double (B_mul_pos p y))
+  end. 
+Close Scope positive_scope. 
+
+Definition B_mul (x y g : N) : N :=
+  match x with
+  | 0 => 0
+  | Npos p => B_mod (B_mul_pos p y) g
+  end.
 
 Definition P_sub (x y q : N) :=
   (q + x - y) mod q.
 
 Definition P_sq (x q : N) :=
   (N.square x) mod q. 
-
 (*B.1.1*)
 Fixpoint power_tail (g : N)(e : bL)(q : N)(sq md : N -> N -> N)
   (mp : N -> N -> N -> N)(acc : N) : N :=
@@ -31,16 +70,16 @@ Fixpoint power_tail (g : N)(e : bL)(q : N)(sq md : N -> N -> N)
       end
   end.
 
-Definition power' (g : N)(a : N)(q : N)(sq md : N -> N -> N)
+Definition power_general (g : N)(a : N)(q : N)(sq md : N -> N -> N)
   (mp : N -> N -> N -> N)  : N :=
   let e := md a (q - 1) in
   power_tail g (N2bL e) q sq md mp 1. 
 
-Definition power (g : N)(a : N)(q : N) : N :=
-  power' g a q P_sq N.modulo P_mul. 
+Definition P_power (g : N)(a : N)(q : N) : N :=
+  power_general g a q P_sq N.modulo P_mul. 
 
 Definition inv_p (g : N)(q : N) : N :=
-  power g (q - 2) q. 
+  P_power g (q - 2) q. 
 
 Definition P_inv (g q : N) :=
   inv_p g q. 
@@ -50,7 +89,7 @@ Definition P_div (x : N)(y : N)(q : N) : N :=
 
 (* Test whether (x, y) is on the elliptic-curve defined by a b p *)
 Definition OnCurve (x y p a b : N) : bool := 
-  ((N.square y) mod p =? ((power x 3 p) + a * x + b) mod p). 
+  ((N.square y) mod p =? ((P_power x 3 p) + a * x + b) mod p). 
 
 Compute OnCurve 2 4 7 1 6. 
 
