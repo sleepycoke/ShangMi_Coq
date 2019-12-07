@@ -78,14 +78,11 @@ Definition power_general (g : N)(a : N)(q : N)(sq md : N -> N -> N)
 Definition P_power (g : N)(a : N)(q : N) : N :=
   power_general g a q P_sq N.modulo P_mul. 
 
-Definition inv_p (g : N)(q : N) : N :=
-  P_power g (q - 2) q. 
-
 Definition P_inv (g q : N) :=
-  inv_p g q. 
+  P_power g (q - 2) q. 
   
 Definition P_div (x : N)(y : N)(q : N) : N :=
-  (N.mul x (inv_p y q)) mod q. 
+  (N.mul x (P_inv y q)) mod q. 
 
 (* Test whether (x, y) is on the elliptic-curve defined by a b p *)
 Definition OnCurve (x y p a b : N) : bool := 
