@@ -6,16 +6,16 @@ Inductive GE : Set :=
 
 (*TODO rename *)
 
-Definition F_add (x y q : N) :=
+Definition P_add (x y q : N) :=
   (x + y) mod q. 
 
-Definition F_mul (x y q : N) :=
+Definition P_mul (x y q : N) :=
   (x * y) mod q. 
 
-Definition F_sub (x y q : N) :=
+Definition P_sub (x y q : N) :=
   (q + x - y) mod q.
 
-Definition F_sq (x q : N) :=
+Definition P_sq (x q : N) :=
   (N.square x) mod q. 
 
 (*B.1.1*)
@@ -37,15 +37,15 @@ Definition power' (g : N)(a : N)(q : N)(sq md : N -> N -> N)
   power_tail g (N2bL e) q sq md mp 1. 
 
 Definition power (g : N)(a : N)(q : N) : N :=
-  power' g a q F_sq N.modulo F_mul. 
+  power' g a q P_sq N.modulo P_mul. 
 
 Definition inv_p (g : N)(q : N) : N :=
   power g (q - 2) q. 
 
-Definition F_inv (g q : N) :=
+Definition P_inv (g q : N) :=
   inv_p g q. 
   
-Definition F_div (x : N)(y : N)(q : N) : N :=
+Definition P_div (x : N)(y : N)(q : N) : N :=
   (N.mul x (inv_p y q)) mod q. 
 
 (* Test whether (x, y) is on the elliptic-curve defined by a b p *)
@@ -64,30 +64,30 @@ Definition pf_eqb (P1 P2 : GE) : bool :=
   end.
 
 Open Scope positive_scope. 
-Fixpoint F_sqr_pos (n q : positive) : N :=
+Fixpoint P_sqr_pos (n q : positive) : N :=
   match n with
   | 1 => 1
   | p~1 => 
-      match ((F_sqr_pos p q) + (Npos p)) mod (Npos q) with
+      match ((P_sqr_pos p q) + (Npos p)) mod (Npos q) with
       | N0 => 1
       | Npos m => (Npos m~0~1) mod (Npos q)
       end
   | p~0 => 
-      match (F_sqr_pos p q) with
+      match (P_sqr_pos p q) with
       | N0 => 0
       | Npos m => (Npos m~0) mod (Npos q)
       end
   end. 
 Close Scope positive_scope. 
  
-Definition F_sqr (n q : N) :=
+Definition P_sqr (n q : N) :=
   match q with
   | 0 => n 
   | Npos q' => 
     match n with
     | 0 => 0
     | Npos n' =>
-        F_sqr_pos n' q'
+        P_sqr_pos n' q'
     end
   end. 
 (* 3.2.3.1 also A.1.2.2 *)
@@ -95,27 +95,27 @@ Definition pf_double (P1 : GE)(p : N)(a : N) :=
   match P1 with
   | InfO => InfO
   | Cop (x1, y1) =>
-      let lambda := F_div (3 * (square x1) + a) (double y1) p in
-      let x3 := F_sub (square lambda) ((double x1) mod p) p in
-      let y3 := F_sub (lambda * (F_sub x1 x3 p)) y1 p in
+      let lambda := P_div (3 * (square x1) + a) (double y1) p in
+      let x3 := P_sub (square lambda) ((double x1) mod p) p in
+      let y3 := P_sub (lambda * (P_sub x1 x3 p)) y1 p in
         Cop (x3, y3)
   end. 
 Definition pf_double_mul (P1 : GE)(p : N)(a : N) :=
   match P1 with
   | InfO => InfO
   | Cop (x1, y1) =>
-      let lambda := F_div (3 * (x1 * x1) + a) (double y1) p in
-      let x3 := F_sub (lambda * lambda) ((double x1) mod p) p in
-      let y3 := F_sub (lambda * (F_sub x1 x3 p)) y1 p in
+      let lambda := P_div (3 * (x1 * x1) + a) (double y1) p in
+      let x3 := P_sub (lambda * lambda) ((double x1) mod p) p in
+      let y3 := P_sub (lambda * (P_sub x1 x3 p)) y1 p in
         Cop (x3, y3)
   end. 
 Definition pf_double_sqr (P1 : GE)(p : N)(a : N) :=
   match P1 with
   | InfO => InfO
   | Cop (x1, y1) =>
-      let lambda := F_div (3 * (F_sqr x1 p) + a) (double y1) p in
-      let x3 := F_sub (F_sqr lambda p) ((double x1) mod p) p in
-      let y3 := F_sub (lambda * (F_sub x1 x3 p)) y1 p in
+      let lambda := P_div (3 * (P_sqr x1 p) + a) (double y1) p in
+      let x3 := P_sub (P_sqr lambda p) ((double x1) mod p) p in
+      let y3 := P_sub (lambda * (P_sub x1 x3 p)) y1 p in
         Cop (x3, y3)
   end. 
 
@@ -143,9 +143,9 @@ Definition pf_add (P1 P2 : GE)(p a : N):=
       | true, true => InfO
       | true, false => pf_double P1 p a
       | false, _ => 
-        let lambda := F_div (F_sub y2  y1 p) (F_sub x2 x1 p) p in
+        let lambda := P_div (P_sub y2  y1 p) (P_sub x2 x1 p) p in
           let x3 := ((square lambda) + 2 * p - x1 - x2) mod p in
-          let y3 := F_sub (lambda * (F_sub x1 x3 p)) y1 p in
+          let y3 := P_sub (lambda * (P_sub x1 x3 p)) y1 p in
             Cop (x3, y3)
       end
   end. 

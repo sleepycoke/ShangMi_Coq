@@ -41,19 +41,19 @@ Definition ComputeR (G : GE)(r p a: N) : GE :=
 
 Definition ComputeTide (w x p : N) : N :=
       let w2 := N.shiftl 1 w in
-      F_add w2 (N.land x (w2 - 1) ) p. 
+      P_add w2 (N.land x (w2 - 1) ) p. 
 
 Definition ComputeW (n : N) : N :=
   (div_ceil_N (N.size (n - 1)) 2) - 1.
 
 (*B1 - B9*)
 Definition ComputeV (P R : GE)(x_tide p a h t n : N) : GE :=
-  pf_mul (pf_add P (pf_mul R x_tide p a) p a) (F_mul h t n) p a. 
+  pf_mul (pf_add P (pf_mul R x_tide p a) p a) (P_mul h t n) p a. 
 Definition ComputeK (x y : N)(ZA ZB : bL)(klen : nat)(hash_v : bL -> bL)(v : nat) : bL :=
   KDF ((N2BbL x) ++ (N2BbL y) ++ ZA ++ ZB) klen hash_v v. 
 Definition ComputeS (prehS : string)(ZA ZB : bL)(x y x1 y1 x2 y2 : N)(hash_v : bL -> bL) : bL :=
   hash_v ((hS2bL prehS) ++ (N2BbL y) ++ (hash_v ((N2BbL x) ++ ZA ++ ZB ++ (N2BbL x1) ++ (N2BbL y1) ++ (N2BbL x2) ++ (N2BbL y2)))). 
-Definition ComputeT (d x_tide r n : N) : N := F_add d (x_tide * r) n. 
+Definition ComputeT (d x_tide r n : N) : N := P_add d (x_tide * r) n. 
 Definition ComputeRBKBSB (rB a b p dB n h : N)(G RA PA : GE)(ZA ZB : bL)(klen : nat)(hash_v : bL -> bL)(v : nat) : optErr (GE * bL * bL) :=
   let RB := ComputeR G rB p a in 
   match RB with
@@ -161,7 +161,7 @@ Compute (x2, y2). Correct *)
 (*Compute N2hS (ComputeTide w x2 p). Correct*)
 Definition x2_tide := hS2N "B8F2B533 7B3DCF45 14E8BBC1 9D900EE5".
 Definition tB := hS2N "2B2E11CB F03641FC 3D939262 FC0B652A 70ACAA25 B5369AD3 8B375C02 65490C9F". 
-(*Compute N2hS (F_add dB (x2_tide * rB) n).  Correct *)
+(*Compute N2hS (P_add dB (x2_tide * rB) n).  Correct *)
 
 (* Compute ComputeW n. Correct should be 127*)
 Definition x1_tide := hS2N "E856C095 05324A6D 23150C40 8F162BF0". 

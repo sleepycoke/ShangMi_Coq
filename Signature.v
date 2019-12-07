@@ -14,9 +14,9 @@ Definition TrySigWithk (k e n dA xG yG p a : N) : option (N * N) :=
   match pf_mul (Cop (xG, yG)) k p a with
   | InfO => None
   | Cop (x1, y1) => 
-      let r := F_add e x1 n in
+      let r := P_add e x1 n in
         if orb (N.eqb r 0) (N.eqb (r + k) n) then None else
-        let s := F_mul (F_inv (F_add 1 dA n) n) (F_sub k (F_mul r dA n) n) n in
+        let s := P_mul (P_inv (P_add 1 dA n) n) (P_sub k (P_mul r dA n) n) n in
           if N.eqb s 0 then None else
           Some (r, s)
   end. 
@@ -52,14 +52,14 @@ Definition VeriSig (n p a xG yG xA yA : N)(r'bL s'bL Z_A M' : bL) : option strin
   if negb (inRange r' 1 (n - 1)) then Some "r' out of range" else
   if negb (inRange s' 1 (n - 1)) then Some "s' out of range" else
   let e' := HashN (Z_A ++ M') in
-  let t := F_add r' s' n in
+  let t := P_add r' s' n in
   if t =? 0 then Some "t = 0" else 
   let G := Cop (xG, yG) in
   let PA := Cop (xA, yA) in
   match pf_add (pf_mul G s' p a) (pf_mul PA t p a) p a with
   | InfO => Some "s'G + tPA = InfO"
   | Cop (x1', y1') => 
-      let R := F_add e' x1' n in
+      let R := P_add e' x1' n in
       if R =? r' then None else Some "R != r'"
   end. 
 
@@ -129,16 +129,16 @@ Compute N2hS rt. (* Correct *)
 Definition factor1 := inv_p (1 + (bL2N dAIn)) (bL2N nIn).
 Compute N2hS factor1. (*Correct, should be inverse on field n*)
 
-Definition factor2 := F_sub (bL2N kt) (F_mul rt (bL2N dAIn) (bL2N nIn)) (bL2N nIn). 
+Definition factor2 := P_sub (bL2N kt) (P_mul rt (bL2N dAIn) (bL2N nIn)) (bL2N nIn). 
 Definition nN := bL2N nIn. 
-Definition st := F_mul factor1 factor2 nN.
+Definition st := P_mul factor1 factor2 nN.
 
 Compute N2hS st. (*Correct*) 
 (* Correct Finished transaction in 615.163 secs 
 Time Compute SigWithList [bL2N kt] nIn dAIn xGIn yGIn pIn aIn ZAt MIn.  
   *)
 
-Definition tt := F_add rt st nN.
+Definition tt := P_add rt st nN.
 
 Definition x0't := hS2N "7DEACE5F D121BC38 5A3C6317 249F413D 28C17291 A60DFD83 B835A453 92D22B0A". 
 
@@ -173,7 +173,7 @@ Definition y1't := hS2N
 Print pf_add. 
 Definition P1t := pf_add (Cop (x0't, y0't)) (Cop (x00't, y00't)) (bL2N pIn) (bL2N aIn).
 (*Compute P1t. Correct*)
-Compute N2hS (F_add (bL2N et) x1't nN).  (*Correct*)
+Compute N2hS (P_add (bL2N et) x1't nN).  (*Correct*)
 
 (*
 Time Compute VeriSig nN (bL2N pIn) (bL2N aIn) (bL2N xGIn)

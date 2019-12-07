@@ -13,11 +13,11 @@ Fixpoint Lucas_tail (X : N)(Delta : N)(k : bL)(p : N)(acc : N * N) : N * N :=
   | ki :: tl =>
       match acc with (U0, V0) =>
         let (U1, V1) := 
-            ((U0 * V0) mod p, (F_div ((N.square V0) + Delta * (N.square U0))) 2 p) in
+            ((U0 * V0) mod p, (P_div ((N.square V0) + Delta * (N.square U0))) 2 p) in
           match ki with
           | false => Lucas_tail X Delta tl p (U1, V1)
           | true => Lucas_tail X Delta tl p 
-              ((F_div (X * U1 + V1) 2 p), (F_div (X * V1 + Delta * U1) 2 p)) 
+              ((P_div (X * U1 + V1) 2 p), (P_div (X * V1 + Delta * U1) 2 p)) 
           end
       end
   end.
