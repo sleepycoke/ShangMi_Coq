@@ -46,10 +46,10 @@ Fixpoint B_mul_pos (x : positive)(y : N) : N :=
   end. 
 Close Scope positive_scope. 
 
-Definition B_mul (x y g : N) : N :=
+Definition B_mul (x y gp : N) : N :=
   match x with
   | 0 => 0
-  | Npos p => B_mod (B_mul_pos p y) g
+  | Npos p => B_mod (B_mul_pos p y) gp
   end.
 
 Definition P_sub (x y q : N) :=
@@ -57,36 +57,57 @@ Definition P_sub (x y q : N) :=
 
 Definition P_sq (x q : N) :=
   (N.square x) mod q. 
+
+(* TODO Consider speeding up *)
+Definition B_sq (x gp : N) :=
+  B_mul x x gp. 
+
+Definition B_cb (x gp : N) :=
+  B_mul x (B_sq x gp) gp. 
+  
 (*B.1.1*)
-Fixpoint power_tail (g : N)(e : bL)(q : N)(sq md : N -> N -> N)
-  (mp : N -> N -> N -> N)(acc : N) : N :=
+Fixpoint power_tail (g : N)(e : bL)(q : N)(sq : N -> N)
+  (mp : N ->  N -> N)(acc : N) : N :=
   match e with
   | [] => acc
   | h :: tl =>
-      power_tail g tl q sq md mp
+      power_tail g tl q sq mp
       match h with
-      | true => (mp (sq acc q) g q) 
-      | false => (sq acc q)
+      | true => (mp (sq acc) g) 
+      | false => (sq acc)
       end
   end.
 
-Definition power_general (g : N)(a : N)(q : N)(sq md : N -> N -> N)
-  (mp : N -> N -> N -> N)  : N :=
-  let e := md a (q - 1) in
-  power_tail g (N2bL e) q sq md mp 1. 
+(* Returns g ^ a, q is the size of the field *) 
+Definition power_general (g : N)(a : N)(q : N)(sq : N -> N)
+  (mp : N -> N -> N)  : N :=
+  let e := N.modulo a (q - 1) in
+  power_tail g (N2bL e) q sq mp 1. 
 
 Definition P_power (g : N)(a : N)(q : N) : N :=
-  power_general g a q P_sq N.modulo P_mul. 
+  power_general g a q (fun x => P_sq x q) (fun x y => P_mul x y q). 
+
+Definition B_power (g : N)(a : N)(m : N)(gp : N) : N :=
+  power_general g a (N.shiftl 1 m)(fun x => B_sq x gp)(fun x y => B_mul x y gp). 
 
 Definition P_inv (g q : N) :=
   P_power g (q - 2) q. 
+
+Definition B_inv (g m gp : N) : N :=
+  B_power g ((N.shiftl 1 m) - 2) m gp. 
   
 Definition P_div (x : N)(y : N)(q : N) : N :=
   (N.mul x (P_inv y q)) mod q. 
 
+Definition B_div (x y m gp : N) : N :=
+  B_mul x (B_inv y m gp) gp. 
+
 (* Test whether (x, y) is on the elliptic-curve defined by a b p *)
 Definition OnCurve (x y p a b : N) : bool := 
   ((N.square y) mod p =? ((P_power x 3 p) + a * x + b) mod p). 
+
+Definition OnCurve_bf (x y a b gp : N) : bool :=
+  B_add (B_sq y gp) (B_mul x y gp) =? B_add (B_add (B_cb x gp) (B_mul a (B_sq x gp) gp)) b. 
 
 Compute OnCurve 2 4 7 1 6. 
 
@@ -98,6 +119,9 @@ Definition pf_eqb (P1 P2 : GE) : bool :=
   | Cop (x1, y1), Cop (x2, y2) =>
       andb (x1 =? x2) (y1 =? y2)
   end.
+
+Definition GE_eqb (P1 P2 : GE) : bool :=
+  pf_eqb P1 P2. 
 
 Open Scope positive_scope. 
 Fixpoint P_sqr_pos (n q : positive) : N :=
@@ -136,6 +160,17 @@ Definition pf_double (P1 : GE)(p : N)(a : N) :=
       let y3 := P_sub (lambda * (P_sub x1 x3 p)) y1 p in
         Cop (x3, y3)
   end. 
+ 
+Definition bf_double (P1 : GE)(a m gp : N) : GE :=
+  match P1 with
+  | InfO => InfO
+  | Cop (x1, y1) =>
+      let lambda := B_add x1 (B_div y1 x1 m gp) in
+      let x3 := B_add (B_add (B_sq lambda gp) lambda) a in
+      let y3 := B_add (B_sq x1 gp) (B_mul (B_add lambda 1) x3 gp) in
+        Cop (x3, y3)
+  end. 
+(*
 Definition pf_double_mul (P1 : GE)(p : N)(a : N) :=
   match P1 with
   | InfO => InfO
@@ -154,7 +189,7 @@ Definition pf_double_sqr (P1 : GE)(p : N)(a : N) :=
       let y3 := P_sub (lambda * (P_sub x1 x3 p)) y1 p in
         Cop (x3, y3)
   end. 
-
+*)
   
 (*
 Definition p := hS2N "8542D69E 4C044F18 E8B92435 BF6FF7DE 45728391 5C45517D 722EDB8B 08F1DFC3". 
@@ -170,7 +205,7 @@ Locate Pos.square.
 Print Pos.square. 
 *)
 
-Definition pf_add (P1 P2 : GE)(p a : N):=
+Definition pf_add (P1 P2 : GE)(p a : N) : GE :=
   match P1, P2 with
   | InfO, _ => P2
   | _, InfO => P1
@@ -182,6 +217,22 @@ Definition pf_add (P1 P2 : GE)(p a : N):=
         let lambda := P_div (P_sub y2  y1 p) (P_sub x2 x1 p) p in
           let x3 := ((square lambda) + 2 * p - x1 - x2) mod p in
           let y3 := P_sub (lambda * (P_sub x1 x3 p)) y1 p in
+            Cop (x3, y3)
+      end
+  end. 
+
+Definition bf_add (P1 P2 : GE)(a m gp : N) : GE :=
+  match P1, P2 with
+  | InfO, _ => P2
+  | _, InfO => P1
+  | Cop (x1, y1), Cop (x2, y2) =>
+      match x1 =? x2, y2 =? B_add x1 y1 with
+      | true, true => InfO
+      | true, false => bf_double P1 a m gp 
+      | false, _ =>
+          let lambda := B_div (B_add y1 y2) (B_add x1 x2) m gp in
+          let x3 := B_add (B_add (B_add (B_add (B_sq lambda gp) lambda) x1) x2) a in
+          let y3 := B_add (B_add (B_mul lambda (B_add x1 x2) gp) x3) y1 in
             Cop (x3, y3)
       end
   end. 
