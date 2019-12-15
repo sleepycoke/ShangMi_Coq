@@ -232,7 +232,7 @@ Definition bf_add (P1 P2 : GE)(a m gp : N) : GE :=
       | false, _ =>
           let lambda := B_div (B_add y1 y2) (B_add x1 x2) m gp in
           let x3 := B_add (B_add (B_add (B_add (B_sq lambda gp) lambda) x1) x2) a in
-          let y3 := B_add (B_add (B_mul lambda (B_add x1 x2) gp) x3) y1 in
+          let y3 := B_add (B_add (B_mul lambda (B_add x1 x3) gp) x3) y1 in
             Cop (x3, y3)
       end
   end. 
@@ -247,8 +247,29 @@ Fixpoint pf_mul_tail (P : GE)(kl : bL)(p : N)(a : N)(acc : GE) : GE :=
       pf_mul_tail P tl p a (pf_add P (pf_double acc p a) p a)
   end. 
 
-Definition pf_mul (P : GE)(k p a: N) : GE :=
+Definition pf_mul_old (P : GE)(k p a: N) : GE :=
   pf_mul_tail P (N2bL k) p a InfO. 
+
+Fixpoint GE_mul_tail (kl : bL)(ad db : GE -> GE)(acc : GE) : GE :=
+  match kl with
+  | [] => acc
+  | head :: tl =>
+      let double := db acc in
+        GE_mul_tail tl ad db 
+          match head with
+          | false => double
+          | true => ad double
+          end
+  end. 
+
+Definition GE_mul (P : GE)(k : N)(adder : GE -> GE -> GE)(db : GE -> GE) : GE :=
+  GE_mul_tail (N2bL k) (adder P) db InfO.
+
+Definition pf_mul (P : GE)(k p a: N) : GE :=
+  GE_mul P k (fun (x y : GE) => pf_add x y p a)(fun (x : GE) => pf_double x p a). 
+
+Definition bf_mul (P : GE)(k a m gp : N) : GE :=
+  GE_mul P k (fun x y => bf_add x y a m gp) (fun x => bf_double x a m gp).   
 
 Fixpoint pf_mul_naive (P : GE)(k : nat)(p a : N) : GE :=
   match k with
@@ -257,14 +278,33 @@ Fixpoint pf_mul_naive (P : GE)(k : nat)(p a : N) : GE :=
       pf_add P (pf_mul_naive P k' p a) p a
   end. 
 
+
 (*
 (* Identical *)
 Compute map (fun x => pf_mul (Cop (1, 2)) x 17 3) (Nlist 9). 
+Compute map (fun x => pf_mul_old (Cop (1, 2)) x 17 3) (Nlist 9). 
 Compute map (fun x => pf_mul_naive (Cop (1, 2)) (N.to_nat x) 17 3) (Nlist 9). 
-
+*)
 (* Example 3 *)
-Compute pf_add (Cop (10, 2)) (Cop (9, 6)) 19 1. (* Correct *)
-Compute pf_mul (Cop (10, 2)) 2 19 1. (* Correct *)
+(*
+Compute pf_add (Cop (10, 2)) (Cop (9, 6)) 19 1. (* Correct (16, 3) *)
+Compute pf_mul (Cop (10, 2)) 2 19 1. (* Correct (15, 16)*)
+*)
+(* Example 6 *)
+Definition alpha := 2%N. 
+Compute B_power alpha 14 5 37. (* 29 correct *)
+Compute B_power alpha 31 5 37. (* 1 correct *)
+Definition a6 := B_power alpha 6 5 37. 
+Definition a21 := B_power alpha 21 5 37. 
+Definition a3 := B_power alpha 3 5 37. 
+Definition a15 := B_power alpha 15 5 37. 
+Definition a24 := B_power alpha 24 5 37. 
+Definition a22 := B_power alpha 22 5 37. 
+Definition P1 := Cop (a6, a21). 
+Definition P2 := Cop (a3, a15). 
+Definition P3 := Cop (a24, a22). 
 
-Compute negb (3 =? 2). 
+(*
+Compute bf_add P1 P2 1 5 37.  (* 30, 21 correct *)
+Compute bf_mul P1 2 1 5 37. (* 8, 31 correct *) 
 *)

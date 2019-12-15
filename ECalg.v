@@ -58,16 +58,7 @@ Fixpoint TryFunWithList (l : list N)(func : N -> option N) : option N :=
       end
   end. 
 
-Fixpoint Nlist_tail (k : nat)(acc : list N) : list N :=
-  match k with
-  | O => acc
-  | S k' =>
-      Nlist_tail k' ((N.of_nat k') :: acc)
-  end.
 
-(*Generates [0; 1; 2; ... ; len - 1]*)
-Definition Nlist (len : N) : list N :=
-  Nlist_tail (N.to_nat len) []. 
 
 
 (*B.1.4*)
