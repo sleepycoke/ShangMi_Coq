@@ -38,18 +38,19 @@ Definition B_mod (x y : N) : N :=
   end. 
 
 Open Scope positive_scope. 
-Fixpoint B_mul_pos (x : positive)(y : N) : N :=
+Fixpoint Bp_mul_pos (x : positive)(y : N) : N :=
   match x with
   | 1 => y
-  | p~0 => N.double (B_mul_pos p y) 
-  | p~1 => B_add y (N.double (B_mul_pos p y))
+  | p~0 => N.double (Bp_mul_pos p y) 
+  | p~1 => B_add y (N.double (Bp_mul_pos p y))
   end. 
 Close Scope positive_scope. 
 
-Definition B_mul (x y gp : N) : N :=
+(* Polynomial Base *)
+Definition Bp_mul (x y gp : N) : N :=
   match x with
   | 0 => 0
-  | Npos p => B_mod (B_mul_pos p y) gp
+  | Npos p => B_mod (Bp_mul_pos p y) gp
   end.
 
 Definition P_sub (x y q : N) :=
@@ -59,11 +60,12 @@ Definition P_sq (x q : N) :=
   (N.square x) mod q. 
 
 (* TODO Consider speeding up *)
-Definition B_sq (x gp : N) :=
-  B_mul x x gp. 
+Definition Bp_sq (x gp : N) :=
+  Bp_mul x x gp. 
 
-Definition B_cb (x gp : N) :=
-  B_mul x (B_sq x gp) gp. 
+(* cube *)
+Definition Bp_cb (x gp : N) :=
+  Bp_mul x (Bp_sq x gp) gp. 
   
 (*B.1.1*)
 Fixpoint power_tail (g : N)(e : bL)(q : N)(sq : N -> N)
@@ -87,27 +89,28 @@ Definition power_general (g : N)(a : N)(q : N)(sq : N -> N)
 Definition P_power (g : N)(a : N)(q : N) : N :=
   power_general g a q (fun x => P_sq x q) (fun x y => P_mul x y q). 
 
-Definition B_power (g : N)(a : N)(m : N)(gp : N) : N :=
-  power_general g a (N.shiftl 1 m)(fun x => B_sq x gp)(fun x y => B_mul x y gp). 
+(* Polynomial Base *)
+Definition Bp_power (g : N)(a : N)(m : N)(gp : N) : N :=
+  power_general g a (N.shiftl 1 m)(fun x => Bp_sq x gp)(fun x y => Bp_mul x y gp). 
 
 Definition P_inv (g q : N) :=
   P_power g (q - 2) q. 
 
-Definition B_inv (g m gp : N) : N :=
-  B_power g ((N.shiftl 1 m) - 2) m gp. 
+Definition Bp_inv (g m gp : N) : N :=
+  Bp_power g ((N.shiftl 1 m) - 2) m gp. 
   
 Definition P_div (x : N)(y : N)(q : N) : N :=
   (N.mul x (P_inv y q)) mod q. 
 
-Definition B_div (x y m gp : N) : N :=
-  B_mul x (B_inv y m gp) gp. 
+Definition Bp_div (x y m gp : N) : N :=
+  Bp_mul x (Bp_inv y m gp) gp. 
 
 (* Test whether (x, y) is on the elliptic-curve defined by a b p *)
 Definition OnCurve (x y p a b : N) : bool := 
   ((N.square y) mod p =? ((P_power x 3 p) + a * x + b) mod p). 
 
 Definition OnCurve_bf (x y a b gp : N) : bool :=
-  B_add (B_sq y gp) (B_mul x y gp) =? B_add (B_add (B_cb x gp) (B_mul a (B_sq x gp) gp)) b. 
+  B_add (Bp_sq y gp) (Bp_mul x y gp) =? B_add (B_add (Bp_cb x gp) (Bp_mul a (Bp_sq x gp) gp)) b. 
 
 Compute OnCurve 2 4 7 1 6. 
 
@@ -167,7 +170,7 @@ Definition bf_double (P1 : GE)(a m gp : N) : GE :=
   | Cop (x1, y1) =>
       let lambda := B_add x1 (B_div y1 x1 m gp) in
       let x3 := B_add (B_add (B_sq lambda gp) lambda) a in
-      let y3 := B_add (B_sq x1 gp) (B_mul (B_add lambda 1) x3 gp) in
+      let y3 := B_add (B_sq x1 gp) (Bp_mul (B_add lambda 1) x3 gp) in
         Cop (x3, y3)
   end. 
 (*
@@ -232,7 +235,7 @@ Definition bf_add (P1 P2 : GE)(a m gp : N) : GE :=
       | false, _ =>
           let lambda := B_div (B_add y1 y2) (B_add x1 x2) m gp in
           let x3 := B_add (B_add (B_add (B_add (B_sq lambda gp) lambda) x1) x2) a in
-          let y3 := B_add (B_add (B_mul lambda (B_add x1 x3) gp) x3) y1 in
+          let y3 := B_add (B_add (Bp_mul lambda (B_add x1 x3) gp) x3) y1 in
             Cop (x3, y3)
       end
   end. 
