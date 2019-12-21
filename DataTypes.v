@@ -31,9 +31,6 @@ Fixpoint bL2bS_tail (bl : bL)(acc : string) : string :=
 Definition bL2bS (bl : bL) : string :=
   bL2bS_tail bl "". 
 
-
-
-
 Fixpoint BL2N_tail (Bl : BL)(acc : N) : N :=
   match Bl with
   | [] => acc
@@ -266,17 +263,31 @@ Inductive field_type : Set :=
 Definition Field2BL_p (alpha : N) : BL :=
   N2BL_len (N.to_nat (N.div ((N.size alpha) + 7) 8)) alpha. 
 
-Definition Field2BL_m (alpha : bL) :=
+(* Since we are using N to represent elements in 2m, 
+Field2BL_p should fit *)
+(*
+Definition Field2BL_b (alpha : bL) :=
   bL2BL alpha. 
+*)
+
+Definition Field2BL_b := Field2BL_p. 
 
 (*4.2.6*)
 Definition BL2Field_p (Bl : BL)(q : N) : option N :=
   (fun (alpha : N)  => if leb q alpha then None else Some alpha) (BL2N Bl).  
 
-Definition BL2Field_m (Bl : BL) : bL :=
+Definition BL2Field_b (Bl : BL)(m : N) : option N :=
+  BL2Field_p Bl (N.shiftl 1 m). 
+
+(*
+Definition BL2Field_b (Bl : BL) : bL :=
   BL2bL Bl. 
+*)
 
 (*4.2.7*)
+(* Still no need to convert since we are using N *)
+(*
 Definition Field2N_m (alpha : bL) : N :=
   bL2N alpha. 
+  *)
 
