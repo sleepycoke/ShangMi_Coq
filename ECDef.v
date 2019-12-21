@@ -109,8 +109,11 @@ Definition Bp_div (x y m gp : N) : N :=
 Definition OnCurve (x y p a b : N) : bool := 
   ((N.square y) mod p =? ((P_power x 3 p) + a * x + b) mod p). 
 
-Definition OnCurve_bf (x y a b gp : N) : bool :=
-  B_add (Bp_sq y gp) (Bp_mul x y gp) =? B_add (B_add (Bp_cb x gp) (Bp_mul a (Bp_sq x gp) gp)) b. 
+Definition OnCurve_bf (x y a b : N)(ml : N -> N -> N)(sq cb : N -> N) : bool :=
+  B_add (sq y) (ml x y) =? B_add (B_add (cb x) (ml a (sq x))) b. 
+
+Definition OnCurve_bfp (x y a b gp : N) : bool :=
+  OnCurve_bf x y a b (fun x y => Bp_mul x y gp) (fun x => Bp_sq x gp) (fun x => Bp_cb x gp). 
 
 Compute OnCurve 2 4 7 1 6. 
 
