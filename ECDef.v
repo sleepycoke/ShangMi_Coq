@@ -167,15 +167,18 @@ Definition pf_double (P1 : GE)(p : N)(a : N) :=
         Cop (x3, y3)
   end. 
  
-Definition bf_double (P1 : GE)(a m gp : N) : GE :=
+Definition bf_double (P1 : GE)(a : N)(ml dv : N -> N -> N)(sq : N -> N) : GE :=
   match P1 with
   | InfO => InfO
   | Cop (x1, y1) =>
-      let lambda := B_add x1 (B_div y1 x1 m gp) in
-      let x3 := B_add (B_add (B_sq lambda gp) lambda) a in
-      let y3 := B_add (B_sq x1 gp) (Bp_mul (B_add lambda 1) x3 gp) in
+      let lambda := B_add x1 (dv y1 x1) in
+      let x3 := B_add (B_add (sq lambda) lambda) a in
+      let y3 := B_add (sq x1) (ml (B_add lambda 1) x3) in
         Cop (x3, y3)
   end. 
+
+Definition bfp_double (P1 : GE)(a m gp : N) : GE :=
+  bf_double P1 a (fun x y => Bp_mul x y gp) (fun x y => Bp_div x y m gp) (fun x => Bp_sq x gp). 
 (*
 Definition pf_double_mul (P1 : GE)(p : N)(a : N) :=
   match P1 with
@@ -227,21 +230,24 @@ Definition pf_add (P1 P2 : GE)(p a : N) : GE :=
       end
   end. 
 
-Definition bf_add (P1 P2 : GE)(a m gp : N) : GE :=
+Definition bf_add (P1 P2 : GE)(a : N)(ml dv : N -> N -> N)(sq : N -> N) : GE :=
   match P1, P2 with
   | InfO, _ => P2
   | _, InfO => P1
   | Cop (x1, y1), Cop (x2, y2) =>
       match x1 =? x2, y2 =? B_add x1 y1 with
       | true, true => InfO
-      | true, false => bf_double P1 a m gp 
+      | true, false => bf_double P1 a ml dv sq 
       | false, _ =>
-          let lambda := B_div (B_add y1 y2) (B_add x1 x2) m gp in
-          let x3 := B_add (B_add (B_add (B_add (B_sq lambda gp) lambda) x1) x2) a in
-          let y3 := B_add (B_add (Bp_mul lambda (B_add x1 x3) gp) x3) y1 in
+          let lambda := dv (B_add y1 y2) (B_add x1 x2) in
+          let x3 := B_add (B_add (B_add (B_add (sq lambda) lambda) x1) x2) a in
+          let y3 := B_add (B_add (ml lambda (B_add x1 x3)) x3) y1 in
             Cop (x3, y3)
       end
   end. 
+
+Definition bfp_add (P1 P2 : GE)(a m gp : N) : GE :=
+  bf_add P1 P2 a (fun x y => Bp_mul x y gp) (fun x y => Bp_div x y m gp) (fun x => Bp_sq x gp). 
 
 (* A.3.2 method 1*)
 Fixpoint pf_mul_tail (P : GE)(kl : bL)(p : N)(a : N)(acc : GE) : GE :=
@@ -273,9 +279,8 @@ Definition GE_mul (P : GE)(k : N)(adder : GE -> GE -> GE)(db : GE -> GE) : GE :=
 
 Definition pf_mul (P : GE)(k p a: N) : GE :=
   GE_mul P k (fun (x y : GE) => pf_add x y p a)(fun (x : GE) => pf_double x p a). 
-
-Definition bf_mul (P : GE)(k a m gp : N) : GE :=
-  GE_mul P k (fun x y => bf_add x y a m gp) (fun x => bf_double x a m gp).   
+Definition bfp_mul (P : GE)(k a m gp : N) : GE :=
+  GE_mul P k (fun x y => bfp_add x y a m gp) (fun x => bfp_double x a m gp).   
 
 Fixpoint pf_mul_naive (P : GE)(k : nat)(p a : N) : GE :=
   match k with
@@ -297,20 +302,20 @@ Compute pf_add (Cop (10, 2)) (Cop (9, 6)) 19 1. (* Correct (16, 3) *)
 Compute pf_mul (Cop (10, 2)) 2 19 1. (* Correct (15, 16)*)
 *)
 (* Example 6 *)
+(*
 Definition alpha := 2%N. 
-Compute B_power alpha 14 5 37. (* 29 correct *)
-Compute B_power alpha 31 5 37. (* 1 correct *)
-Definition a6 := B_power alpha 6 5 37. 
-Definition a21 := B_power alpha 21 5 37. 
-Definition a3 := B_power alpha 3 5 37. 
-Definition a15 := B_power alpha 15 5 37. 
-Definition a24 := B_power alpha 24 5 37. 
-Definition a22 := B_power alpha 22 5 37. 
+Compute Bp_power alpha 14 5 37. (* 29 correct *)
+Compute Bp_power alpha 31 5 37. (* 1 correct *)
+Definition a6 := Bp_power alpha 6 5 37. 
+Definition a21 := Bp_power alpha 21 5 37. 
+Definition a3 := Bp_power alpha 3 5 37. 
+Definition a15 := Bp_power alpha 15 5 37. 
+Definition a24 := Bp_power alpha 24 5 37. 
+Definition a22 := Bp_power alpha 22 5 37. 
 Definition P1 := Cop (a6, a21). 
 Definition P2 := Cop (a3, a15). 
 Definition P3 := Cop (a24, a22). 
 
-(*
-Compute bf_add P1 P2 1 5 37.  (* 30, 21 correct *)
-Compute bf_mul P1 2 1 5 37. (* 8, 31 correct *) 
+Compute bfp_add P1 P2 1 5 37.  (* 30, 21 correct *)
+Compute bfp_mul P1 2 1 5 37. (* 8, 31 correct *) 
 *)
