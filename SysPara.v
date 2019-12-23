@@ -7,8 +7,22 @@ Definition SampleN (low : N)(high : N)(seed : N) : N :=
 
 (*Compute map (SampleN 10 20) (Nlist 15). *)
 
-(* false if composite *)
-Fixpoint TryFunb (l : list N)(func : N -> bool) : bool :=
+(* Generally try each element in l until func returns false. Should all true returns true *)
+Fixpoint Scrutinize (DomType : Type)(l : list DomType)(test : DomType -> bool) : bool :=
+  match l with
+  | [] => true
+  | h :: tl =>
+      match test h with
+      | false => false
+      | true => Scrutinize DomType tl test 
+      end
+  end. 
+
+
+(* For B.1.10, false if composite *)
+Definition TryFunb (l : list N)(func : N -> bool) : bool :=
+  Scrutinize N l func. 
+(*
   match l with
   | [] => true
   | j :: tl =>
@@ -17,6 +31,7 @@ Fixpoint TryFunb (l : list N)(func : N -> bool) : bool :=
       | true => TryFunb tl func (* b.6 *)
       end
   end. 
+*)
 (*
 Fixpoint TryFunb (l : list N)(func : N -> (bool * N)) : (bool * N * N) :=
   match l with
@@ -246,3 +261,8 @@ let order := 1 in (*There is no way for me to know it, just assign it to test*)
 
 End tests. 
 *)
+
+
+(* B.2.4, Irredicible Polynomial Test*)
+Definition IrdTest (sq : N -> N)(f : N) : bool :=
+
