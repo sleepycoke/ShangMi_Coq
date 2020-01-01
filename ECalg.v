@@ -232,7 +232,7 @@ Definition B_gcd (a b : N) : N :=
   match a, b with
   | N0, _ => b
   | _, N0 => a
-  | pos a', pos b' => pos (gcd_pos a' b')
+  | pos a', pos b' => pos (B_gcd_pos a' b')
   end. 
 
 (*
