@@ -243,5 +243,5 @@ Compute B_gcd 9 5.
 Compute B_gcd 5 9. 
 Compute B_gcd 3 5. 
 *)
-
+Close Scope positive_scope.
 

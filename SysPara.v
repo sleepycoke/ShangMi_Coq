@@ -18,10 +18,12 @@ Fixpoint Scrutinize (DomType : Type)(l : list DomType)(test : DomType -> bool) :
       end
   end. 
 
+Definition ScrutN (l : list N)(test : N -> bool) : bool :=
+  Scrutinize N l test. 
 
 (* For B.1.10, false if composite *)
 Definition TryFunb (l : list N)(func : N -> bool) : bool :=
-  Scrutinize N l func. 
+  ScrutN l func. 
 (*
   match l with
   | [] => true
@@ -262,7 +264,22 @@ let order := 1 in (*There is no way for me to know it, just assign it to test*)
 End tests. 
 *)
 
-
 (* B.2.4, Irredicible Polynomial Test*)
+Print B_mod. 
+(* j = d/2 - i *)
+Fixpoint IrdBody (sq : N -> N)(gcd : N -> N -> N)(f u' : N)(j : nat) : bool :=
+  match j with
+  | O => true
+  | S j' =>
+    let u := B_mod (sq u') f in
+    let g := gcd (B_add u 2) f in
+      if N.eqb g 1 then IrdBody sq gcd f u j'
+        else false
+  end. 
+
 Definition IrdTest (sq : N -> N)(f : N) : bool :=
+  let d := size_nat f in
+  let u := 2%N in
+    IrdBody sq B_gcd f u (Nat.div d 2). 
+
 
