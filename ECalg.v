@@ -206,10 +206,42 @@ Definition BL2Point_p (p : N)(a : N)(b : N)(S : BL)(cp : cmp_type) : option (N *
   end. 
 
             
+(* B.2.1 *)
+(* Using Binary GCD instead of Euclidean Alg, just as Pos.gcd does *)
+Open Scope positive_scope. 
+Fixpoint B_gcd_rcur (n : nat)(a b : positive) : positive :=
+  match n with
+    | O => 1
+    | S n' =>
+      match a,b with
+        | 1, _ => 1
+        | _, 1 => 1
+        | a'~0, b'~0 => (B_gcd_rcur n' a' b')~0
+        | _ , b'~0 => B_gcd_rcur n' a b'
+        | a'~0, _ => B_gcd_rcur n' a' b
+        | a'~1, b'~1 =>
+          match Pos.lxor a' b' with
+            | N0 => b
+            | pos r => B_gcd_rcur n' r (if a' <? b' then a else b)
+          end
+      end
+  end.
+Definition B_gcd_pos (a b : positive) := B_gcd_rcur (Pos.size_nat a + Pos.size_nat b)%nat a b.
 
-  
-  
+Definition B_gcd (a b : N) : N :=
+  match a, b with
+  | N0, _ => b
+  | _, N0 => a
+  | pos a', pos b' => pos (gcd_pos a' b')
+  end. 
 
-
+(*
+Compute B_gcd 2 0. 
+Compute B_gcd 0 3. 
+Compute B_gcd 0 0. 
+Compute B_gcd 9 5. 
+Compute B_gcd 5 9. 
+Compute B_gcd 3 5. 
+*)
 
 
