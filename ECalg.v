@@ -205,6 +205,29 @@ Definition BL2Point_p (p : N)(a : N)(b : N)(S : BL)(cp : cmp_type) : option (N *
   | Some point => BL2PointStep2_p p a b point
   end. 
 
+(* B.1.5 *)
+Fixpoint Trace_p_tail (sq_add : N -> N)(T' : N)(j : nat) : N :=
+  match j with
+  | O => T'
+  | S j' =>
+      Trace_p_tail sq_add (sq_add T') j'  
+  end. 
+
+Definition Trace_p (m gp : N)(alpha : N) : N :=
+  let (T, j) := (alpha, N.to_nat (m - 1)) in
+    Trace_p_tail (fun x => B_add (Bp_sq x gp) alpha) T j. 
+
+Fixpoint Semi_Trace_p_tail (quad_add : N -> N)(T' : N)(j : nat) : N :=
+  match j with
+  | O => T'
+  | S j' =>
+      Semi_Trace_p_tail quad_add (quad_add T') j'
+  end. 
+
+Definition Semi_Trace_p (m gp : N)(alpha : N) : N :=
+  let (T, j) := (alpha, N.to_nat((m - 1) / 2)) in
+    Semi_Trace_p_tail (fun x => B_add (Bp_sq (Bp_sq x gp) gp) alpha) T j. 
+
             
 (* B.2.1 *)
 (* Using Binary GCD instead of Euclidean Alg, just as Pos.gcd does *)

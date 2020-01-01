@@ -265,7 +265,6 @@ End tests.
 *)
 
 (* B.2.4, Irredicible Polynomial Test*)
-Print B_mod. 
 (* j = d/2 - i *)
 Fixpoint IrdBody (sq : N -> N)(gcd : N -> N -> N)(f u' : N)(j : nat) : bool :=
   match j with
