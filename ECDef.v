@@ -6,14 +6,14 @@ Inductive GE : Set :=
 
 (*TODO rename *)
 
-Definition P_add (x y q : N) :=
-  (x + y) mod q. 
+Definition P_add (p x y : N) :=
+  (x + y) mod p. 
 
 Definition B_add (x y : N) : N :=
   N.lxor x y.
 
-Definition P_mul (x y q : N) :=
-  (x * y) mod q. 
+Definition P_mul (p x y : N) :=
+  (x * y) mod p. 
 
 Open Scope positive_scope. 
 Fixpoint B_mod_pos (x y : positive)(ly : nat) : N :=
@@ -47,25 +47,25 @@ Fixpoint Bp_mul_pos (x : positive)(y : N) : N :=
 Close Scope positive_scope. 
 
 (* Polynomial Base *)
-Definition Bp_mul (x y gp : N) : N :=
+Definition Bp_mul (gp x y : N) : N :=
   match x with
   | 0 => 0
   | Npos p => B_mod (Bp_mul_pos p y) gp
   end.
 
-Definition P_sub (x y q : N) :=
-  (q + x - y) mod q.
+Definition P_sub (p x y : N) :=
+  (p + x - y) mod p.
 
-Definition P_sq (x q : N) :=
-  (N.square x) mod q. 
+Definition P_sq (p x : N) :=
+  (N.square x) mod p. 
 
 (* TODO Consider speeding up *)
-Definition Bp_sq (x gp : N) :=
-  Bp_mul x x gp. 
+Definition Bp_sq (gp x : N) :=
+  Bp_mul gp x x. 
 
 (* cube *)
-Definition Bp_cb (x gp : N) :=
-  Bp_mul x (Bp_sq x gp) gp. 
+Definition Bp_cb (gp x : N) :=
+  Bp_mul gp x (Bp_sq gp x). 
   
 (*B.1.1*)
 Fixpoint power_tail (g : N)(e : bL)(q : N)(sq : N -> N)
@@ -86,38 +86,38 @@ Definition power_general (g : N)(a : N)(q : N)(sq : N -> N)
   let e := N.modulo a (q - 1) in
   power_tail g (N2bL e) q sq mp 1. 
 
-Definition P_power (g : N)(a : N)(q : N) : N :=
-  power_general g a q (fun x => P_sq x q) (fun x y => P_mul x y q). 
+Definition P_power (p : N)(g : N)(a : N) : N :=
+  power_general g a p (P_sq p) (P_mul p). 
 
 (* Polynomial Base *)
-Definition Bp_power (g : N)(a : N)(m : N)(gp : N) : N :=
-  power_general g a (N.shiftl 1 m)(fun x => Bp_sq x gp)(fun x y => Bp_mul x y gp). 
+Definition Bp_power (m : N)(gp : N)(g : N)(a : N) : N :=
+  power_general g a (N.shiftl 1 m)(Bp_sq gp)(Bp_mul gp). 
 
-Definition P_inv (g q : N) :=
-  P_power g (q - 2) q. 
+Definition P_inv (p g : N) :=
+  P_power p g (p - 2). 
 
-Definition Bp_inv (g m gp : N) : N :=
-  Bp_power g ((N.shiftl 1 m) - 2) m gp. 
-  
-Definition P_div (x : N)(y : N)(q : N) : N :=
-  (N.mul x (P_inv y q)) mod q. 
+Definition Bp_inv (m gp g : N) : N :=
+  Bp_power m gp g ((N.shiftl 1 m) - 2).
 
-Definition Bp_div (x y m gp : N) : N :=
-  Bp_mul x (Bp_inv y m gp) gp. 
+Definition P_div (p : N)(x : N)(y : N) : N :=
+  P_mul p x (P_inv p y). 
+
+Definition Bp_div (m gp x y : N) : N :=
+  Bp_mul gp x (Bp_inv m gp y). 
 
 (* Test whether (x, y) is on the elliptic-curve defined by a b p *)
-Definition OnCurve (x y p a b : N) : bool := 
-  ((N.square y) mod p =? ((P_power x 3 p) + a * x + b) mod p). 
+Definition OnCurve (p a b x y : N) : bool := 
+  ((N.square y) mod p =? ((P_power p x 3) + a * x + b) mod p). 
 
-Definition OnCurve_bf (x y a b : N)(ml : N -> N -> N)(sq cb : N -> N) : bool :=
+Definition OnCurve_bf (ml : N -> N -> N)(sq cb : N -> N)(a b x y : N) : bool :=
   B_add (sq y) (ml x y) =? B_add (B_add (cb x) (ml a (sq x))) b. 
 
-Definition OnCurve_bfp (x y a b gp : N) : bool :=
-  OnCurve_bf x y a b (fun x y => Bp_mul x y gp) (fun x => Bp_sq x gp) (fun x => Bp_cb x gp). 
+Definition OnCurve_bfp (gp a b x y : N) : bool :=
+  OnCurve_bf (Bp_mul gp) (Bp_sq gp) (Bp_cb gp) a b x y. 
 
 Compute OnCurve 2 4 7 1 6. 
 
-Definition pf_eqb (P1 P2 : GE) : bool :=
+Definition GE_eqb (P1 P2 : GE) : bool :=
   match P1, P2 with
   | InfO, InfO => true
   | InfO, _ => false
@@ -126,9 +126,8 @@ Definition pf_eqb (P1 P2 : GE) : bool :=
       andb (x1 =? x2) (y1 =? y2)
   end.
 
-Definition GE_eqb (P1 P2 : GE) : bool :=
-  pf_eqb P1 P2. 
-
+(* What is this function? *)
+(*
 Open Scope positive_scope. 
 Fixpoint P_sqr_pos (n q : positive) : N :=
   match n with
@@ -156,18 +155,22 @@ Definition P_sqr (n q : N) :=
         P_sqr_pos n' q'
     end
   end. 
+
+Compute P_sqr 4 13. 
+*)
 (* 3.2.3.1 also A.1.2.2 *)
-Definition pf_double (P1 : GE)(p : N)(a : N) :=
+Definition pf_double (p : N)(a : N)(P1 : GE) :=
   match P1 with
   | InfO => InfO
   | Cop (x1, y1) =>
-      let lambda := P_div (3 * (square x1) + a) (double y1) p in
-      let x3 := P_sub (square lambda) ((double x1) mod p) p in
-      let y3 := P_sub (lambda * (P_sub x1 x3 p)) y1 p in
+      let lambda := P_div p (3 * (P_sq p x1) + a) (double y1) in
+      let x3 := P_sub p (square lambda) ((double x1) mod p) in
+      let y3 := P_sub p (lambda * (P_sub p x1 x3)) y1 in
         Cop (x3, y3)
   end. 
  
-Definition bf_double (P1 : GE)(a : N)(ml dv : N -> N -> N)(sq : N -> N) : GE :=
+Definition bf_double (ml dv : N -> N -> N)(sq : N -> N)
+  (a : N)(P1 : GE): GE :=
   match P1 with
   | InfO => InfO
   | Cop (x1, y1) =>
@@ -177,8 +180,8 @@ Definition bf_double (P1 : GE)(a : N)(ml dv : N -> N -> N)(sq : N -> N) : GE :=
         Cop (x3, y3)
   end. 
 
-Definition bfp_double (P1 : GE)(a m gp : N) : GE :=
-  bf_double P1 a (fun x y => Bp_mul x y gp) (fun x y => Bp_div x y m gp) (fun x => Bp_sq x gp). 
+Definition bfp_double (m gp a : N)(P1 : GE): GE :=
+  bf_double (Bp_mul gp) (Bp_div m gp) (Bp_sq gp) a P1. 
 (*
 Definition pf_double_mul (P1 : GE)(p : N)(a : N) :=
   match P1 with
@@ -214,30 +217,30 @@ Locate Pos.square.
 Print Pos.square. 
 *)
 
-Definition pf_add (P1 P2 : GE)(p a : N) : GE :=
+Definition pf_add (p a : N)(P1 P2 : GE) : GE :=
   match P1, P2 with
   | InfO, _ => P2
   | _, InfO => P1
   | Cop (x1, y1), Cop (x2, y2) =>
       match x1 =? x2, y1 + y2 =? p with
       | true, true => InfO
-      | true, false => pf_double P1 p a
+      | true, false => pf_double p a P1
       | false, _ => 
-        let lambda := P_div (P_sub y2  y1 p) (P_sub x2 x1 p) p in
+        let lambda := P_div p (P_sub p y2 y1) (P_sub p x2 x1) in
           let x3 := ((square lambda) + 2 * p - x1 - x2) mod p in
-          let y3 := P_sub (lambda * (P_sub x1 x3 p)) y1 p in
+          let y3 := P_sub p (lambda * (P_sub p x1 x3)) y1 in
             Cop (x3, y3)
       end
   end. 
 
-Definition bf_add (P1 P2 : GE)(a : N)(ml dv : N -> N -> N)(sq : N -> N) : GE :=
+Definition bf_add (ml dv : N -> N -> N)(sq : N -> N)(a : N)(P1 P2 : GE) : GE :=
   match P1, P2 with
   | InfO, _ => P2
   | _, InfO => P1
   | Cop (x1, y1), Cop (x2, y2) =>
       match x1 =? x2, y2 =? B_add x1 y1 with
       | true, true => InfO
-      | true, false => bf_double P1 a ml dv sq 
+      | true, false => bf_double ml dv sq a P1 
       | false, _ =>
           let lambda := dv (B_add y1 y2) (B_add x1 x2) in
           let x3 := B_add (B_add (B_add (B_add (sq lambda) lambda) x1) x2) a in
@@ -246,49 +249,53 @@ Definition bf_add (P1 P2 : GE)(a : N)(ml dv : N -> N -> N)(sq : N -> N) : GE :=
       end
   end. 
 
-Definition bfp_add (P1 P2 : GE)(a m gp : N) : GE :=
-  bf_add P1 P2 a (fun x y => Bp_mul x y gp) (fun x y => Bp_div x y m gp) (fun x => Bp_sq x gp). 
+Definition bfp_add (m gp a : N)(P1 P2 : GE) : GE :=
+  bf_add (Bp_mul gp) (Bp_div m gp) (Bp_sq gp) a P1 P2. 
 
 (* A.3.2 method 1*)
-Fixpoint pf_mul_tail (P : GE)(kl : bL)(p : N)(a : N)(acc : GE) : GE :=
+(*
+Fixpoint pf_mul_tail (p : N)(a : N)(P : GE)(kl : bL)(acc : GE) : GE :=
   match kl with
   | [] => acc
   | false :: tl =>
-      pf_mul_tail P tl p a (pf_double acc p a)
+      pf_mul_tail p a P tl (pf_double p a acc)
   | true :: tl =>
-      pf_mul_tail P tl p a (pf_add P (pf_double acc p a) p a)
+      pf_mul_tail p a P tl (pf_add p a P (pf_double p a acc))
   end. 
 
-Definition pf_mul_old (P : GE)(k p a: N) : GE :=
-  pf_mul_tail P (N2bL k) p a InfO. 
+Definition pf_mul_old (p a: N)(P : GE)(k : N) : GE :=
+  pf_mul_tail p a P (N2bL k) InfO. 
+*)
 
-Fixpoint GE_mul_tail (kl : bL)(ad db : GE -> GE)(acc : GE) : GE :=
+Fixpoint GE_mul_tail (ad db : GE -> GE)(kl : bL)(acc : GE) : GE :=
   match kl with
   | [] => acc
   | head :: tl =>
       let double := db acc in
-        GE_mul_tail tl ad db 
+        GE_mul_tail ad db tl 
           match head with
           | false => double
           | true => ad double
           end
   end. 
 
-Definition GE_mul (P : GE)(k : N)(adder : GE -> GE -> GE)(db : GE -> GE) : GE :=
-  GE_mul_tail (N2bL k) (adder P) db InfO.
+Definition GE_mul (adder : GE -> GE -> GE)(db : GE -> GE)(P : GE)(k : N) : GE :=
+  GE_mul_tail (adder P) db (N2bL k) InfO.
 
-Definition pf_mul (P : GE)(k p a: N) : GE :=
-  GE_mul P k (fun (x y : GE) => pf_add x y p a)(fun (x : GE) => pf_double x p a). 
-Definition bfp_mul (P : GE)(k a m gp : N) : GE :=
-  GE_mul P k (fun x y => bfp_add x y a m gp) (fun x => bfp_double x a m gp).   
+Definition pf_mul (p a : N)(P : GE)(k : N) : GE :=
+  GE_mul (pf_add p a)(pf_double p a) P k. 
 
-Fixpoint pf_mul_naive (P : GE)(k : nat)(p a : N) : GE :=
+Definition bfp_mul (m gp a : N)(P : GE)(k : N) : GE :=
+  GE_mul (bfp_add m gp a) (bfp_double m gp a) P k.   
+
+(*
+Fixpoint pf_mul_naive (p a : N)(P : GE)(k : nat) : GE :=
   match k with
   | O => InfO
   | S k' => 
-      pf_add P (pf_mul_naive P k' p a) p a
+      pf_add p a P (pf_mul_naive p a P k')
   end. 
-
+*)
 
 (*
 (* Identical *)
@@ -298,24 +305,26 @@ Compute map (fun x => pf_mul_naive (Cop (1, 2)) (N.to_nat x) 17 3) (Nlist 9).
 *)
 (* Example 3 *)
 (*
-Compute pf_add (Cop (10, 2)) (Cop (9, 6)) 19 1. (* Correct (16, 3) *)
-Compute pf_mul (Cop (10, 2)) 2 19 1. (* Correct (15, 16)*)
+Compute pf_double 19 1 (Cop (10, 2)) . (* Correct (15, 16)*)
+Compute pf_add 19 1 (Cop (10, 2)) (Cop (9, 6)) . (* Correct (16, 3) *)
+Compute pf_mul 19 1 (Cop (10, 2)) 2 . (* Correct (15, 16)*)
 *)
 (* Example 6 *)
 (*
 Definition alpha := 2%N. 
-Compute Bp_power alpha 14 5 37. (* 29 correct *)
-Compute Bp_power alpha 31 5 37. (* 1 correct *)
-Definition a6 := Bp_power alpha 6 5 37. 
-Definition a21 := Bp_power alpha 21 5 37. 
-Definition a3 := Bp_power alpha 3 5 37. 
-Definition a15 := Bp_power alpha 15 5 37. 
-Definition a24 := Bp_power alpha 24 5 37. 
-Definition a22 := Bp_power alpha 22 5 37. 
+Compute Bp_power 5 37 alpha 14. (* 29 correct *)
+Compute Bp_power 5 37 alpha 31. (* 1 correct *)
+Definition a6 := Bp_power 5 37 alpha 6. 
+Definition a21 := Bp_power 5 37 alpha 21. 
+Definition a3 := Bp_power 5 37 alpha 3. 
+Definition a15 := Bp_power 5 37 alpha 15. 
+Definition a24 := Bp_power 5 37 alpha 24. 
+Definition a22 := Bp_power 5 37 alpha 22. 
 Definition P1 := Cop (a6, a21). 
 Definition P2 := Cop (a3, a15). 
 Definition P3 := Cop (a24, a22). 
 
-Compute bfp_add P1 P2 1 5 37.  (* 30, 21 correct *)
-Compute bfp_mul P1 2 1 5 37. (* 8, 31 correct *) 
+Compute bfp_double 5 37 1 P1 . (* 8, 31 correct *) 
+Compute bfp_mul 5 37 1 P1 2 . (* 8, 31 correct *) 
+Compute bfp_add 5 37 1 P1 P2 .  (* 30, 21 correct *)
 *)
