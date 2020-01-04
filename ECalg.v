@@ -4,30 +4,28 @@ Require Export ECDef.
 Definition tide_p (yp : N) : bool :=
   N.odd yp. 
 
-
-
 (*B.1.3*)
-Fixpoint Lucas_tail (X : N)(Delta : N)(k : bL)(p : N)(acc : N * N) : N * N :=
+Fixpoint Lucas_tail (p X Delta : N)(k : bL)(acc : N * N) : N * N :=
   match k with
   | [] => acc
   | ki :: tl =>
       match acc with (U0, V0) =>
         let (U1, V1) := 
-            ((U0 * V0) mod p, (P_div ((N.square V0) + Delta * (N.square U0))) 2 p) in
+            ((U0 * V0) mod p, (P_div p ((N.square V0) + Delta * (N.square U0))) 2) in
           match ki with
-          | false => Lucas_tail X Delta tl p (U1, V1)
-          | true => Lucas_tail X Delta tl p 
-              ((P_div (X * U1 + V1) 2 p), (P_div (X * V1 + Delta * U1) 2 p)) 
+          | false => Lucas_tail p X Delta tl (U1, V1)
+          | true => Lucas_tail p X Delta tl 
+              ((P_div p (X * U1 + V1) 2), (P_div p (X * V1 + Delta * U1) 2)) 
           end
       end
   end.
 
 
 (* X, Y > 0 *)
-Definition Lucas (X : N)(Y : N)(k : N)(p : N) :=
+Definition Lucas (p X Y k : N) :=
   match N2bL k with
   | true :: k' => (* k > 0 *)
-    Lucas_tail X (((N.square X) + 4 * (p - Y)) mod p) k' p (1, X)
+    Lucas_tail p X (((N.square X) + 4 * (p - Y)) mod p) k' (1, X)
   | _ => (0, 2) (* k = 0 *)
   end. 
 
@@ -48,51 +46,46 @@ Fixpoint Lucas_naive (X : Z)(Y : Z)(k : nat)(p : Z) {struct k} : Z * Z :=
 (* Try each element x in l with func : option N. 
 * If func x is not None then return its value otherwise keep trying. 
 * If all None then return None. *)
-Fixpoint TryFunWithList (l : list N)(func : N -> option N) : option N :=
+Fixpoint TryFunWithList (func : N -> option N)(l : list N) : option N :=
   match l with
   | [] => None
   | x :: tl =>
       match func x with
       | Some y => Some y
-      | None => TryFunWithList tl func
+      | None => TryFunWithList func tl 
       end
   end. 
 
-
-
-
 (*B.1.4*)
-
-Definition square_root (g : N)(p : N) : option N :=
+Definition square_root (p g : N) : option N :=
   if N.eqb g 0 then Some 0
   else if N.eqb (N.modulo p 4) 3 then 
     let u := N.div p 4 in
-      let y := P_power g (u + 1) p in
-        let z := N.modulo (N.square y) p in
+      let y := P_power p g (u + 1) in
+        let z := P_sq p y in
           if N.eqb z g then Some y else None
   else if N.eqb (N.modulo p 8) 5 then
     let u := (N.div p 8) in
-      let z := P_power g (N.double u + 1) p in
+      let z := P_power p g (N.double u + 1) in
         let t := N.modulo z p in
-        if N.eqb t 1 then Some (P_power g (u + 1) p)
-        else if N.eqb t (p - 1) then Some ((g * 2 * (P_power (g * 4) u p)) mod p)
+        if N.eqb t 1 then Some (P_power p g (u + 1))
+        else if N.eqb t (p - 1) then Some ((g * 2 * (P_power p (g * 4) u)) mod p)
         else None 
   else (* N.eqb (N.modulo p 8) 1 *)  
     let u := N.div p 8 in
       let Y := g in
-        TryFunWithList (Nlist p) (* Should provide a random sequence *)
+        TryFunWithList 
         (fun X =>
-          let (U, V) := Lucas X Y (4 * u + 1) p in
-            if N.eqb ((N.square V) mod p) (4 * Y mod p) then Some (V / 2 mod p)
+          let (U, V) := Lucas p X Y (4 * u + 1) in
+            if N.eqb (P_sq p V) (4 * Y mod p) then Some (P_div p V 2)
             else if (andb (N.eqb (U mod p) 1) (N.eqb (U mod p) (p - 1))) then None
             else None 
-        ). 
+        )
+        (Nlist p) (* Should provide a random sequence *). 
     
-
-
-Definition recover_p (p : N)(a : N)(b : N)(xp : N)(y_tide : bool) : option (N * N) :=
+Definition recover_p (p a b xp : N)(y_tide : bool) : option (N * N) :=
   let alpha := (xp * xp * xp + a * xp + b) mod p in
-    let beta := square_root alpha p in
+    let beta := square_root p alpha in
       match beta with
       | None => None
       | Some beta' =>
@@ -137,7 +130,7 @@ Inductive cmp_type : Set :=
 
 
 Open Scope list_scope. 
-Definition Point2BL_p (xp : N)(yp : N)(cp : cmp_type) : BL :=
+Definition Point2BL_p (cp : cmp_type)(xp : N)(yp : N) : BL :=
   let X1 := Field2BL_p xp in (* a *)
   match cp with
   | cmp => (* b *)
@@ -156,7 +149,7 @@ Definition Point2BL_p (xp : N)(yp : N)(cp : cmp_type) : BL :=
   end. 
 
 (*4.2.9 still only prime field case*)
-Definition BL2PointStep1_p (p : N)(a : N)(b : N)(S : BL)(cp : cmp_type) : option (N * N) :=
+Definition BL2PointStep1_p (cp : cmp_type)(p : N)(a : N)(b : N)(S : BL) : option (N * N) :=
   match cp with
   | cmp => 
       match S with
@@ -196,11 +189,11 @@ Definition BL2PointStep1_p (p : N)(a : N)(b : N)(S : BL)(cp : cmp_type) : option
 
 Definition BL2PointStep2_p (p : N)(a : N)(b : N)(point : N * N) : option (N * N) :=
   let (xp, yp) := point in
-    if N.eqb ((N.square yp) mod p) (((P_power xp 3 p) + a * xp + b) mod p) then Some point
+    if N.eqb (P_sq p yp) (((P_power p xp 3) + a * xp + b) mod p) then Some point
     else None. 
 
-Definition BL2Point_p (p : N)(a : N)(b : N)(S : BL)(cp : cmp_type) : option (N * N) :=
-  match BL2PointStep1_p p a b S cp with
+Definition BL2Point_p (cp : cmp_type)(p : N)(a : N)(b : N)(S : BL) : option (N * N) :=
+  match BL2PointStep1_p cp p a b S with
   | None => None
   | Some point => BL2PointStep2_p p a b point
   end. 
@@ -215,7 +208,7 @@ Fixpoint Trace_p_tail (sq_add : N -> N)(T' : N)(j : nat) : N :=
 
 Definition Trace_p (m gp : N)(alpha : N) : N :=
   let (T, j) := (alpha, N.to_nat (m - 1)) in
-    Trace_p_tail (fun x => B_add (Bp_sq x gp) alpha) T j. 
+    Trace_p_tail (fun x => B_add (Bp_sq gp x) alpha) T j. 
 
 Fixpoint Semi_Trace_p_tail (quad_add : N -> N)(T' : N)(j : nat) : N :=
   match j with
@@ -226,30 +219,30 @@ Fixpoint Semi_Trace_p_tail (quad_add : N -> N)(T' : N)(j : nat) : N :=
 
 Definition Semi_Trace_p (m gp : N)(alpha : N) : N :=
   let (T, j) := (alpha, N.to_nat((m - 1) / 2)) in
-    Semi_Trace_p_tail (fun x => B_add (Bp_sq (Bp_sq x gp) gp) alpha) T j. 
+    Semi_Trace_p_tail (fun x => B_add (Bp_sq gp (Bp_sq gp x)) alpha) T j. 
 
             
 (* B.2.1 *)
 (* Using Binary GCD instead of Euclidean Alg, just as Pos.gcd does *)
 Open Scope positive_scope. 
-Fixpoint B_gcd_rcur (n : nat)(a b : positive) : positive :=
+Fixpoint B_gcd_rcur (a b : positive)(n : nat) : positive :=
   match n with
     | O => 1
     | S n' =>
       match a,b with
         | 1, _ => 1
         | _, 1 => 1
-        | a'~0, b'~0 => (B_gcd_rcur n' a' b')~0
-        | _ , b'~0 => B_gcd_rcur n' a b'
-        | a'~0, _ => B_gcd_rcur n' a' b
+        | a'~0, b'~0 => (B_gcd_rcur a' b' n')~0
+        | _ , b'~0 => B_gcd_rcur a b' n'
+        | a'~0, _ => B_gcd_rcur a' b n'
         | a'~1, b'~1 =>
           match Pos.lxor a' b' with
             | N0 => b
-            | pos r => B_gcd_rcur n' r (if a' <? b' then a else b)
+            | pos r => B_gcd_rcur r (if a' <? b' then a else b) n'
           end
       end
   end.
-Definition B_gcd_pos (a b : positive) := B_gcd_rcur (Pos.size_nat a + Pos.size_nat b)%nat a b.
+Definition B_gcd_pos (a b : positive) := B_gcd_rcur a b (Pos.size_nat a + Pos.size_nat b)%nat.
 
 Definition B_gcd (a b : N) : N :=
   match a, b with
