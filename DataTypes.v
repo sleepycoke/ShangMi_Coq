@@ -218,6 +218,24 @@ Fixpoint str2bL_tail (s : string)(acc : bL) :=
 Definition str2bL (s : string) :=
   str2bL_tail s [].
 
+Fixpoint BL2str_tail (Bl : BL)(acc : string) :=
+  match Bl with
+  | [] => acc
+  | h :: tl =>
+      BL2str_tail tl (acc ++ (String (ascii_of_N (Byte.to_N h)) ""))
+  end. 
+ 
+Definition BL2str (Bl : BL) :=
+  BL2str_tail Bl "". 
+
+Definition bL2str (bl : bL) := 
+  BL2str (bL2BL bl). 
+
+(*
+Compute bL2str (str2bL "abc"). 
+*)
+
+
 Fixpoint bLeqb (bl1 bl2 : bL) : bool :=
   match bl1, bl2 with
   | [], [] => true
