@@ -8,22 +8,22 @@ Definition SampleN (low : N)(high : N)(seed : N) : N :=
 (*Compute map (SampleN 10 20) (Nlist 15). *)
 
 (* Generally try each element in l until func returns false. Should all true returns true *)
-Fixpoint Scrutinize (DomType : Type)(l : list DomType)(test : DomType -> bool) : bool :=
+Fixpoint Scrutinize (DomType : Type)(test : DomType -> bool)(l : list DomType) : bool :=
   match l with
   | [] => true
   | h :: tl =>
       match test h with
       | false => false
-      | true => Scrutinize DomType tl test 
+      | true => Scrutinize DomType test tl
       end
   end. 
 
-Definition ScrutN (l : list N)(test : N -> bool) : bool :=
-  Scrutinize N l test. 
+Definition ScrutN (test : N -> bool)(l : list N): bool :=
+  Scrutinize N test l. 
 
 (* For B.1.10, false if composite *)
-Definition TryFunb (l : list N)(func : N -> bool) : bool :=
-  ScrutN l func. 
+Definition TryFunb (func : N -> bool)(l : list N) : bool :=
+  ScrutN func l.  
 (*
   match l with
   | [] => true
@@ -45,14 +45,14 @@ Fixpoint TryFunb (l : list N)(func : N -> (bool * N)) : (bool * N * N) :=
       end
   end. 
 *)
-Fixpoint TryFunb4 (l : list N)(b : N)(u : N)(func : N -> N -> option bool) : bool :=
+Fixpoint TryFunb4 (b u : N)(func : N -> N -> option bool)(l : list N) : bool :=
   match l with
   | [] => false (* b.5 *)
   | i :: tl =>
       let b2 := (N.square b) mod u in
         match func i b2 with
         | Some result => result
-        | None => TryFunb4 tl b2 u func
+        | None => TryFunb4 b2 u func tl
         end
   end.
 
@@ -60,18 +60,18 @@ Fixpoint NInterval (low : N)(high : N) : list N :=
   map (N.add low) (Nlist (high + 1 - low)).
 
 (* Returns (v, w) so that m = 2 ^ v * w and w is odd *)
-Fixpoint Decom_tail (n : positive)(v : N) : N * positive :=
+Fixpoint Decom_tail (v : N)(n : positive) : N * positive :=
   match n with
   | xH => (v, xH)
   | xI _ => (v, n)
-  | xO n' => Decom_tail n' (v + 1)
+  | xO n' => Decom_tail (v + 1) n'
   end. 
 
 Definition Decom (m : N) : N * N :=
   match m with
   | N0 => (0, 0)
   | Npos n => 
-      match Decom_tail n N0 with
+      match Decom_tail N0 n with
       | (v, w) => (v, Npos w)
       end
   end. 
@@ -83,18 +83,19 @@ If Returns false then u is a composite.  *)
 Definition ProPrimTest (T : N)(u : N) : bool :=
   let m := u - 1 in
   let (v, w) := Decom m in (
-  TryFunb (NInterval 1 T) 
+  TryFunb  
   (fun j =>
     let a := SampleN 2 m j in
     let b := (a ^ w) mod u in
     if orb (N.eqb b 1) (N.eqb b m) then true (* b.3 *) else
-      TryFunb4 (NInterval 1 (v - 1)) b u (* b.4 *)
+      TryFunb4 b u  (* b.4 *)
       (fun i b2 =>
           if N.eqb b2 m then Some true else (* b.4.2 *)
           if N.eqb b2 1 then Some false else (* b.4.3 *)
           None (* b.4.4 *)
-      ))
-  ). 
+      ) (NInterval 1 (v - 1)))
+  )
+  (NInterval 1 T). 
 
 
 (*
@@ -137,13 +138,13 @@ Definition CheckSEED (SEED : bL)(a p : N) : option (bL * N * N) :=
     if negb (SingTest a b p) then None
     else Some (SEED, a, b). 
 
-Fixpoint GenSab_tail (seedl : list bL)(a p : N) : option (bL * N * N) :=
+Fixpoint GenSab_tail (p a : N)(seedl : list bL) : option (bL * N * N) :=
   match seedl with
   | [] => None
   | h :: tl =>
       match CheckSEED h a p with
       | Some tuple => Some tuple
-      | None => GenSab_tail tl a p
+      | None => GenSab_tail p a tl
       end
   end. 
 
@@ -151,7 +152,7 @@ Definition constant_seedlist := map
   (fun x => N2bL_len 192 x) [0; 1; 2 ^ 90; 2 ^ 191]. 
 
 Definition GenSab (a p : N) : option (bL * N * N) :=
-  GenSab_tail constant_seedlist a p. 
+  GenSab_tail p a constant_seedlist. 
 
 Definition DisplaySab (para : option (bL * N * N)) :=
   match para with
@@ -161,7 +162,7 @@ Definition DisplaySab (para : option (bL * N * N)) :=
 
 
 (* D.2.1 method 2 *)
-Definition VeriSab (SEED : bL)(b p : N) : bool :=
+Definition VeriSab (p b : N)(SEED : bL) : bool :=
   b =? (HashN SEED) mod p. 
 
 Definition constant_T := 999. 
@@ -169,7 +170,7 @@ Definition constant_T := 999.
 
 (* A.4.2.1, true means pass *)
 (* j = B - i + 1 *)
-Fixpoint MOV_Test_tail (j : nat)(q n : N)(acc : list (bool * N)) : list (bool * N)  :=
+Fixpoint MOV_Test_tail (q n : N)(j : nat)(acc : list (bool * N)) : list (bool * N)  :=
   match j with
   | O => acc (* i = B + 1, break *) 
   | S j' =>
@@ -178,13 +179,13 @@ Fixpoint MOV_Test_tail (j : nat)(q n : N)(acc : list (bool * N)) : list (bool * 
       | (b_old, t_old) :: tl =>
         let t := (t_old * q) mod n in
         let b := andb b_old (negb (t =? 1)) in
-          MOV_Test_tail j' q n ((b, t) :: acc)
+          MOV_Test_tail q n j' ((b, t) :: acc)
       end
   end. 
 
 (* n is a prime and q is a prime exponent *)
-Definition MOV_Test (B : nat)(q n : N) : bool :=
-  fst (List.hd (false, 0) (MOV_Test_tail B q n [(true, 1)])). 
+Definition MOV_Test (B: nat)(q n : N) : bool :=
+  fst (List.hd (false, 0) (MOV_Test_tail q n B [(true, 1)])). 
 
 Definition constant_B := 27%nat. 
 
@@ -201,7 +202,7 @@ Definition Computeh' (p n : N) : N :=
   N.div (p + 1 + (floor2sqrt p)) n. 
 (* 5.2.2 returns None if valid, otherwise Some error message*)
 (* Quick tests for large inputs *)
-Definition VeriSysPara_Quick (p a b xG yG n h order : N)(SEED : bL) : option string :=
+Definition VeriSysPara_Quick (p a b n h xG yG order : N)(SEED : bL) : option string :=
   if even p then Some "p is even." else
   if p <=? a then Some "a >= p" else
   if p <=? b then Some "b >= p" else
@@ -209,30 +210,29 @@ Definition VeriSysPara_Quick (p a b xG yG n h order : N)(SEED : bL) : option str
   if p <=? yG then Some "yG >= p" else
   let SEED_len := (N.of_nat (List.length SEED)) in
   if andb (0 <? SEED_len) (SEED_len <? 192) then Some "SEED is shorter than 192." else
-  if andb (0 <? SEED_len ) (negb (VeriSab SEED b p)) then Some "Failed in VeriSab." else
-  if negb (SingTest a b p) then Some "Failed in SingTest." else
-  if negb (OnCurve xG yG p a b) then Some "Failed in OnCurveTest." else
+  if andb (0 <? SEED_len ) (negb (VeriSab p b SEED)) then Some "Failed in VeriSab." else
+  if negb (SingTest p a b) then Some "Failed in SingTest." else
+  if negb (OnCurve p a b xG yG) then Some "Failed in OnCurveTest." else
   if n <=? N.shiftl 1 191 then Some "n <= 2 ^ 192." else
   if square n <=? 16 * p then Some "n <= 4 p ^ 1/2." else
   if negb (h =? Computeh' p n) then Some "h != h'." else
   None. 
 
-
 (* These tests are quite time consuming *)
-Definition VeriSysPara (p a b xG yG n h order: N)(SEED : bL) : option string :=
-  match VeriSysPara_Quick p a b xG yG n h order SEED with
+Definition VeriSysPara (p a b n h xG yG order: N)(SEED : bL) : option string :=
+  match VeriSysPara_Quick p a b n h xG yG order SEED with
   | Some msg => Some msg
   | None =>
-    if negb (pf_eqb (pf_mul (Cop (xG, yG)) n p a) InfO) then Some "[n]G != O." else
-    if negb (ProPrimTest p constant_T) then Some "p is a composite." else
-    if negb (ProPrimTest n constant_T) then Some "n is a composite." else
-    if negb (MOV_Test constant_B p n) then Some "Failed in MOV test" else 
+    if negb (GE_eqb (pf_mul p a (Cop (xG, yG)) n) InfO) then Some "[n]G != O." else
+    if negb (ProPrimTest constant_T p) then Some "p is a composite." else
+    if negb (ProPrimTest constant_T n)  then Some "n is a composite." else
+    if negb (MOV_Test constant_B p n ) then Some "Failed in MOV test" else 
     if negb (Anomalous_Curve_Test p order) then Some "Failed in Anomalous Curve Test" else
     None
   end.
-(*
 Module tests. 
 
+(*
 (* C.2 *)
 (* Example 1 *)
 Time Compute 
@@ -244,7 +244,7 @@ let yG := hS2N "02BB3A02D4AAADACAE24817A4CA3A1B014B5270432DB27D2" in
 let n := hS2N "BDB6F4FE3E8B1D9E0DA8C0D40FC962195DFAE76F56564677" in
 let h := 1 in (*By Hasse Thm*)
 let order := 1 in (*There is no way for me to know it, just assign it to test*)
-  VeriSysPara p a b xG yG n h order []
+  VeriSysPara_Quick p a b n h xG yG order []
 
 . (* None *)
 
@@ -258,7 +258,7 @@ let yG := hS2N "0680512BCBB42C07D47349D2153B70C4E5D7FDFCBFA36EA1A85841B9E46E09A2
 let n := hS2N "8542D69E4C044F18E8B92435BF6FF7DD297720630485628D5AE74EE7C32E79B7" in
 let h := 1 in (*By Hasse Thm*)
 let order := 1 in (*There is no way for me to know it, just assign it to test*)
-  VeriSysPara p a b xG yG n h order []
+  VeriSysPara_Quick p a b n h xG yG order []
 . (* None *)
 
 End tests. 
@@ -281,4 +281,8 @@ Definition IrdTest (sq : N -> N)(f : N) : bool :=
   let u := 2%N in
     IrdBody sq B_gcd f u (Nat.div d 2). 
 
+Definition IrdTest_p (gp f : N) : bool :=
+  IrdTest (Bp_sq gp) f. 
+ 
+(* TODO need test casess *)
 
