@@ -35,7 +35,7 @@ Fixpoint TrySigWithList (ml : GE -> N -> GE)(n xG yG dA e : N)(klist : list N) :
 
 (* 6.1 *)
 (* TODO How to generate klist? *)
-Definition SigWithList (ml : GE -> N -> GE)(n xG yG Z_A dA M : bL)(klist : list N)
+Definition SigWithZAList (ml : GE -> N -> GE)(a b n xG yG Z_A dA xA yA M : bL)(klist : list N)
    : option (bL * (bL * bL)) :=
    let e := HashN (Z_A ++ M) in
      match TrySigWithList ml (bL2N n)
@@ -44,9 +44,22 @@ Definition SigWithList (ml : GE -> N -> GE)(n xG yG Z_A dA M : bL)(klist : list 
         | Some (r, s) => Some (M, ((N2bL r), (N2bL s)))
      end. 
 
-Definition SigWithList_bp (p a n xG yG Z_A dA M : bL)(klist : list N)
+Definition SigWithList (ml : GE -> N -> GE)(a b n xG yG ENTL_A ID_A dA xA yA M : bL)(klist : list N)
    : option (bL * (bL * bL)) :=
-   SigWithList (pf_mul (bL2N p) (bL2N a)) n xG yG Z_A dA M klist. 
+   let Z_A := ComputeZ ENTL_A ID_A a b xG yG xA yA in
+   SigWithZAList ml a b n xG yG Z_A dA xA yA M klist. 
+
+Definition SigWithList_pf (p a b n xG yG ENTL_A ID_A dA xA yA M : bL)(klist : list N)
+   : option (bL * (bL * bL)) :=
+   SigWithList (pf_mul (bL2N p) (bL2N a)) a b n xG yG ENTL_A ID_A dA xA yA M klist. 
+
+Definition SigWithList_bfp (m gp : N)(a b n xG yG ENTL_A ID_A dA xA yA M : bL)(klist : list N)
+   : option (bL * (bL * bL)) :=
+   SigWithList (bfp_mul m gp (bL2N a)) a b n xG yG ENTL_A ID_A dA xA yA M klist. 
+
+Definition SigWithZAList_bfp (m gp : N)(a b n xG yG ZA dA xA yA M : bL)(klist : list N)
+   : option (bL * (bL * bL)) :=
+   SigWithZAList (bfp_mul m gp (bL2N a)) a b n xG yG ZA dA xA yA M klist. 
 
 (* true if x \in [lower, upper] *)
 Definition inRange (x lower upper : N) : bool :=
@@ -70,9 +83,13 @@ Definition VeriSig (ml : GE -> N -> GE)(ad : GE -> GE -> GE)(n xG yG xA yA : N)(
   end. 
 
   
-Definition VeriSig_bp (p a n xG yG xA yA : N)(r'bL s'bL Z_A M' : bL) : option string :=
+Definition VeriSig_pf (p a n xG yG xA yA : N)(r'bL s'bL Z_A M' : bL) : option string :=
   VeriSig (pf_mul p a) (pf_add p a) n xG yG xA yA r'bL s'bL Z_A M'. 
 
+Definition VeriSig_bfp (m gp a n xG yG xA yA : N)(r'bL s'bL Z_A M' : bL) : option string :=
+  VeriSig (bfp_mul m gp a) (bfp_add m gp a) n xG yG xA yA r'bL s'bL Z_A M'. 
+
+(*
 Module A_1. 
 Definition IDa := hS2bL "414C 49434531 32334059 41484F4F 2E434F4D".
 Definition ENTLa := hS2bL "0090". 
@@ -155,7 +172,7 @@ Compute N2hS st.
 *)
 (*Correct, 6FC6DAC3 2C5D5CF1 0C77DFB2 0F7C2EB6 67A45787 2FB09EC5 6327A67E C7DEEBE7 *)
 (*
-Time Compute  match SigWithList_bp pIn aIn nIn xGIn yGIn ZAt dAIn MIn [bL2N kt] with
+Time Compute match SigWithList_pf pIn aIn bIn nIn xGIn yGIn ENTLa IDa dAIn xAIn yAIn MIn [bL2N kt] with
 | None => None
 | Some (M, (r, s)) => Some (bL2str M, ((bL2hS r), (bL2hS s)))
 end. 
@@ -206,7 +223,7 @@ Definition P1t := pf_add (bL2N pIn) (bL2N aIn) (Cop (x0't, y0't)) (Cop (x00't, y
 Compute N2hS (P_add nN (bL2N et) x1't).  (*Correct*)
 *)
 (*
-Time Compute VeriSig_bp (bL2N pIn) (bL2N aIn) nN (bL2N xGIn)
+Time Compute VeriSig_pf (bL2N pIn) (bL2N aIn) nN (bL2N xGIn)
   (bL2N yGIn) (bL2N xAIn) (bL2N yAIn) (N2bL rt) (N2bL st) ZAt MIn. 
 *)
 (*
@@ -216,3 +233,78 @@ Finished transaction in 1247.005 secs (1245.699u,0.693s) (successful)
 Correct! 
 *)
 End A_1. 
+*)
+
+
+Module A_2. 
+Definition m := 257%N. 
+Definition gp := (N.shiftl 1 257) + (N.shiftl 1 12) + 1. 
+Definition b := false :: (hS2bL "E78BCD09 746C2023 78A7E72B 12BCE002 66B9627E CB0B5A25 367AD1AD 4CC6242B"). 
+Definition xG := false :: (hS2bL "CDB9CA7F 1E6B0441 F658343F 4B10297C 0EF9B649 1082400A 62E7A748 5735FADD"). 
+Definition yG := true :: (hS2bL "3DE74DA6 5951C4D7 6DC89220 D5F7777A 611B1C38 BAE260B1 75951DC8 060C2B3E"). 
+Definition n := hS2bL "7FFFFFFF FFFFFFFF FFFFFFFF FFFFFFFF BC972CF7 E6B6F900 945B3C6A 0CF6161D".
+Definition M := str2bL "message digest".
+Definition dA := hS2bL "771EF3DB FF5F1CDC 32B9C572 93047619 1998B2BF 7CB981D7 F5B39202 645F0931".
+Definition xA := true :: (hS2bL "65961645 281A8626 607B917F 657D7E93 82F1EA5C D931F40F 6627F357 542653B2"). 
+Definition yA := true :: (hS2bL "68652213 0D590FB8 DE635D8F CA715CC6 BF3D05BE F3F75DA5 D5434544 48166612").
+Definition k := hS2bL "36CD79FC 8E24B735 7A8A7B4A 46D454C3 97703D64 98158C60 5399B341 ADA186D6". 
+Definition IDa := hS2bL "414C 49434531 32334059 41484F4F 2E434F4D".
+Definition ENTLa := hS2bL "0090". 
+
+Definition e := hS2N "AD673CBD A3114171 29A9EAA5 F9AB1AA1 633AD477 18A84DFD 46C17C6F A0AA3B12". 
+Definition x1 := hS2N "00 3FD87D69 47A15F94 25B32EDD 39381ADF D5E71CD4 BB357E3C 6A6E0397 EEA7CD66". 
+Definition y1 := hS2N "00 80771114 6D73951E 9EB373A6 58214054 B7B56D1D 50B4CD6E B32ED387 A65AA6A2". 
+ 
+Definition nN := bL2N n. 
+Definition r := hS2bL "6D3FBA26 EAB2A105 4F5D1983 32E33581 7C8AC453 ED26D339 1CD4439D 825BF25B".
+Definition s := hS2bL "3124C568 8D95F0A1 0252A9BE D033BEC8 4439DA38 4621B6D6 FAD77F94 B74A9556". 
+Definition G := Cop (bL2N xG, bL2N yG).
+Definition a := N2bL_len 257 0. 
+
+Definition Z_A := hS2bL "26352AF8 2EC19F20 7BBC6F94 74E11E90 CE0F7DDA CE03B27F 801817E8 97A81FD5". 
+
+(* TODO how to ComputeZ ? *)
+(*
+Compute bL2hS (ComputeZ ENTLa IDa a b xG yG xA yA). 
+Compute bL2hS (ComputeZ ENTLa IDa [] b xG yG xA yA). 
+Compute bL2hS (ComputeZ ENTLa IDa [false] b xG yG xA yA). 
+Compute bL2hS (ComputeZ ENTLa IDa [false; false] b xG yG xA yA). 
+Compute bL2hS (ComputeZ ENTLa IDa [false; false; false] b xG yG xA yA). 
+Compute bL2hS (ComputeZ ENTLa IDa [false; false; false; false] b xG yG xA yA). 
+Compute bL2hS (ComputeZ ENTLa IDa [false; false; false; false; false] b xG yG xA yA). 
+Compute bL2hS (ComputeZ ENTLa IDa [false; false; false; false; false; false] b xG yG xA yA). 
+Compute bL2hS (ComputeZ ENTLa IDa [false; false; false; false; false; false; false] b xG yG xA yA). 
+Compute bL2hS (ComputeZ ENTLa IDa [false; false; false; false; false; false; false; false] b xG yG xA yA). 
+Compute bL2hS (ComputeZ ENTLa IDa [false; false; false; false; false; false; false; false; false] b xG yG xA yA). 
+*)
+
+(*
+Time Compute bfp_mul m gp 0 G (bL2N k). 
+  *)
+(*
+* Cop
+         (28878213983369220209949422064733326048509454351103134932255078508052236193126,
+         58106417299780141903471788656951832429470650752450945419547271270608922125986)
+     : GE
+Finished transaction in 1146.773 secs (1143.449u,1.716s) (successful) 
+*)
+(*
+Compute N2hS (P_add nN e x1). 
+*)
+(*
+Time Compute match SigWithZAList_bfp m gp a b n xG yG Z_A dA xA yA M [bL2N k] with
+  | None => None
+  | Some (m',  (r, s)) => 
+    Some (bL2str m', ((bL2hS r), (bL2hS s)))
+  end. 
+*)
+(*Correct*)
+(*
+Time Compute VeriSig_bfp m gp (bL2N a) (bL2N n) (bL2N xG) (bL2N yG) (bL2N xA) (bL2N yA) r s Z_A M.
+= None
+     : option string
+     *)
+ (*
+Finished transaction in 2264.387 secs (2254.81u,4.95s) (successful)
+*)
+End A_2. 
