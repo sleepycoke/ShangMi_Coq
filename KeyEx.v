@@ -36,41 +36,43 @@ Definition KDF (Z : bL)(klen : nat)(hash_v : bL -> bL)(v : nat) : bL :=
   end. 
 
 (* A1 - A3 *)
-Definition ComputeR (G : GE)(r p a: N) : GE :=
-  pf_mul G r p a. 
+Definition ComputeR (ml : GE -> N -> GE)(G : GE)(r : N) : GE :=
+  ml G r. 
 
-Definition ComputeTide (w x p : N) : N :=
+Definition ComputeTide (w x : N) : N :=
       let w2 := N.shiftl 1 w in
-      P_add w2 (N.land x (w2 - 1) ) p. 
+      w2 + (N.land x (w2 - 1) ). 
 
 Definition ComputeW (n : N) : N :=
   (div_ceil_N (N.size (n - 1)) 2) - 1.
 
 (*B1 - B9*)
-Definition ComputeV (P R : GE)(x_tide p a h t n : N) : GE :=
-  pf_mul (pf_add P (pf_mul R x_tide p a) p a) (P_mul h t n) p a. 
+Definition ComputeV (ml : GE -> N -> GE)(ad : GE -> GE -> GE)(n h t x_tide  : N)(P R : GE): GE :=
+  ml (ad P (ml R x_tide)) (P_mul n h t). 
 Definition ComputeK (x y : N)(ZA ZB : bL)(klen : nat)(hash_v : bL -> bL)(v : nat) : bL :=
   KDF ((N2BbL x) ++ (N2BbL y) ++ ZA ++ ZB) klen hash_v v. 
 Definition ComputeS (prehS : string)(ZA ZB : bL)(x y x1 y1 x2 y2 : N)(hash_v : bL -> bL) : bL :=
   hash_v ((hS2bL prehS) ++ (N2BbL y) ++ (hash_v ((N2BbL x) ++ ZA ++ ZB ++ (N2BbL x1) ++ (N2BbL y1) ++ (N2BbL x2) ++ (N2BbL y2)))). 
-Definition ComputeT (d x_tide r n : N) : N := P_add d (x_tide * r) n. 
-Definition ComputeRBKBSB (rB a b p dB n h : N)(G RA PA : GE)(ZA ZB : bL)(klen : nat)(hash_v : bL -> bL)(v : nat) : optErr (GE * bL * bL) :=
-  let RB := ComputeR G rB p a in 
+
+(* A5 *)
+Definition ComputeT (n d x_tide r : N) : N := P_add n d (x_tide * r). 
+Definition ComputeRBKBSB (hash_v : bL -> bL)(v : nat)(klen : nat)(ml : GE -> N -> GE)(ad : GE -> GE -> GE)(OnCrv : N -> N -> bool)
+  (G : GE)(n h : N)(ZA ZB : bL)(RA PA : GE)(rB dB : N): optErr (GE * bL * bL) :=
+  let RB := ComputeR ml G rB in 
   match RB with
   | InfO => Error "RB = InfO" (* impossible since rB < n *)
   | Cop (x2, y2) =>
       (* w2 := 2^w < n by definiton of w *)
       let w := ComputeW n in
-      let x2_tide := ComputeTide w x2 p in
-      let tB := ComputeT dB x2_tide rB n in
+      let x2_tide := ComputeTide w x2 in
+      let tB := ComputeT n dB x2_tide rB in
       (* B5 *)
       match RA with
       | InfO => Error "RA = InfO"
-      | Cop (x1, y1) => 
-          if negb (OnCurve x1 y1 p a b) then Error "RA is not on the curve" else 
-        let x1_tide := ComputeTide w x1 p in
+      | Cop (x1, y1) => if negb (OnCrv x1 y1) then Error "RA is not on the curve" else 
+        let x1_tide := ComputeTide w x1 in
         (* B6 *)
-        let V := ComputeV PA RA x1_tide p a h tB n in
+        let V := ComputeV ml ad n h tB x1_tide PA RA in
         match V with
         | InfO => Error "V = InfO"
         | Cop (xV, yV) =>
@@ -83,22 +85,27 @@ Definition ComputeRBKBSB (rB a b p dB n h : N)(G RA PA : GE)(ZA ZB : bL)(klen : 
       end
   end.
 
-
+Definition ComputeRBKBSB_pf (hash_v : bL -> bL)(v : nat)(klen : nat)
+  (p a b : N)(G : GE)(n h : N)(ZA ZB : bL)(RA PA : GE)(rB dB : N)
+  : optErr (GE * bL * bL) :=
+  ComputeRBKBSB hash_v v klen (pf_mul p a) (pf_add p a) (OnCurve_pf p a b)
+    G n h ZA ZB RA PA rB dB. 
 
 (* A4-A10 *)
-Definition ComputeKAS1SA (rA a b p dA n h : N) (PB RA RB : GE)(ZA ZB SB : bL)(klen : nat)(hash_v : bL -> bL)(v : nat) : optErr (bL * bL * bL) :=
+Definition ComputeKAS1SA (hash_v : bL -> bL)(v : nat)(klen : nat)(ml : GE -> N -> GE)(ad : GE -> GE -> GE)(OnCrv : N -> N -> bool)
+(rA dA n h : N) (PB RA RB : GE)(ZA ZB SB : bL): optErr (bL * bL * bL) :=
   match RA with
   | InfO => Error "RA = InfO"
   | Cop (x1, y1) =>
       let w := ComputeW n in
-      let x1_tide := ComputeTide w x1 p in
-      let tA := ComputeT dA x1_tide rA n in
+      let x1_tide := ComputeTide w x1 in
+      let tA := ComputeT n dA x1_tide rA in
       match RB with
       | InfO => Error "RB = InfO" (*RB cannot be InfO since rB < n*)
       | Cop (x2, y2) =>
-        if negb (OnCurve x2 y2 p a b) then Error "RB is not on curve"
-        else let x2_tide := ComputeTide w x2 p in
-        let U := ComputeV PB RB x2_tide p a h tA n in  
+        if negb (OnCrv x2 y2) then Error "RB is not on curve"
+        else let x2_tide := ComputeTide w x2 in
+        let U := ComputeV ml ad n h tA x2_tide PB RB in  
         match U with
         | InfO => Error "U = InfO"
         | Cop (xU, yU) =>
@@ -110,6 +117,9 @@ Definition ComputeKAS1SA (rA a b p dA n h : N) (PB RA RB : GE)(ZA ZB SB : bL)(kl
         end
       end
   end. 
+Definition ComputeKAS1SA_pf (hash_v : bL -> bL)(v : nat)(klen : nat)(p a b : N) (rA dA n h : N) (PB RA RB : GE)(ZA ZB SB : bL): optErr (bL * bL * bL) :=
+  ComputeKAS1SA hash_v v klen (pf_mul p a) (pf_add p a) (OnCurve_pf p a b)
+rA dA n h PB RA RB ZA ZB SB. 
 
 (* B10 *)
 Definition VeriS2eqSA (ZA ZB SA: bL)(xV yV x1 y1 x2 y2 : N)(hash_v : bL -> bL) : bool :=
@@ -216,11 +226,10 @@ Compute bL2hS (Hash(hS2bL "02" ++ (yVbL) ++
   (Hash((xVbL) ++ ZA ++ ZB ++ (N2BbL x1) ++ (N2BbL y1)
     ++ (N2BbL x2) ++ (N2BbL y2))))). (* Correct So we need to convert into BL*)
 *)
+(*Compute (RB, bL2hS KB, bL2hS SB). *)
 (*
-Compute (RB, bL2hS KB, bL2hS SB). 
-
-Time Compute 
-  match ComputeRBKBSB rB a b p dB n h G RA PA ZA ZB klen Hash constant_v with
+Time Compute  
+  match ComputeRBKBSB_pf Hash constant_v klen p a b G n h ZA ZB RA PA rB dB with
   | Normal (r, k, s) =>
       Normal (r, bL2hS k, bL2hS s)
   | Error str => Error str
@@ -233,13 +242,13 @@ Time Compute
             38349695398999244294516177264660271811914762859380595053573598523959505796340),
          "55b0ac62a6b927ba23703832c853ded4",
          "284c8f198f141b502e81250f1581c7e9eeb4ca6990f9e02df388b45471f5bc5c")
+Finished transaction in 1479.333 secs (1475.634u,1.955s) (successful)
 Correct *)
 Definition KA := hS2bL "55B0AC62 A6B927BA 23703832 C853DED4". 
 Definition S1 := hS2bL "284C8F19 8F141B50 2E81250F 1581C7E9 EEB4CA69 90F9E02D F388B454 71F5BC5C". 
 Definition SA := hS2bL "23444DAF 8ED75343 66CB901C 84B3BDBB 63504F40 65C1116C 91A4C006 97E6CF7A". 
 
-Definition result3 := ComputeKAS1SA rA a b p dA n h PB RA RB ZA ZB SB klen Hash constant_v.  
-
+Definition result3 := ComputeKAS1SA_pf Hash constant_v klen p a b rA dA n h PB RA RB ZA ZB SB.  
 (*
 Time Compute match result3 with
 | Error err => Error err
@@ -253,7 +262,8 @@ end.
 Finished transaction in 919.87 secs (918.127u,0.839s) (successful)
 Correct. 
 *)
-(* Compute VeriS2eqSA ZA ZB SA xV yV x1 y1 x2 y2 Hash. 
+(*
+Compute VeriS2eqSA ZA ZB SA xV yV x1 y1 x2 y2 Hash. 
 * = true Correct. *)
 
 Definition Z2 := hS2bL "00 83E628CF 701EE314 1E8873FE 55936ADF 24963F5D C9C64805 66C80F8A 1D8CC51B 01 524C647F 0C0412DE FD468BDA 3AE0E5A8 0FCC8F5C 990FEE11 60292923 2DCD9F36".
