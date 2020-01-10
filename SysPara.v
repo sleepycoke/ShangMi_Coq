@@ -212,7 +212,7 @@ Definition VeriSysPara_Quick (p a b n h xG yG order : N)(SEED : bL) : option str
   if andb (0 <? SEED_len) (SEED_len <? 192) then Some "SEED is shorter than 192." else
   if andb (0 <? SEED_len ) (negb (VeriSab p b SEED)) then Some "Failed in VeriSab." else
   if negb (SingTest p a b) then Some "Failed in SingTest." else
-  if negb (OnCurve p a b xG yG) then Some "Failed in OnCurveTest." else
+  if negb (OnCurve_pf p a b xG yG) then Some "Failed in OnCurveTest." else
   if n <=? N.shiftl 1 191 then Some "n <= 2 ^ 192." else
   if square n <=? 16 * p then Some "n <= 4 p ^ 1/2." else
   if negb (h =? Computeh' p n) then Some "h != h'." else

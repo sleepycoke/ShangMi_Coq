@@ -106,7 +106,7 @@ Definition Bp_div (m gp x y : N) : N :=
   Bp_mul gp x (Bp_inv m gp y). 
 
 (* Test whether (x, y) is on the elliptic-curve defined by a b p *)
-Definition OnCurve (p a b x y : N) : bool := 
+Definition OnCurve_pf (p a b x y : N) : bool := 
   ((N.square y) mod p =? ((P_power p x 3) + a * x + b) mod p). 
 
 Definition OnCurve_bf (ml : N -> N -> N)(sq cb : N -> N)(a b x y : N) : bool :=
@@ -114,8 +114,6 @@ Definition OnCurve_bf (ml : N -> N -> N)(sq cb : N -> N)(a b x y : N) : bool :=
 
 Definition OnCurve_bfp (gp a b x y : N) : bool :=
   OnCurve_bf (Bp_mul gp) (Bp_sq gp) (Bp_cb gp) a b x y. 
-
-Compute OnCurve 2 4 7 1 6. 
 
 Definition GE_eqb (P1 P2 : GE) : bool :=
   match P1, P2 with
