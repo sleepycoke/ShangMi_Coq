@@ -140,6 +140,10 @@ Definition BL2bL (M : BL) : bL :=
 
 Definition N2BbL (n : N) : bL := BL2bL (N2BL n). 
 
+(*Padding len to a multiplier of 8*)
+(*Croping from the rightside *)
+Definition N2BbL_len (len : nat)(n : N) : bL := 
+  BL2bL (N2BL_len (div_ceil_nat len 8%nat) n). 
 
 Definition N2bS (n : N) : string :=
   bL2bS (N2bL n).
@@ -230,10 +234,6 @@ Definition BL2str (Bl : BL) :=
 
 Definition bL2str (bl : bL) := 
   BL2str (bL2BL bl). 
-
-(*
-Compute bL2str (str2bL "abc"). 
-*)
 
 
 Fixpoint bLeqb (bl1 bl2 : bL) : bool :=
