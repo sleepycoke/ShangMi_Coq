@@ -91,6 +91,9 @@ Definition ComputeRBKBSB_pf (hash_v : bL -> bL)(v : nat)(klen : nat)
   ComputeRBKBSB hash_v v klen (pf_mul p a) (pf_add p a) (OnCurve_pf p a b)
     G n h ZA ZB RA PA rB dB. 
 
+Definition ComputeRBKBSB_bpf (hash_v : bL -> bL)(v : nat)(klen : nat)(m gp a b : N) (G : GE)(n h : N)(ZA ZB : bL)(RA PA : GE)(rB dB : N): optErr (GE * bL * bL) :=
+  ComputeRBKBSB hash_v v klen (bfp_mul m gp a) (bfp_add m gp a) (OnCurve_bfp gp a b) G n h ZA ZB RA PA rB dB. 
+
 (* A4-A10 *)
 Definition ComputeKAS1SA (hash_v : bL -> bL)(v : nat)(klen : nat)(ml : GE -> N -> GE)(ad : GE -> GE -> GE)(OnCrv : N -> N -> bool)
 (rA dA n h : N) (PB RA RB : GE)(ZA ZB SB : bL): optErr (bL * bL * bL) :=
@@ -121,13 +124,17 @@ Definition ComputeKAS1SA_pf (hash_v : bL -> bL)(v : nat)(klen : nat)(p a b : N) 
   ComputeKAS1SA hash_v v klen (pf_mul p a) (pf_add p a) (OnCurve_pf p a b)
 rA dA n h PB RA RB ZA ZB SB. 
 
+Definition ComputeKAS1SA_bpf (hash_v : bL -> bL)(v : nat)(klen : nat)(m gp a b : N) (rA dA n h : N) (PB RA RB : GE)(ZA ZB SB : bL): optErr (bL * bL * bL) :=
+  ComputeKAS1SA hash_v v klen (bfp_mul m gp a) (bfp_add m gp a) (OnCurve_bfp gp a b)
+rA dA n h PB RA RB ZA ZB SB. 
+
 (* B10 *)
 Definition VeriS2eqSA (ZA ZB SA: bL)(xV yV x1 y1 x2 y2 : N)(hash_v : bL -> bL) : bool :=
   let S2 := ComputeS "03" ZA ZB xV yV x1 y1 x2 y2 hash_v in
     bLeqb S2 SA. 
 
 
-Module test. 
+Module test_pf. 
 Definition p := hS2N "8542D69E 4C044F18 E8B92435 BF6FF7DE 45728391 5C45517D 722EDB8B 08F1DFC3". 
 Definition a := hS2N"787968B4 FA32C3FD 2417842E 73BBFEFF 2F3C848B 6831D7E0 EC65228B 3937E498". 
 Definition b := hS2N"63E4C6D3 B23B0C84 9CF84241 484BFE48 F61D59A5 B16BA06E 6E12D1DA 27C5249A". 
@@ -270,5 +277,89 @@ Definition Z2 := hS2bL "00 83E628CF 701EE314 1E8873FE 55936ADF 24963F5D C9C64805
 (*983BCF 106AB2DC C92F8AEA C6C60BF2 98BB0117*)
 (*Compute bL2hS (KDF Z2 152 Hash constant_v).*) (*Correct*)
 
-End test. 
+End test_pf. 
+
+
+Module test_bfp. 
+Definition m := 257%N. 
+Definition gp := (N.shiftl 1 257) + (N.shiftl 1 12) + 1. 
+Definition a := 0.
+Definition b := hS2N "00 E78BCD09 746C2023 78A7E72B 12BCE002 66B9627E CB0B5A25 367AD1AD 4CC6242B". 
+Definition h := 4%N. 
+
+Definition n := hS2N "7FFFFFFF FFFFFFFF FFFFFFFF FFFFFFFF BC972CF7 E6B6F900 945B3C6A 0CF6161D". 
+
+Definition xG := hS2N "00 CDB9CA7F 1E6B0441 F658343F 4B10297C 0EF9B649 1082400A 62E7A748 5735FADD". 
+Definition yG := hS2N "01 3DE74DA6 5951C4D7 6DC89220 D5F7777A 611B1C38 BAE260B1 75951DC8 060C2B3E". 
+Definition G := Cop (xG, yG).
+Definition dA := hS2N "4813903D 254F2C20 A94BC570 42384969 54BB5279 F861952E F2C5298E 84D2CEAA".
+Definition xA := hS2N "00 8E3BDB2E 11F91933 88F1F901 CCC857BF 49CFC065 FB38B906 9CAAE6D5 AFC3592F". 
+Definition yA := hS2N "00 4555122A AC0075F4 2E0A8BBD 2C0665C7 89120DF1 9D77B4E3 EE4712F5 98040415".
+Definition PA := Cop (xA, yA).
+Definition xB := hS2N "00 34297DD8 3AB14D5B 393B6712 F32B2F2E 938D4690 B095424B 89DA880C 52D4A7D9". 
+Definition yB := hS2N "01 99BBF11A C95A0EA3 4BBD00CA 50B93EC2 4ACB6833 5D20BA5D CFE3B33B DBD2B62D". 
+Definition PB := Cop (xB, yB).
+Definition ZA := hS2bL "ECF00802 15977B2E 5D6D61B9 8A99442F 03E8803D C39E349F 8DCA5621 A9ACDF2B". 
+Definition ZB := hS2bL "557BAD30 E183559A EEC3B225 6E1C7C11 F870D22B 165D015A CF9465B0 9B87B527". 
+Definition rA := hS2N "54A3D667 3FF3A6BD 6B02EBB1 64C2A3AF 6D4A4906 229D9BFC E68CC366 A2E64BA4". 
+Definition rB := hS2N "1F219333 87BEF781 D0A8F7FD 708C5AE0 A56EE3F4 23DBC2FE 5BDF6F06 8C53F7AD". 
+Definition dB := hS2N "08F41BAE 0922F47C 212803FE 681AD52B 9BF28A35 E1CD0EC2 73A2CF81 3E8FD1DC". 
+Definition klen := 128%nat. 
+Definition RA' := bfp_mul m gp a G rA. 
+Definition RB' := bfp_mul m gp a G rB. 
+Definition x1 := hS2N "01 81076543 ED19058C 38B313D7 39921D46 B80094D9 61A13673 D4A5CF8C 7159E304".
+Definition y1 := hS2N "01 D8CFFF7C A27A01A2 E88C1867 3748FDE9 A74C1F9B 45646ECA 0997293C 15C34DD8".
+Definition RA := Cop (x1, y1). 
+Definition x2 := hS2N "00 2A4832B4 DCD399BA AB3FFFE7 DD6CE6ED 68CC43FF A5F2623B 9BD04E46 8D322A2A".
+Definition y2 := hS2N "00 16599BB5 2ED9EAFA D01CFA45 3CF3052E D60184D2 EECFD42B 52DB7411 0B984C23". 
+Definition RB := Cop (x2, y2). 
+Definition SB := hS2bL "4EB47D28 AD3906D6 244D01E0 F6AEC73B 0B51DE15 74C13798 184E4833 DBAE295A". 
+
+(*
+Time Compute match RA' with
+  |InfO => ("", "")
+  |Cop (x, y) => (N2hS x, N2hS y)
+end. 
+Time Compute match RB' with
+  |InfO => ("", "")
+  |Cop (x, y) => (N2hS x, N2hS y)
+end. 
+*)
+(* Same as RA and RB *)
+(*     = ("181076543ed19058c38b313d739921d46b80094d961a13673d4a5cf8c7159e304",
+       "1d8cfff7ca27a01a2e88c18673748fde9a74c1f9b45646eca0997293c15c34dd8")
+     : string * string
+Finished transaction in 1172.412 secs (1168.732u,1.655s) (successful)
+     = ("2a4832b4dcd399baab3fffe7dd6ce6ed68cc43ffa5f2623b9bd04e468d322a2a",
+       "16599bb52ed9eafad01cfa453cf3052ed60184d2eecfd42b52db74110b984c23")
+     : string * string
+Finished transaction in 1156.16 secs (1155.32u,0.488s) (successful)
+*)
+(*
+Time Compute match ComputeRBKBSB_bpf Hash constant_v klen m gp a b G n h ZA ZB RA PA rB dB with
+| Error err => Error err
+| Normal (rb, kb, sb) => Normal (
+    match rb with
+    | InfO => ("", "")
+    | Cop (xrb, yrb) =>
+        (N2hS xrb, N2hS yrb)
+    end,
+    bL2hS kb, bL2hS sb)
+end. 
+*)
+(*= Normal
+         ("2a4832b4dcd399baab3fffe7dd6ce6ed68cc43ffa5f2623b9bd04e468d322a2a",
+         "16599bb52ed9eafad01cfa453cf3052ed60184d2eecfd42b52db74110b984c23",
+         "8bb6b5c8b6b9f0fbd66680dc2379cc0a",
+         "2a7824f3fa5024891f399fad8279cccd9d8e4932844aa18bfde655deaeab9026")
+     : optErr (string * string * string * string)
+Finished transaction in 2925.554 secs (2913.839u,5.342s) (successful)
+(*
+Time Compute match ComputeKAS1SA_bpf Hash constant_v klen m gp a b rA dA n h PB RA RB ZA ZB SB with
+| Error err => Error err
+| Normal (ka, s1, sa) => Normal (bL2hS ka, bL2hS s1, bL2hS sa)
+end. 
+*)
+
+End test_bfp. 
 
