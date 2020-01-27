@@ -54,6 +54,9 @@ Definition ComputeK (x y : N)(ZA ZB : bL)(klen : nat)(hash_v : bL -> bL)(v : nat
 Definition ComputeS (prehS : string)(ZA ZB : bL)(x y x1 y1 x2 y2 : N)(hash_v : bL -> bL) : bL :=
   hash_v ((hS2bL prehS) ++ (N2BbL y) ++ (hash_v ((N2BbL x) ++ ZA ++ ZB ++ (N2BbL x1) ++ (N2BbL y1) ++ (N2BbL x2) ++ (N2BbL y2)))). 
 
+Definition ComputeS_bf (m : nat)(prehS : string)(ZA ZB : bL)(x y x1 y1 x2 y2 : N)(hash_v : bL -> bL) : bL :=
+  hash_v ((hS2bL prehS) ++ (N2BbL_len m y) ++ (hash_v ((N2BbL_len m x) ++ ZA ++ ZB ++ (N2BbL_len m x1) ++ (N2BbL_len m y1) ++ (N2BbL_len m x2) ++ (N2BbL_len m y2)))). 
+
 (* A5 *)
 Definition ComputeT (n d x_tide r : N) : N := P_add n d (x_tide * r). 
 Definition ComputeRBKBSB (hash_v : bL -> bL)(v : nat)(klen : nat)(ml : GE -> N -> GE)(ad : GE -> GE -> GE)(OnCrv : N -> N -> bool)
@@ -133,7 +136,7 @@ Definition VeriS2eqSA (ZA ZB SA: bL)(xV yV x1 y1 x2 y2 : N)(hash_v : bL -> bL) :
   let S2 := ComputeS "03" ZA ZB xV yV x1 y1 x2 y2 hash_v in
     bLeqb S2 SA. 
 
-
+(*
 Module test_pf. 
 Definition p := hS2N "8542D69E 4C044F18 E8B92435 BF6FF7DE 45728391 5C45517D 722EDB8B 08F1DFC3". 
 Definition a := hS2N"787968B4 FA32C3FD 2417842E 73BBFEFF 2F3C848B 6831D7E0 EC65228B 3937E498". 
@@ -278,6 +281,7 @@ Definition Z2 := hS2bL "00 83E628CF 701EE314 1E8873FE 55936ADF 24963F5D C9C64805
 (*Compute bL2hS (KDF Z2 152 Hash constant_v).*) (*Correct*)
 
 End test_pf. 
+  *)
 
 
 Module test_bfp. 
@@ -313,8 +317,17 @@ Definition RA := Cop (x1, y1).
 Definition x2 := hS2N "00 2A4832B4 DCD399BA AB3FFFE7 DD6CE6ED 68CC43FF A5F2623B 9BD04E46 8D322A2A".
 Definition y2 := hS2N "00 16599BB5 2ED9EAFA D01CFA45 3CF3052E D60184D2 EECFD42B 52DB7411 0B984C23". 
 Definition RB := Cop (x2, y2). 
+Definition xV := hS2N "00 DADD0874 06221D65 7BC3FA79 FF329BB0 22E9CB7D DFCFCCFE 277BE8CD 4AE9B954".
+Definition yV := hS2N "01 F0464B1E 81684E5E D6EF281B 55624EF4 6CAA3B2D 37484372 D91610B6 98252CC9". 
 Definition SB := hS2bL "4EB47D28 AD3906D6 244D01E0 F6AEC73B 0B51DE15 74C13798 184E4833 DBAE295A". 
+(*
+Compute bL2hS (ComputeS_bf (N.to_nat m) "02" ZA ZB xV yV x1 y1 x2 y2 Hash). 
+Correc. Same as SB *)
 
+Print N2bL_len.
+Compute N2bL_len 2 5. 
+Print N2BbL.
+Print N2BbL_len. 
 (*
 Time Compute match RA' with
   |InfO => ("", "")
@@ -354,6 +367,7 @@ end.
          "2a7824f3fa5024891f399fad8279cccd9d8e4932844aa18bfde655deaeab9026")
      : optErr (string * string * string * string)
 Finished transaction in 2925.554 secs (2913.839u,5.342s) (successful)
+(*Only RB is correct *)
 (*
 Time Compute match ComputeKAS1SA_bpf Hash constant_v klen m gp a b rA dA n h PB RA RB ZA ZB SB with
 | Error err => Error err
