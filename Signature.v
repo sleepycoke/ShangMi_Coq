@@ -263,21 +263,6 @@ Definition a := N2bL_len 257 0.
 
 Definition Z_A := hS2bL "26352AF8 2EC19F20 7BBC6F94 74E11E90 CE0F7DDA CE03B27F 801817E8 97A81FD5". 
 
-(* TODO how to ComputeZ ? *)
-(*
-Compute bL2hS (ComputeZ ENTLa IDa a b xG yG xA yA). 
-Compute bL2hS (ComputeZ ENTLa IDa [] b xG yG xA yA). 
-Compute bL2hS (ComputeZ ENTLa IDa [false] b xG yG xA yA). 
-Compute bL2hS (ComputeZ ENTLa IDa [false; false] b xG yG xA yA). 
-Compute bL2hS (ComputeZ ENTLa IDa [false; false; false] b xG yG xA yA). 
-Compute bL2hS (ComputeZ ENTLa IDa [false; false; false; false] b xG yG xA yA). 
-Compute bL2hS (ComputeZ ENTLa IDa [false; false; false; false; false] b xG yG xA yA). 
-Compute bL2hS (ComputeZ ENTLa IDa [false; false; false; false; false; false] b xG yG xA yA). 
-Compute bL2hS (ComputeZ ENTLa IDa [false; false; false; false; false; false; false] b xG yG xA yA). 
-Compute bL2hS (ComputeZ ENTLa IDa [false; false; false; false; false; false; false; false] b xG yG xA yA). 
-Compute bL2hS (ComputeZ ENTLa IDa [false; false; false; false; false; false; false; false; false] b xG yG xA yA). 
-*)
-
 (*
 Time Compute bfp_mul m gp 0 G (bL2N k). 
   *)
