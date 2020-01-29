@@ -94,7 +94,7 @@ Definition ComputeRBKBSB_pf (hash_v : bL -> bL)(v : nat)(klen : nat)
   ComputeRBKBSB hash_v v klen (ComputeK 0) (ComputeS 0) (pf_mul p a) (pf_add p a) (OnCurve_pf p a b)
     G n h ZA ZB RA PA rB dB . 
 
-Definition ComputeRBKBSB_bpf (hash_v : bL -> bL)(v : nat)(klen : nat)(m gp a b : N) (G : GE)(n h : N)(ZA ZB : bL)(RA PA : GE)(rB dB : N): optErr (GE * bL * bL) :=
+Definition ComputeRBKBSB_bfp (hash_v : bL -> bL)(v : nat)(klen : nat)(m gp a b : N) (G : GE)(n h : N)(ZA ZB : bL)(RA PA : GE)(rB dB : N): optErr (GE * bL * bL) :=
   ComputeRBKBSB hash_v v klen (ComputeK m) (ComputeS m) (bfp_mul m gp a) (bfp_add m gp a) (OnCurve_bfp gp a b) G n h ZA ZB RA PA rB dB. 
 
 (* A4-A10 *)
@@ -128,7 +128,7 @@ Definition ComputeKAS1SA_pf (hash_v : bL -> bL)(v : nat)(klen : nat)(p a b : N) 
   ComputeKAS1SA  hash_v v klen (ComputeK 0) (ComputeS 0) (pf_mul p a) (pf_add p a) (OnCurve_pf p a b)
 rA dA n h PB RA RB ZA ZB SB. 
 
-Definition ComputeKAS1SA_bpf (hash_v : bL -> bL)(v : nat)(klen : nat)(m gp a b : N) (rA dA n h : N) (PB RA RB : GE)(ZA ZB SB : bL): optErr (bL * bL * bL) :=
+Definition ComputeKAS1SA_bfp (hash_v : bL -> bL)(v : nat)(klen : nat)(m gp a b : N) (rA dA n h : N) (PB RA RB : GE)(ZA ZB SB : bL): optErr (bL * bL * bL) :=
   ComputeKAS1SA hash_v v klen (ComputeK m) (ComputeS m) (bfp_mul m gp a) (bfp_add m gp a) (OnCurve_bfp gp a b)
 rA dA n h PB RA RB ZA ZB SB. 
 
@@ -354,7 +354,7 @@ Finished transaction in 1172.412 secs (1168.732u,1.655s) (successful)
 Finished transaction in 1156.16 secs (1155.32u,0.488s) (successful)
 *)
 (*
-Time Compute match ComputeRBKBSB_bpf Hash constant_v klen m gp a b G n h ZA ZB RA PA rB dB with
+Time Compute match ComputeRBKBSB_bfp Hash constant_v klen m gp a b G n h ZA ZB RA PA rB dB with
 | Error err => Error err
 | Normal (rb, kb, sb) => Normal (
     match rb with
@@ -375,7 +375,7 @@ Finished transaction in 2817.141 secs (2815.495u,0.988s) (successful)
 *)
 (*Correct *)
 (*
-Time Compute match ComputeKAS1SA_bpf Hash constant_v klen m gp a b rA dA n h PB RA RB ZA ZB SB with
+Time Compute match ComputeKAS1SA_bfp Hash constant_v klen m gp a b rA dA n h PB RA RB ZA ZB SB with
 | Error err => Error err
 | Normal (ka, s1, sa) => Normal (bL2hS ka, bL2hS s1, bL2hS sa)
 end. 
