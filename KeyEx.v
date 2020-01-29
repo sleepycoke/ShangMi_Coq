@@ -49,17 +49,17 @@ Definition ComputeW (n : N) : N :=
 (*B1 - B9*)
 Definition ComputeV (ml : GE -> N -> GE)(ad : GE -> GE -> GE)(n h t x_tide  : N)(P R : GE): GE :=
   ml (ad P (ml R x_tide)) (P_mul n h t). 
-Definition ComputeK (x y : N)(ZA ZB : bL)(klen : nat)(hash_v : bL -> bL)(v : nat) : bL :=
-  KDF ((N2BbL x) ++ (N2BbL y) ++ ZA ++ ZB) klen hash_v v. 
-Definition ComputeS (prehS : string)(ZA ZB : bL)(x y x1 y1 x2 y2 : N)(hash_v : bL -> bL) : bL :=
-  hash_v ((hS2bL prehS) ++ (N2BbL y) ++ (hash_v ((N2BbL x) ++ ZA ++ ZB ++ (N2BbL x1) ++ (N2BbL y1) ++ (N2BbL x2) ++ (N2BbL y2)))). 
-
-Definition ComputeS_bf (m : nat)(prehS : string)(ZA ZB : bL)(x y x1 y1 x2 y2 : N)(hash_v : bL -> bL) : bL :=
-  hash_v ((hS2bL prehS) ++ (N2BbL_len m y) ++ (hash_v ((N2BbL_len m x) ++ ZA ++ ZB ++ (N2BbL_len m x1) ++ (N2BbL_len m y1) ++ (N2BbL_len m x2) ++ (N2BbL_len m y2)))). 
+Definition ComputeK (m : N)(hash_v : bL -> bL)(v : nat)(klen : nat)
+  (x y : N)(ZA ZB : bL) : bL :=
+  let n2bl := if m =? 0 then N2BbL else N2BbL_len (N.to_nat m) in
+  KDF ((n2bl x) ++ (n2bl y) ++ ZA ++ ZB) klen hash_v v. 
+Definition ComputeS (m : N)(hash_v : bL -> bL)(prehS : string)(ZA ZB : bL)(x y x1 y1 x2 y2 : N) : bL :=
+  let n2bl := if m =? 0 then N2BbL else N2BbL_len (N.to_nat m) in
+    hash_v ((hS2bL prehS) ++ (n2bl y) ++ (hash_v ((n2bl x) ++ ZA ++ ZB ++ (n2bl x1) ++ (n2bl y1) ++ (n2bl x2) ++ (n2bl y2)))). 
 
 (* A5 *)
 Definition ComputeT (n d x_tide r : N) : N := P_add n d (x_tide * r). 
-Definition ComputeRBKBSB (hash_v : bL -> bL)(v : nat)(klen : nat)(ml : GE -> N -> GE)(ad : GE -> GE -> GE)(OnCrv : N -> N -> bool)
+Definition ComputeRBKBSB (hash_v : bL -> bL)(v : nat)(klen : nat)(comk : (bL -> bL) -> nat ->nat -> N -> N -> bL -> bL -> bL)(coms : (bL -> bL) -> string -> bL -> bL -> N -> N -> N -> N -> N -> N -> bL)(ml : GE -> N -> GE)(ad : GE -> GE -> GE)(OnCrv : N -> N -> bool)
   (G : GE)(n h : N)(ZA ZB : bL)(RA PA : GE)(rB dB : N): optErr (GE * bL * bL) :=
   let RB := ComputeR ml G rB in 
   match RB with
@@ -80,9 +80,9 @@ Definition ComputeRBKBSB (hash_v : bL -> bL)(v : nat)(klen : nat)(ml : GE -> N -
         | InfO => Error "V = InfO"
         | Cop (xV, yV) =>
             (* B7 *)
-            let KB := ComputeK xV yV ZA ZB klen hash_v v in
+            let KB := comk hash_v v klen xV yV ZA ZB in
             (* B8 *)
-            let SB := ComputeS "02" ZA ZB xV yV x1 y1 x2 y2 hash_v in
+            let SB := coms hash_v "02" ZA ZB xV yV x1 y1 x2 y2 in
             Normal (RB, KB, SB)
         end
       end
@@ -91,14 +91,14 @@ Definition ComputeRBKBSB (hash_v : bL -> bL)(v : nat)(klen : nat)(ml : GE -> N -
 Definition ComputeRBKBSB_pf (hash_v : bL -> bL)(v : nat)(klen : nat)
   (p a b : N)(G : GE)(n h : N)(ZA ZB : bL)(RA PA : GE)(rB dB : N)
   : optErr (GE * bL * bL) :=
-  ComputeRBKBSB hash_v v klen (pf_mul p a) (pf_add p a) (OnCurve_pf p a b)
-    G n h ZA ZB RA PA rB dB. 
+  ComputeRBKBSB hash_v v klen (ComputeK 0) (ComputeS 0) (pf_mul p a) (pf_add p a) (OnCurve_pf p a b)
+    G n h ZA ZB RA PA rB dB . 
 
 Definition ComputeRBKBSB_bpf (hash_v : bL -> bL)(v : nat)(klen : nat)(m gp a b : N) (G : GE)(n h : N)(ZA ZB : bL)(RA PA : GE)(rB dB : N): optErr (GE * bL * bL) :=
-  ComputeRBKBSB hash_v v klen (bfp_mul m gp a) (bfp_add m gp a) (OnCurve_bfp gp a b) G n h ZA ZB RA PA rB dB. 
+  ComputeRBKBSB hash_v v klen (ComputeK m) (ComputeS m) (bfp_mul m gp a) (bfp_add m gp a) (OnCurve_bfp gp a b) G n h ZA ZB RA PA rB dB. 
 
 (* A4-A10 *)
-Definition ComputeKAS1SA (hash_v : bL -> bL)(v : nat)(klen : nat)(ml : GE -> N -> GE)(ad : GE -> GE -> GE)(OnCrv : N -> N -> bool)
+Definition ComputeKAS1SA (hash_v : bL -> bL)(v : nat)(klen : nat)(comk : (bL -> bL) -> nat ->nat -> N -> N -> bL -> bL -> bL)(coms : (bL -> bL) -> string -> bL -> bL -> N -> N -> N -> N -> N -> N -> bL)(ml : GE -> N -> GE)(ad : GE -> GE -> GE)(OnCrv : N -> N -> bool)
 (rA dA n h : N) (PB RA RB : GE)(ZA ZB SB : bL): optErr (bL * bL * bL) :=
   match RA with
   | InfO => Error "RA = InfO"
@@ -115,26 +115,29 @@ Definition ComputeKAS1SA (hash_v : bL -> bL)(v : nat)(klen : nat)(ml : GE -> N -
         match U with
         | InfO => Error "U = InfO"
         | Cop (xU, yU) =>
-            let KA := ComputeK xU yU ZA ZB klen hash_v v in
-            let S1 := ComputeS "02" ZA ZB xU yU x1 y1 x2 y2 hash_v in
+            let KA := comk hash_v v klen xU yU ZA ZB in
+            let S1 := coms hash_v "02" ZA ZB xU yU x1 y1 x2 y2 in
             if negb (bLeqb S1 SB) then Error "S1 != SB"
-            else let SA := ComputeS "03" ZA ZB xU yU x1 y1 x2 y2 hash_v in
+            else let SA := coms hash_v "03" ZA ZB xU yU x1 y1 x2 y2 in
               Normal (KA, S1, SA)
         end
       end
   end. 
+
 Definition ComputeKAS1SA_pf (hash_v : bL -> bL)(v : nat)(klen : nat)(p a b : N) (rA dA n h : N) (PB RA RB : GE)(ZA ZB SB : bL): optErr (bL * bL * bL) :=
-  ComputeKAS1SA hash_v v klen (pf_mul p a) (pf_add p a) (OnCurve_pf p a b)
+  ComputeKAS1SA  hash_v v klen (ComputeK 0) (ComputeS 0) (pf_mul p a) (pf_add p a) (OnCurve_pf p a b)
 rA dA n h PB RA RB ZA ZB SB. 
 
 Definition ComputeKAS1SA_bpf (hash_v : bL -> bL)(v : nat)(klen : nat)(m gp a b : N) (rA dA n h : N) (PB RA RB : GE)(ZA ZB SB : bL): optErr (bL * bL * bL) :=
-  ComputeKAS1SA hash_v v klen (bfp_mul m gp a) (bfp_add m gp a) (OnCurve_bfp gp a b)
+  ComputeKAS1SA hash_v v klen (ComputeK m) (ComputeS m) (bfp_mul m gp a) (bfp_add m gp a) (OnCurve_bfp gp a b)
 rA dA n h PB RA RB ZA ZB SB. 
 
 (* B10 *)
-Definition VeriS2eqSA (ZA ZB SA: bL)(xV yV x1 y1 x2 y2 : N)(hash_v : bL -> bL) : bool :=
-  let S2 := ComputeS "03" ZA ZB xV yV x1 y1 x2 y2 hash_v in
+Definition VeriS2eqSA (hash_v : bL -> bL)(coms : (bL -> bL) -> string -> bL -> bL -> N -> N -> N -> N -> N -> N -> bL)(ZA ZB SA: bL)(xV yV x1 y1 x2 y2 : N) : bool :=
+  let S2 := coms hash_v "03" ZA ZB xV yV x1 y1 x2 y2 in
     bLeqb S2 SA. 
+Definition VeriS2eqSA_pf (hash_v : bL -> bL)(ZA ZB SA: bL)(xV yV x1 y1 x2 y2 : N) : bool :=
+  VeriS2eqSA hash_v (ComputeS 0) ZA ZB SA xV yV x1 y1 x2 y2. 
 
 (*
 Module test_pf. 
@@ -323,11 +326,13 @@ Definition SB := hS2bL "4EB47D28 AD3906D6 244D01E0 F6AEC73B 0B51DE15 74C13798 18
 (*
 Compute bL2hS (ComputeS_bf (N.to_nat m) "02" ZA ZB xV yV x1 y1 x2 y2 Hash). 
 Correc. Same as SB *)
+Definition xU := hS2N "00 DADD0874 06221D65 7BC3FA79 FF329BB0 22E9CB7D DFCFCCFE 277BE8CD 4AE9B954". 
+Definition yU := hS2N "01 F0464B1E 81684E5E D6EF281B 55624EF4 6CAA3B2D 37484372 D91610B6 98252CC9". 
+Definition KA := hS2bL "4E587E5C 66634F22 D973A7D9 8BF8BE23".
+(*
+Compute bL2hS (ComputeK m Hash constant_v klen xU yU ZA ZB). 
+Correct Same as KA*)
 
-Print N2bL_len.
-Compute N2bL_len 2 5. 
-Print N2BbL.
-Print N2BbL_len. 
 (*
 Time Compute match RA' with
   |InfO => ("", "")
@@ -363,17 +368,26 @@ end.
 (*= Normal
          ("2a4832b4dcd399baab3fffe7dd6ce6ed68cc43ffa5f2623b9bd04e468d322a2a",
          "16599bb52ed9eafad01cfa453cf3052ed60184d2eecfd42b52db74110b984c23",
-         "8bb6b5c8b6b9f0fbd66680dc2379cc0a",
-         "2a7824f3fa5024891f399fad8279cccd9d8e4932844aa18bfde655deaeab9026")
+         "4e587e5c66634f22d973a7d98bf8be23",
+         "4eb47d28ad3906d6244d01e0f6aec73b0b51de1574c13798184e4833dbae295a")
      : optErr (string * string * string * string)
-Finished transaction in 2925.554 secs (2913.839u,5.342s) (successful)
-(*Only RB is correct *)
+Finished transaction in 2817.141 secs (2815.495u,0.988s) (successful)
+*)
+(*Correct *)
 (*
 Time Compute match ComputeKAS1SA_bpf Hash constant_v klen m gp a b rA dA n h PB RA RB ZA ZB SB with
 | Error err => Error err
 | Normal (ka, s1, sa) => Normal (bL2hS ka, bL2hS s1, bL2hS sa)
 end. 
 *)
+(*
+*      = Normal
+         ("4e587e5c66634f22d973a7d98bf8be23",
+         "4eb47d28ad3906d6244d01e0f6aec73b0b51de1574c13798184e4833dbae295a",
+         "588aa67064f24dc27ccaa1fab7e27dff811d500ad7ef2fb8f69ddf48cc0fecb7")
+     : optErr (string * string * string)
+Finished transaction in 1691.229 secs (1686.318u,1.809s) (successful)
+Correct *)
 
 End test_bfp. 
 
