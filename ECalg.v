@@ -130,8 +130,8 @@ Inductive cmp_type : Set :=
 
 
 Open Scope list_scope. 
-Definition Point2BL_p (cp : cmp_type)(xp : N)(yp : N) : BL :=
-  let X1 := Field2BL_p xp in (* a *)
+Definition Point2BL (f2Bl : N -> BL)(cp : cmp_type)(xp : N)(yp : N) : BL :=
+  let X1 := f2Bl xp in (* a *)
   match cp with
   | cmp => (* b *)
       let yp_tide := tide_p yp in
@@ -147,6 +147,10 @@ Definition Point2BL_p (cp : cmp_type)(xp : N)(yp : N) : BL :=
       | true => (x07 :: X1) ++ (Field2BL_p yp)
       end
   end. 
+
+Definition Point2BL_p := Point2BL Field2BL_p.  
+
+Definition Point2BL_b (m : N) := Point2BL (Field2BL_b m).  
 
 (*4.2.9 still only prime field case*)
 Definition BL2PointStep1_p (cp : cmp_type)(p : N)(a : N)(b : N)(S : BL) : option (N * N) :=

@@ -278,18 +278,14 @@ Compute bLXOR (bS2bL "111001") (bS2bL "11111101").
 (*4.2.5*)
 Inductive field_type : Set :=
   pri : field_type | ext : field_type .
-Definition Field2BL_p (alpha : N) : BL :=
-  N2BL_len (N.to_nat (N.div ((N.size alpha) + 7) 8)) alpha. 
 
-(* Since we are using N to represent elements in 2m, 
-Field2BL_p should fit *)
-(*
-Definition Field2BL_b (alpha : bL) :=
-  bL2BL alpha. 
-*)
+(* Same as N2BL *)
+Definition Field2BL_p :=  N2BL. 
 
-Definition Field2BL_b := Field2BL_p. 
 
+Definition Field2BL_b (m : N) :=
+  N2BL_len (N.to_nat (div_ceil_N m 8)). 
+ 
 (*4.2.6*)
 Definition BL2Field_p (Bl : BL)(q : N) : option N :=
   (fun (alpha : N)  => if leb q alpha then None else Some alpha) (BL2N Bl).  
