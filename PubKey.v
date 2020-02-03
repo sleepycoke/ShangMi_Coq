@@ -76,12 +76,17 @@ Definition ComputeM' (hash_v : bL -> bL)(v : nat)(klen : nat)(ml : GE -> N -> GE
     end
   end. 
 
-Print BL2Point_p. 
+Print bfp_mul. 
+Print OnCurve_bfp. 
+Print BL2Point_bfp. 
 
 Definition ComputeM'_pf (hash_v : bL -> bL)(v : nat)(klen : nat)(p a b h dB : N)(cp : cmp_type)(C : bL) : optErr bL :=
   ComputeM' hash_v v klen (pf_mul p a) (OnCurve_pf p a b) (BL2Point_p cp p a b) h dB C . 
 
-Module test. 
+Definition ComputeM'_bfp (hash_v : bL -> bL)(v : nat)(klen : nat)(m gp a b h dB : N)(cp : cmp_type)(C : bL) : optErr bL :=
+  ComputeM' hash_v v klen (bfp_mul m gp a) (OnCurve_bfp gp a b) (BL2Point_bfp cp m gp a b) h dB C . 
+
+Module test_pf. 
 Definition p := hS2N "8542D69E 4C044F18 E8B92435 BF6FF7DE 45728391 5C45517D 722EDB8B 08F1DFC3".
 Definition a := hS2N "787968B4 FA32C3FD 2417842E 73BBFEFF 2F3C848B 6831D7E0 EC65228B 3937E498".
 Definition b := hS2N "63E4C6D3 B23B0C84 9CF84241 484BFE48 F61D59A5 B16BA06E 6E12D1DA 27C5249A".
@@ -145,6 +150,9 @@ end.
 Finished transaction in 612.356 secs (611.425u,0.411s) (successful)
 Correct
 *)
-End test. 
+End test_pf. 
 
+Module test_bfp.
+
+End test_bfp.
 

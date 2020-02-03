@@ -83,6 +83,7 @@ Definition square_root (p g : N) : option N :=
         )
         (Nlist p) (* Should provide a random sequence *). 
     
+(* A.5.2 *)
 Definition recover_p (p a b xp : N)(y_tide : bool) : option (N * N) :=
   let alpha := (xp * xp * xp + a * xp + b) mod p in
     let beta := square_root p alpha in
@@ -92,6 +93,52 @@ Definition recover_p (p a b xp : N)(y_tide : bool) : option (N * N) :=
           if Bool.eqb (odd beta') y_tide then Some (xp, beta')
           else Some (xp, (p - beta'))
       end.
+
+(* B.1.5 *)
+Fixpoint Trace_p_tail (sq_add : N -> N)(T' : N)(j : nat) : N :=
+  match j with
+  | O => T'
+  | S j' =>
+      Trace_p_tail sq_add (sq_add T') j'  
+  end. 
+
+Definition Trace_p (m gp : N)(alpha : N) : N :=
+  let (T, j) := (alpha, N.to_nat (m - 1)) in
+    Trace_p_tail (fun x => B_add (Bp_sq gp x) alpha) T j. 
+
+Fixpoint Semi_Trace_p_tail (quad_add : N -> N)(T' : N)(j : nat) : N :=
+  match j with
+  | O => T'
+  | S j' =>
+      Semi_Trace_p_tail quad_add (quad_add T') j'
+  end. 
+
+Definition Semi_Trace_p (m gp : N)(alpha : N) : N :=
+  let (T, j) := (alpha, N.to_nat((m - 1) / 2)) in
+    Semi_Trace_p_tail (fun x => B_add (Bp_sq gp (Bp_sq gp x)) alpha) T j. 
+
+(*B.1.6*)
+(*TODO Only the second case, odd m*)
+Definition FindRoot (m gp beta : N) : option N := 
+  let z := Semi_Trace_p m gp beta in
+  let gamma := B_add (Bp_sq gp beta) z in
+    if gamma =? beta then Some z else None.
+
+(* A.5.3 *)
+Definition recover_b (m gp a b xp : N)(yp_tide : bool) : option (N * N):=
+  if xp =? 0 then Some (xp, (Bp_power m gp b (N.shiftl 1 (m - 1)))) else
+  let beta := B_add (B_add xp a) (Bp_mul gp b (Bp_sq gp (Bp_inv m gp xp))) in
+  match FindRoot m gp beta with
+  | None => None
+  | Some z => 
+     let z_tide := N.odd z in
+     (* b.4 compares yp !=? z_tide, which I think is a typo *)
+     let yp := Bp_mul gp xp (if (Bool.eqb yp_tide z_tide) then z else z + 1) in
+      Some (xp, yp)
+  end. 
+
+
+
 
 
 (*A.5.3*)
@@ -153,7 +200,7 @@ Definition Point2BL_p := Point2BL Field2BL_p.
 Definition Point2BL_b (m : N) := Point2BL (Field2BL_b m).  
 
 (*4.2.9 still only prime field case*)
-Definition BL2PointStep1_p (cp : cmp_type)(p : N)(a : N)(b : N)(S : BL) : option (N * N) :=
+Definition BL2PointStep1 (rcv : N -> bool -> option (N * N))(cp : cmp_type)(q : N)(S : BL) : option (N * N) :=
   match cp with
   | cmp => 
       match S with
@@ -161,8 +208,8 @@ Definition BL2PointStep1_p (cp : cmp_type)(p : N)(a : N)(b : N)(S : BL) : option
       | PC :: X1 =>
           let xp := BL2N X1 in
             match PC with
-            | x02 => (recover_p p a b xp false)
-            | x03 => (recover_p p a b xp true) 
+            | x02 => (rcv xp false)
+            | x03 => (rcv xp true) 
             | _ => None
             end
       end
@@ -181,51 +228,38 @@ Definition BL2PointStep1_p (cp : cmp_type)(p : N)(a : N)(b : N)(S : BL) : option
       | [] => None
       | PC :: X1Y1 =>
           let (X1, Y1) := partList X1Y1 (Nat.div (List.length X1Y1)  2%nat) in
-          let sampleList := Nlist p in
+          let sampleList := Nlist q in
             let xp := BL2N X1 in
               match PC with (* I choose e.2.2 TODO how to choose? *)
-              | x06 => (recover_p p a b xp false)
-              | x07 => (recover_p p a b xp true) 
+              | x06 => (rcv xp false)
+              | x07 => (rcv xp true) 
               | _ => None
               end
       end
   end. 
 
-Definition BL2PointStep2_p (p : N)(a : N)(b : N)(point : N * N) : option (N * N) :=
+Print OnCurve_pf.
+Print OnCurve_bfp.
+Print OnCurve_bf. 
+
+Definition BL2PointStep2 (OnCrv : N -> N -> bool)(point : N * N) : option (N * N) :=
   let (xp, yp) := point in
-    if N.eqb (P_sq p yp) (((P_power p xp 3) + a * xp + b) mod p) then Some point
+    (*if N.eqb (P_sq p yp) (((P_power p xp 3) + a * xp + b) mod p) then Some point*)
+    if OnCrv xp yp then Some point
     else None. 
 
 Definition BL2Point_p (cp : cmp_type)(p : N)(a : N)(b : N)(S : BL) : option (N * N) :=
-  match BL2PointStep1_p cp p a b S with
+  match BL2PointStep1 (recover_p p a b) cp p S with
   | None => None
-  | Some point => BL2PointStep2_p p a b point
+  | Some point => BL2PointStep2 (OnCurve_pf p a b) point 
   end. 
 
-(* B.1.5 *)
-Fixpoint Trace_p_tail (sq_add : N -> N)(T' : N)(j : nat) : N :=
-  match j with
-  | O => T'
-  | S j' =>
-      Trace_p_tail sq_add (sq_add T') j'  
+Definition BL2Point_bfp (cp : cmp_type)(m gp a b : N)(S : BL) : option (N * N) :=
+  match BL2PointStep1 (recover_b m gp a b) cp (N.shiftl 1 m) S with
+  | None => None
+  | Some point => BL2PointStep2 (OnCurve_bfp gp a b) point
   end. 
 
-Definition Trace_p (m gp : N)(alpha : N) : N :=
-  let (T, j) := (alpha, N.to_nat (m - 1)) in
-    Trace_p_tail (fun x => B_add (Bp_sq gp x) alpha) T j. 
-
-Fixpoint Semi_Trace_p_tail (quad_add : N -> N)(T' : N)(j : nat) : N :=
-  match j with
-  | O => T'
-  | S j' =>
-      Semi_Trace_p_tail quad_add (quad_add T') j'
-  end. 
-
-Definition Semi_Trace_p (m gp : N)(alpha : N) : N :=
-  let (T, j) := (alpha, N.to_nat((m - 1) / 2)) in
-    Semi_Trace_p_tail (fun x => B_add (Bp_sq gp (Bp_sq gp x)) alpha) T j. 
-
-            
 (* B.2.1 *)
 (* Using Binary GCD instead of Euclidean Alg, just as Pos.gcd does *)
 Open Scope positive_scope. 
