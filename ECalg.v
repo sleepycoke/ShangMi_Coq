@@ -187,11 +187,11 @@ Definition Point2BL (f2Bl : N -> BL)(cp : cmp_type)(xp : N)(yp : N) : BL :=
       | true => x03 :: X1
       end
   | ucp => (* c *)
-      x04 :: (X1 ++ (Field2BL_p yp))
+      x04 :: (X1 ++ (f2Bl yp))
   | mix => (* d *)
       match tide_p yp with
-      | false => (x06 :: X1) ++ (Field2BL_p yp)
-      | true => (x07 :: X1) ++ (Field2BL_p yp)
+      | false => (x06 :: X1) ++ (f2Bl yp)
+      | true => (x07 :: X1) ++ (f2Bl yp)
       end
   end. 
 
