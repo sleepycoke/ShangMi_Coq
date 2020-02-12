@@ -47,11 +47,14 @@ Fixpoint Bp_mul_pos (x : positive)(y : N) : N :=
 Close Scope positive_scope. 
 
 (* Polynomial Base *)
-Definition Bp_mul (gp x y : N) : N :=
+Definition Bp_mul_raw (x y : N) : N :=
   match x with
   | 0 => 0
-  | Npos p => B_mod (Bp_mul_pos p y) gp
-  end.
+  | Npos p => Bp_mul_pos p y
+  end. 
+
+Definition Bp_mul (gp x y : N) : N :=
+  B_mod (Bp_mul_raw x y) gp. 
 
 Definition P_sub (p x y : N) :=
   (p + x - y) mod p.
@@ -60,6 +63,9 @@ Definition P_sq (p x : N) :=
   (N.square x) mod p. 
 
 (* TODO Consider speeding up *)
+Definition Bp_sq_raw (x : N) :=
+  Bp_mul_raw x x. 
+
 Definition Bp_sq (gp x : N) :=
   Bp_mul gp x x. 
 
