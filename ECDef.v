@@ -332,3 +332,15 @@ Compute bfp_double 5 37 1 P1 . (* 8, 31 correct *)
 Compute bfp_mul 5 37 1 P1 2 . (* 8, 31 correct *) 
 Compute bfp_add 5 37 1 P1 P2 .  (* 30, 21 correct *)
 *)
+
+Definition decode_TPB (code : N * N) : N :=
+  match code with
+  | (m, k)  =>
+      (N.shiftl 1 m) + (N.shiftl 1 k) + 1
+  end. 
+
+Definition decode_PPB (code : N * (N * N * N)) : N :=
+  match code with
+  | (m, (k1, k2, k3)) =>
+      (N.shiftl 1 m) + (N.shiftl 1 k1) + (N.shiftl 1 k2) + (N.shiftl 1 k3) + 1
+  end. 

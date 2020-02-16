@@ -276,13 +276,24 @@ Fixpoint IrdBody (sq : N -> N)(gcd : N -> N -> N)(f u' : N)(j : nat) : bool :=
         else false
   end. 
 
-Definition IrdTest (sq : N -> N)(f : N) : bool :=
+Definition IrdTest (f : N) : bool :=
   let d := size_nat f in
   let u := 2%N in
-    IrdBody sq B_gcd f u (Nat.div d 2). 
+    IrdBody (Bp_sq_raw) B_gcd f u (Nat.div d 2). 
 
-Definition IrdTest_p (gp f : N) : bool :=
-  IrdTest (Bp_sq gp) f. 
- 
 (* TODO need test casess *)
+
+Compute IrdTest  37. (* Correct  *)
+
+Compute List.length []. 
+
+Print map. 
+
+Compute map N.double [2; 3]. 
+
+Definition TPB_list := map decode_TPB TPB_IRP. 
+ 
+(*Compute map IrdTest (TPB_list). All true, correct *)
+Definition PPB_list := map decode_PPB PPB_IRP. 
+(*Time Compute map IrdTest (PPB_list).*) (*Finished transaction in 393.439 secs (393.19u,0.153s) (successful)All true, correct *)
 
