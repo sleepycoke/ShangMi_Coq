@@ -117,12 +117,84 @@ Definition Semi_Trace_p (m gp : N)(alpha : N) : N :=
   let (T, j) := (alpha, N.to_nat((m - 1) / 2)) in
     Semi_Trace_p_tail (fun x => B_add (Bp_sq gp (Bp_sq gp x)) alpha) T j. 
 
+Fixpoint BinaryMap_rec (func : N -> N)(len : nat)(prefix : N)(acc : list N) : list N :=
+  match len with
+  | O => func prefix :: acc
+  | S len' => 
+      (BinaryMap_rec func len' (double prefix) []) ++
+      (BinaryMap_rec func len' (succ_double prefix) []) ++ acc
+  end. 
+
+(*maps func on all N's within length len*)
+Definition BinaryMap (func : N -> N)(len : nat) : list N :=
+  BinaryMap_rec func len 0 []. 
+
+(*Compute BinaryMap N.square 4.*) (*Correct*)
+    
+Fixpoint TryBinary_rec (func : N -> bool)(len : nat)(prefix : N) : option N :=
+  match len with
+  | O => if func prefix then Some prefix else None
+  | S len' =>
+      match TryBinary_rec func len' (double prefix) with
+      | Some n => Some n
+      | None => TryBinary_rec func len' (succ_double prefix)
+      end
+  end.
+
+(*Find the smallest N within length len that satisfies func *)
+Definition TryBinary (func : N -> bool)(len : nat) : option N :=
+  TryBinary_rec func len 0. 
+
+(*
+Compute (fix func (x : nat) : nat := 
+  match x with
+  | O => 1%nat
+  | S x' => Nat.mul x (func x') 
+  end)
+  5%nat. 
+  *)
+
+(*
+Compute TryBinary (fun x => leb 20 x) 4. 
+Compute TryBinary (fun x => leb 20 x) 5. 
+Compute TryBinary (fun x => leb 20 x) 6. 
+Compute TryBinary (fun x => leb 20000000 x) 2000. 
+Correct *)
+
+(* Find the smallest element in F_2m whose trace is 1*)
+Definition SolveTrace1_bfp(m gp : N) : option N :=
+  TryBinary (fun x => Trace_p m gp x =? 1) (N.to_nat m). 
+
+Definition FindRoot_alg3 (ml : N -> N -> N)(sq : N -> N)(m beta tau : N) : option N :=
+  let (z, w) := 
+    (* j is m - i, from m - 1 down to 0, returns (z_i, w_i) *)
+    (fix c_loop (j : nat)(z' w' : N) : (N * N) :=
+        match j with
+        | O => (z', w') (*When i = m, break *)
+        | S j' =>
+            let z_i := B_add (sq z') (ml (sq w') tau) in
+            let w_i := B_add (sq w') beta in
+              (z_i, w_i)
+        end
+    ) (N.to_nat (m - 1)) 0 beta in
+  if w =? 0 then None else Some z. 
+
 (*B.1.6*)
-(*TODO Only the second case, odd m*)
-Definition FindRoot (m gp beta : N) : option N := 
-  let z := Semi_Trace_p m gp beta in
-  let gamma := B_add (Bp_sq gp beta) z in
-    if gamma =? beta then Some z else None.
+(*Find a root of z^2 + z = beta*)
+Definition FindRoot_bfp (m gp beta : N) : option N := 
+  if beta =? 0 then Some 0 else
+  if odd m then
+    let z := Semi_Trace_p m gp beta in
+    let gamma := B_add (Bp_sq gp beta) z in
+      if gamma =? beta then Some z else None
+  else
+    match SolveTrace1_bfp m gp with
+    (*This should not happen since half of F_2m has trace 1*)
+    (*As mentioned in B.1.5*)
+    | None => None 
+    | Some tau => FindRoot_alg3 (Bp_mul gp) (Bp_sq gp) m beta tau
+    end. 
+
 
 (* A.5.3 *)
 Definition recover_b (m gp a b xp : N)(yp_tide : bool) : option (N * N):=
