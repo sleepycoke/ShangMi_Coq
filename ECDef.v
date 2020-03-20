@@ -37,19 +37,19 @@ Definition B_mod (x y : N) : N :=
       B_mod_pos xp yp (size_nat y)
   end. 
 
-Open Scope positive_scope. 
 Fixpoint Bp_mul_pos (x : positive)(y : N) : N :=
   match x with
   | 1 => y
   | p~0 => N.double (Bp_mul_pos p y) 
   | p~1 => B_add y (N.double (Bp_mul_pos p y))
   end. 
+
 Close Scope positive_scope. 
 
 (* Polynomial Base *)
 Definition Bp_mul_raw (x y : N) : N :=
   match x with
-  | 0 => 0
+  | N0 => N0
   | Npos p => Bp_mul_pos p y
   end. 
 

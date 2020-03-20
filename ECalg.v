@@ -200,7 +200,7 @@ Definition FindRoot_bfp (m gp beta : N) : option N :=
 Definition recover_b (m gp a b xp : N)(yp_tide : bool) : option (N * N):=
   if xp =? 0 then Some (xp, (Bp_power m gp b (N.shiftl 1 (m - 1)))) else
   let beta := B_add (B_add xp a) (Bp_mul gp b (Bp_sq gp (Bp_inv m gp xp))) in
-  match FindRoot m gp beta with
+  match FindRoot_bfp m gp beta with
   | None => None
   | Some z => 
      let z_tide := N.odd z in

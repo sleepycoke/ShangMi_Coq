@@ -281,6 +281,7 @@ Definition IrdTest (f : N) : bool :=
   let u := 2%N in
     IrdBody (Bp_sq_raw) B_gcd f u (Nat.div d 2). 
 
+(*
 (* TODO need test casess *)
 
 Compute IrdTest  37. (* Correct  *)
@@ -296,4 +297,5 @@ Definition TPB_list := map decode_TPB TPB_IRP.
 (*Compute map IrdTest (TPB_list). All true, correct *)
 Definition PPB_list := map decode_PPB PPB_IRP. 
 (*Time Compute map IrdTest (PPB_list).*) (*Finished transaction in 393.439 secs (393.19u,0.153s) (successful)All true, correct *)
-
+*)
+End tests. 
