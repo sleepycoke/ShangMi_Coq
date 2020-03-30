@@ -1,6 +1,6 @@
 Require Export DataTypes. 
 
-(* Prime field element: O or coordinated point *)
+(* Elliptic Curve Group element: O or coordinated points *)
 Inductive GE : Set :=
   InfO : GE | Cop : N * N -> GE. 
 
@@ -99,6 +99,7 @@ Definition P_power (p : N)(g : N)(a : N) : N :=
 Definition Bp_power (m : N)(gp : N)(g : N)(a : N) : N :=
   power_general g a (N.shiftl 1 m)(Bp_sq gp)(Bp_mul gp). 
 
+(* B.1.2 *)
 Definition P_inv (p g : N) :=
   P_power p g (p - 2). 
 
@@ -162,7 +163,8 @@ Definition P_sqr (n q : N) :=
 
 Compute P_sqr 4 13. 
 *)
-(* 3.2.3.1 also A.1.2.2 *)
+
+(* 3.2.3.1*)
 Definition pf_double (p : N)(a : N)(P1 : GE) :=
   match P1 with
   | InfO => InfO
@@ -173,19 +175,37 @@ Definition pf_double (p : N)(a : N)(P1 : GE) :=
         Cop (x3, y3)
   end. 
  
-Definition bf_double (ml dv : N -> N -> N)(sq : N -> N)
-  (a : N)(P1 : GE): GE :=
-  match P1 with
-  | InfO => InfO
-  | Cop (x1, y1) =>
-      let lambda := B_add x1 (dv y1 x1) in
-      let x3 := B_add (B_add (sq lambda) lambda) a in
-      let y3 := B_add (sq x1) (ml (B_add lambda 1) x3) in
-        Cop (x3, y3)
+Definition pf_add (p a : N)(P1 P2 : GE) : GE :=
+  match P1, P2 with
+  | InfO, _ => P2
+  | _, InfO => P1
+  | Cop (x1, y1), Cop (x2, y2) =>
+      match x1 =? x2, y1 + y2 =? p with
+      | true, true => InfO
+      | true, false => pf_double p a P1
+      | false, _ => 
+        let lambda := P_div p (P_sub p y2 y1) (P_sub p x2 x1) in
+          let x3 := ((square lambda) + 2 * p - x1 - x2) mod p in
+          let y3 := P_sub p (lambda * (P_sub p x1 x3)) y1 in
+            Cop (x3, y3)
+      end
   end. 
 
-Definition bfp_double (m gp a : N)(P1 : GE): GE :=
-  bf_double (Bp_mul gp) (Bp_div m gp) (Bp_sq gp) a P1. 
+  
+(*
+Definition p := hS2N "8542D69E 4C044F18 E8B92435 BF6FF7DE 45728391 5C45517D 722EDB8B 08F1DFC3". 
+Definition a := hS2N "787968B4 FA32C3FD 2417842E 73BBFEFF 2F3C848B 6831D7E0 EC65228B 3937E498". 
+Definition x2 := hS2N "64D20D27 D0632957 F8028C1E 024F6B02 EDF23102 A566C932 AE8BD613 A8E865FE".
+Definition y2 := hS2N "64D20D27 D0632957 F8028C1E 024F6B02 EDF23102 A566C932 AE8BD613 A8E865FE".
+Definition P2 := Cop (x2, y2). 
+
+Time Compute pf_double_sqr P2 p 2.  (* 25 68 1.9s *)
+Time Compute pf_double P2 p 2. (* 1.681 secs originally *)
+Time Compute pf_double_mul P2 p 2. (* 1.607 secs *)
+Locate Pos.square. 
+Print Pos.square. 
+*)
+
 (*
 Definition pf_double_mul (P1 : GE)(p : N)(a : N) :=
   match P1 with
@@ -206,36 +226,38 @@ Definition pf_double_sqr (P1 : GE)(p : N)(a : N) :=
         Cop (x3, y3)
   end. 
 *)
-  
-(*
-Definition p := hS2N "8542D69E 4C044F18 E8B92435 BF6FF7DE 45728391 5C45517D 722EDB8B 08F1DFC3". 
-Definition a := hS2N "787968B4 FA32C3FD 2417842E 73BBFEFF 2F3C848B 6831D7E0 EC65228B 3937E498". 
-Definition x2 := hS2N "64D20D27 D0632957 F8028C1E 024F6B02 EDF23102 A566C932 AE8BD613 A8E865FE".
-Definition y2 := hS2N "64D20D27 D0632957 F8028C1E 024F6B02 EDF23102 A566C932 AE8BD613 A8E865FE".
-Definition P2 := Cop (x2, y2). 
 
-Time Compute pf_double_sqr P2 p 2.  (* 25 68 1.9s *)
-Time Compute pf_double P2 p 2. (* 1.681 secs originally *)
-Time Compute pf_double_mul P2 p 2. (* 1.607 secs *)
-Locate Pos.square. 
-Print Pos.square. 
+(* A.3.2 method 1*)
+(*
+Fixpoint pf_mul_tail (p : N)(a : N)(P : GE)(kl : bL)(acc : GE) : GE :=
+  match kl with
+  | [] => acc
+  | false :: tl =>
+      pf_mul_tail p a P tl (pf_double p a acc)
+  | true :: tl =>
+      pf_mul_tail p a P tl (pf_add p a P (pf_double p a acc))
+  end. 
+
+Definition pf_mul_old (p a: N)(P : GE)(k : N) : GE :=
+  pf_mul_tail p a P (N2bL k) InfO. 
 *)
 
-Definition pf_add (p a : N)(P1 P2 : GE) : GE :=
-  match P1, P2 with
-  | InfO, _ => P2
-  | _, InfO => P1
-  | Cop (x1, y1), Cop (x2, y2) =>
-      match x1 =? x2, y1 + y2 =? p with
-      | true, true => InfO
-      | true, false => pf_double p a P1
-      | false, _ => 
-        let lambda := P_div p (P_sub p y2 y1) (P_sub p x2 x1) in
-          let x3 := ((square lambda) + 2 * p - x1 - x2) mod p in
-          let y3 := P_sub p (lambda * (P_sub p x1 x3)) y1 in
-            Cop (x3, y3)
-      end
+
+(* 3.2.3.2 *)
+Definition bf_double (ml dv : N -> N -> N)(sq : N -> N)
+  (a : N)(P1 : GE): GE :=
+  match P1 with
+  | InfO => InfO
+  | Cop (x1, y1) =>
+      let lambda := B_add x1 (dv y1 x1) in
+      let x3 := B_add (B_add (sq lambda) lambda) a in
+      let y3 := B_add (sq x1) (ml (B_add lambda 1) x3) in
+        Cop (x3, y3)
   end. 
+
+Definition bfp_double (m gp a : N)(P1 : GE): GE :=
+  bf_double (Bp_mul gp) (Bp_div m gp) (Bp_sq gp) a P1. 
+
 
 Definition bf_add (ml dv : N -> N -> N)(sq : N -> N)(a : N)(P1 P2 : GE) : GE :=
   match P1, P2 with
@@ -256,21 +278,8 @@ Definition bf_add (ml dv : N -> N -> N)(sq : N -> N)(a : N)(P1 P2 : GE) : GE :=
 Definition bfp_add (m gp a : N)(P1 P2 : GE) : GE :=
   bf_add (Bp_mul gp) (Bp_div m gp) (Bp_sq gp) a P1 P2. 
 
-(* A.3.2 method 1*)
-(*
-Fixpoint pf_mul_tail (p : N)(a : N)(P : GE)(kl : bL)(acc : GE) : GE :=
-  match kl with
-  | [] => acc
-  | false :: tl =>
-      pf_mul_tail p a P tl (pf_double p a acc)
-  | true :: tl =>
-      pf_mul_tail p a P tl (pf_add p a P (pf_double p a acc))
-  end. 
 
-Definition pf_mul_old (p a: N)(P : GE)(k : N) : GE :=
-  pf_mul_tail p a P (N2bL k) InfO. 
-*)
-
+(* A.3.2 *)
 Fixpoint GE_mul_tail (ad db : GE -> GE)(kl : bL)(acc : GE) : GE :=
   match kl with
   | [] => acc

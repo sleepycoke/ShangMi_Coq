@@ -56,8 +56,10 @@ Fixpoint TryFunWithList (func : N -> option N)(l : list N) : option N :=
       end
   end. 
 
-(*B.1.4*)
-Definition square_root (p g : N) : option N :=
+(*B.1.4 *)
+(* p is the size of the prime field, g is the base,
+*  X_list is list of samples of X *)
+Definition square_root (p g : N)(X_list : list N) : option N :=
   if N.eqb g 0 then Some 0
   else if N.eqb (N.modulo p 4) 3 then 
     let u := N.div p 4 in
@@ -81,7 +83,7 @@ Definition square_root (p g : N) : option N :=
             else if (andb (N.eqb (U mod p) 1) (N.eqb (U mod p) (p - 1))) then None
             else None 
         )
-        (Nlist p) (* Should provide a random sequence *). 
+        X_list (* Should provide a random sequence *). 
     
 (* A.5.2 *)
 Definition recover_p (p a b xp : N)(y_tide : bool) : option (N * N) :=
