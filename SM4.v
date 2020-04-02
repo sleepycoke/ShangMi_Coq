@@ -2,14 +2,18 @@ Require Import SMlib.
 Require Import Coq.Lists.List.
 Import ListNotations.
 
+(* 2.1.1 *)
 Definition Tau (A : N) : N :=
   (Sbox ((land A (255 <<< 24)) >>> 24)) <<< 24 +
   (Sbox ((land A (255 <<< 16)) >>> 16)) <<< 16 +
   (Sbox ((land A (255 <<< 8)) >>> 8)) <<< 8 +
   (Sbox (land A 255)). 
 
+(* 2.1.2 *)
 Definition L (B : N) : N :=
   B $ B <<< 2 $ B <<< 10 $ B <<< 18 $ B <<< 24. 
+
+(* 4(1) *)
 Definition L' (B : N) : N :=
   B $ B <<< 13 $ B <<< 23. 
 
@@ -62,6 +66,7 @@ Fixpoint K_list_rec (i : nat)(init : nat)(acc : list N) : list N :=
 Definition K_list (i : nat)(MK : N) := 
   K_list_rec i i (K_list_init MK). 
 
+
 Definition rk_ext (MK : N) (i : nat) : N := hd 0 (K_list (i + 1) MK). 
 (*
 
@@ -73,6 +78,8 @@ Definition decypheredtext := HexString.of_N (SM4_dec 32 (HexString.to_N cypherte
 Definition expCypherText := "0x681edf34d206965e86b3e94f536e4246"%string. 
 Compute cyphertext. 
 Compute decypheredtext. 
+
+
 
 Example self_test : expCypherText = cyphertext.
 Proof. reflexivity. Qed. 

@@ -16,34 +16,39 @@ Require Export Byte.
 Export N. 
 Definition word_size := 32%N. 
 Definition half_word_size := 16%N. 
-Definition modulus := shiftl 1 word_size.
-Definition half_modulus := div2 modulus.  
+Definition modulus_ws := shiftl 1 word_size.
+Definition half_modulus_ws := div2 modulus_ws.  
 Definition hfws_modulus := shiftl 1 half_word_size.  
-Definition mask_ws := sub modulus 1. 
-Definition mask_hfws := sub half_modulus 1. 
+Definition mask_ws := sub modulus_ws 1. 
+Definition mask_hfws := sub half_modulus_ws 1. 
 
 
-Definition shiftr1_cyc (n : N) : N := 
-  match n with
-  | N0 => N0 
-  | Npos p =>
-      match p with
-      | xH => half_modulus
-      | xO p' => Npos p'
-      | xI p' => half_modulus + Npos p'
-      end
-  end.
+Definition shiftr1_cyc (len : N)(n : N) : N := 
+  let half_modulus := shiftl 1 (len - 1) in
+    match n with
+    | N0 => N0 
+    | Npos p =>
+        match p with
+        | xH => half_modulus
+        | xO p' => Npos p'
+        | xI p' => half_modulus + Npos p'
+        en
+    end.
 
 (* n >>> t*)
-Definition shiftr_cyc (n : N) (t : N) : N :=
-  N.iter t shiftr1_cyc n . 
+Definition shiftr_cyc (len : N)(n : N) (t : N) : N :=
+  N.iter t (shiftr1_cyc len) n. 
+ 
+Definition shiftr_cyc_ws := shiftr_cyc word_size. 
 
-Infix ">>>" := shiftr_cyc (at level 35). 
+Infix ">>>" := shiftr_cyc_ws (at level 35). 
 
-Definition shiftl_cyc (n: N) (t : N) : N :=
-  shiftr_cyc n (word_size - (t mod word_size)). 
+Definition shiftl_cyc (len : N)(n: N) (t : N) : N :=
+  shiftr_cyc len n (len - (t mod len)). 
 
-Infix "<<<" := shiftl_cyc (at level 35). 
+Definition shiftl_cyc_ws := shiftl_cyc word_size. 
+
+Infix "<<<" := shiftl_cyc_ws (at level 35). 
 Infix "$" := lxor (at level 50). 
 
 Definition mask_14 (A : N) : N := 
