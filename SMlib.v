@@ -32,7 +32,7 @@ Definition shiftr1_cyc (len : N)(n : N) : N :=
         | xH => half_modulus
         | xO p' => Npos p'
         | xI p' => half_modulus + Npos p'
-        en
+        end
     end.
 
 (* n >>> t*)

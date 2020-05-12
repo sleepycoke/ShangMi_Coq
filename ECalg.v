@@ -59,7 +59,7 @@ Fixpoint TryFunWithList (func : N -> option N)(l : list N) : option N :=
 (*B.1.4 *)
 (* p is the size of the prime field, g is the base,
 *  X_list is list of samples of X *)
-Definition square_root (p g : N)(X_list : list N) : option N :=
+Definition square_root (p g : N) : option N :=
   if N.eqb g 0 then Some 0
   else if N.eqb (N.modulo p 4) 3 then 
     let u := N.div p 4 in
@@ -83,8 +83,8 @@ Definition square_root (p g : N)(X_list : list N) : option N :=
             else if (andb (N.eqb (U mod p) 1) (N.eqb (U mod p) (p - 1))) then None
             else None 
         )
-        X_list (* Should provide a random sequence *). 
-    
+        (Nlist p) (* Should provide a random sequence *). 
+
 (* A.5.2 *)
 Definition recover_p (p a b xp : N)(y_tide : bool) : option (N * N) :=
   let alpha := (xp * xp * xp + a * xp + b) mod p in
@@ -273,7 +273,7 @@ Definition Point2BL_p := Point2BL Field2BL_p.
 
 Definition Point2BL_b (m : N) := Point2BL (Field2BL_b m).  
 
-(*4.2.9 still only prime field case*)
+(*4.2.9*)
 Definition BL2PointStep1 (rcv : N -> bool -> option (N * N))(cp : cmp_type)(q : N)(S : BL) : option (N * N) :=
   match cp with
   | cmp => 
@@ -312,9 +312,6 @@ Definition BL2PointStep1 (rcv : N -> bool -> option (N * N))(cp : cmp_type)(q : 
       end
   end. 
 
-Print OnCurve_pf.
-Print OnCurve_bfp.
-Print OnCurve_bf. 
 
 Definition BL2PointStep2 (OnCrv : N -> N -> bool)(point : N * N) : option (N * N) :=
   let (xp, yp) := point in
@@ -322,6 +319,7 @@ Definition BL2PointStep2 (OnCrv : N -> N -> bool)(point : N * N) : option (N * N
     if OnCrv xp yp then Some point
     else None. 
 
+(*TODO square_root uses Nlist and thus crashes the memory *)
 Definition BL2Point_p (cp : cmp_type)(p : N)(a : N)(b : N)(S : BL) : option (N * N) :=
   match BL2PointStep1 (recover_p p a b) cp p S with
   | None => None
