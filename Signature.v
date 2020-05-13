@@ -35,7 +35,7 @@ Fixpoint TrySigWithList (ml : GE -> N -> GE)(n xG yG dA e : N)(klist : list N) :
 
 (* 6.1 *)
 (* TODO How to generate klist? *)
-Definition SigWithZAList (ml : GE -> N -> GE)(a b n xG yG Z_A dA xA yA M : bL)(klist : list N)
+Definition SigWithZAList (ml : GE -> N -> GE)(a b n xG yG Z_A dA M : bL)(klist : list N)
    : option (bL * (bL * bL)) :=
    let e := HashN (Z_A ++ M) in
      match TrySigWithList ml (bL2N n)
@@ -47,7 +47,7 @@ Definition SigWithZAList (ml : GE -> N -> GE)(a b n xG yG Z_A dA xA yA M : bL)(k
 Definition SigWithList (ml : GE -> N -> GE)(a b n xG yG ENTL_A ID_A dA xA yA M : bL)(klist : list N)
    : option (bL * (bL * bL)) :=
    let Z_A := ComputeZ ENTL_A ID_A a b xG yG xA yA in
-   SigWithZAList ml a b n xG yG Z_A dA xA yA M klist. 
+   SigWithZAList ml a b n xG yG Z_A dA M klist. 
 
 Definition SigWithList_pf (p a b n xG yG ENTL_A ID_A dA xA yA M : bL)(klist : list N)
    : option (bL * (bL * bL)) :=
@@ -59,7 +59,7 @@ Definition SigWithList_bfp (m gp : N)(a b n xG yG ENTL_A ID_A dA xA yA M : bL)(k
 
 Definition SigWithZAList_bfp (m gp : N)(a b n xG yG ZA dA xA yA M : bL)(klist : list N)
    : option (bL * (bL * bL)) :=
-   SigWithZAList (bfp_mul m gp (bL2N a)) a b n xG yG ZA dA xA yA M klist. 
+   SigWithZAList (bfp_mul m gp (bL2N a)) a b n xG yG ZA dA M klist. 
 
 (* true if x \in [lower, upper] *)
 Definition inRange (x lower upper : N) : bool :=
