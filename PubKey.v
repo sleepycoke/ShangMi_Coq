@@ -171,7 +171,6 @@ Definition y1 := hS2N "00 B23B938D C0A94D1D F8F42CF4 5D2D6601 BF638C3D 7DE75A29 
 Definition x2 := hS2N "00 83E628CF 701EE314 1E8873FE 55936ADF 24963F5D C9C64805 66C80F8A 1D8CC51B".
 Definition y2 := hS2N "01 524C647F 0C0412DE FD468BDA 3AE0E5A8 0FCC8F5C 990FEE11 60292923 2DCD9F36". 
 Definition P2 := Cop (x2, y2). 
-Print KDF. 
 Definition t := KDF ((N2BbL_len 257 x2) ++ (N2BbL_len 257 y2)) klen Hash constant_v. 
 (*Compute bL2hS t.*) (*Correct*)
 Definition C2 := bLXOR M t . 

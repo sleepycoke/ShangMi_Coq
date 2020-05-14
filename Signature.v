@@ -66,11 +66,11 @@ Definition inRange (x lower upper : N) : bool :=
   andb (leb lower x) (leb x upper). 
 
 (* None if passed, otherwise Some error message *)
-Definition VeriSig (ml : GE -> N -> GE)(ad : GE -> GE -> GE)(n xG yG xA yA : N)(r'bL s'bL Z_A M' : bL) : option string :=
+Definition VeriSig (hash : bL -> N)(ml : GE -> N -> GE)(ad : GE -> GE -> GE)(n xG yG xA yA : N)(r'bL s'bL Z_A M' : bL) : option string :=
   let (r', s') := ((bL2N r'bL), (bL2N s'bL)) in
   if negb (inRange r' 1 (n - 1)) then Some "r' out of range" else
   if negb (inRange s' 1 (n - 1)) then Some "s' out of range" else
-  let e' := HashN (Z_A ++ M') in
+  let e' := hash (Z_A ++ M') in
   let t := P_add n r' s' in
   if t =? 0 then Some "t = 0" else 
   let G := Cop (xG, yG) in
@@ -83,11 +83,11 @@ Definition VeriSig (ml : GE -> N -> GE)(ad : GE -> GE -> GE)(n xG yG xA yA : N)(
   end. 
 
   
-Definition VeriSig_pf (p a n xG yG xA yA : N)(r'bL s'bL Z_A M' : bL) : option string :=
-  VeriSig (pf_mul p a) (pf_add p a) n xG yG xA yA r'bL s'bL Z_A M'. 
+Definition VeriSig_pf (hash : bL -> N)(p a n xG yG xA yA : N)(r'bL s'bL Z_A M' : bL) : option string :=
+  VeriSig hash (pf_mul p a) (pf_add p a) n xG yG xA yA r'bL s'bL Z_A M'. 
 
-Definition VeriSig_bfp (m gp a n xG yG xA yA : N)(r'bL s'bL Z_A M' : bL) : option string :=
-  VeriSig (bfp_mul m gp a) (bfp_add m gp a) n xG yG xA yA r'bL s'bL Z_A M'. 
+Definition VeriSig_bfp (hash : bL -> N) (m gp a n xG yG xA yA : N)(r'bL s'bL Z_A M' : bL) : option string :=
+  VeriSig hash (bfp_mul m gp a) (bfp_add m gp a) n xG yG xA yA r'bL s'bL Z_A M'. 
 
 (*
 Module A_1. 
@@ -172,7 +172,7 @@ Compute N2hS st.
 *)
 (*Correct, 6FC6DAC3 2C5D5CF1 0C77DFB2 0F7C2EB6 67A45787 2FB09EC5 6327A67E C7DEEBE7 *)
 (*
-Time Compute match SigWithList_pf pIn aIn bIn nIn xGIn yGIn ENTLa IDa dAIn xAIn yAIn MIn [bL2N kt] with
+Time Compute match SigWithList_pf HashN pIn aIn bIn nIn xGIn yGIn ENTLa IDa dAIn xAIn yAIn MIn [bL2N kt] with
 | None => None
 | Some (M, (r, s)) => Some (bL2str M, ((bL2hS r), (bL2hS s)))
 end. 
@@ -223,7 +223,7 @@ Definition P1t := pf_add (bL2N pIn) (bL2N aIn) (Cop (x0't, y0't)) (Cop (x00't, y
 Compute N2hS (P_add nN (bL2N et) x1't).  (*Correct*)
 *)
 (*
-Time Compute VeriSig_pf (bL2N pIn) (bL2N aIn) nN (bL2N xGIn)
+Time Compute VeriSig_pf HashN (bL2N pIn) (bL2N aIn) nN (bL2N xGIn)
   (bL2N yGIn) (bL2N xAIn) (bL2N yAIn) (N2bL rt) (N2bL st) ZAt MIn. 
 *)
 (*
@@ -277,7 +277,7 @@ Finished transaction in 1146.773 secs (1143.449u,1.716s) (successful)
 Compute N2hS (P_add nN e x1). 
 *)
 (*
-Time Compute match SigWithZAList_bfp m gp a b n xG yG Z_A dA xA yA M [bL2N k] with
+Time Compute match SigWithZAList_bfp HashN m gp a b n xG yG Z_A dA xA yA M [bL2N k] with
   | None => None
   | Some (m',  (r, s)) => 
     Some (bL2str m', ((bL2hS r), (bL2hS s)))
@@ -285,7 +285,7 @@ Time Compute match SigWithZAList_bfp m gp a b n xG yG Z_A dA xA yA M [bL2N k] wi
 *)
 (*Correct*)
 (*
-Time Compute VeriSig_bfp m gp (bL2N a) (bL2N n) (bL2N xG) (bL2N yG) (bL2N xA) (bL2N yA) r s Z_A M.
+Time Compute VeriSig_bfp HashN m gp (bL2N a) (bL2N n) (bL2N xG) (bL2N yG) (bL2N xA) (bL2N yA) r s Z_A M.
 = None
      : option string
      *)
