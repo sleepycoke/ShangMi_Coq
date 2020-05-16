@@ -119,19 +119,32 @@ Definition Semi_Trace_p (m gp : N)(alpha : N) : N :=
   let (T, j) := (alpha, N.to_nat((m - 1) / 2)) in
     Semi_Trace_p_tail (fun x => B_add (Bp_sq gp (Bp_sq gp x)) alpha) T j. 
 
-Fixpoint BinaryMap_rec (func : N -> N)(len : nat)(prefix : N)(acc : list N) : list N :=
+Fixpoint BinaryMapLen_rec (func : N -> N)(len : nat)(prefix : N)(acc : list N) : list N :=
   match len with
   | O => func prefix :: acc
   | S len' => 
-      (BinaryMap_rec func len' (double prefix) []) ++
-      (BinaryMap_rec func len' (succ_double prefix) []) ++ acc
+      (BinaryMapLen_rec func len' (double prefix) []) ++
+      (BinaryMapLen_rec func len' (succ_double prefix) []) ++ acc
   end. 
 
 (*maps func on all N's within length len*)
-Definition BinaryMap (func : N -> N)(len : nat) : list N :=
-  BinaryMap_rec func len 0 []. 
+Definition BinaryMapLen (func : N -> N)(len : nat) : list N :=
+  BinaryMapLen_rec func len 0 []. 
 
-(*Compute BinaryMap N.square 4.*) (*Correct*)
+Compute BinaryMapLen N.square 4. (*Correct*)
+
+Print positive. 
+Open Scope list_scope. 
+Fixpoint BinaryMap_rec (func : N -> N)(p : positive) : list N :=
+  let double_sub := fun y => (BinaryMap_rec func y) ++
+      (BinaryMap_rec (fun x : N => func (x + (Npos y))) y) in
+  match p with
+  | xH => [func (Npos p)]
+  | xO p' => double_sub p'
+  | xI p' => double_sub p' ++ [func (Npos p)]
+  end. 
+
+Compute BinaryMap_rec N.square 20. (* Correct *) 
     
 Fixpoint TryBinary_rec (func : N -> bool)(len : nat)(prefix : N) : option N :=
   match len with
