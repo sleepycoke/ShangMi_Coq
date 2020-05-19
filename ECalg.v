@@ -119,46 +119,102 @@ Definition Semi_Trace_p (m gp : N)(alpha : N) : N :=
   let (T, j) := (alpha, N.to_nat((m - 1) / 2)) in
     Semi_Trace_p_tail (fun x => B_add (Bp_sq gp (Bp_sq gp x)) alpha) T j. 
 
-Fixpoint BinaryMapLen_rec (func : N -> N)(len : nat)(prefix : N)(acc : list N) : list N :=
+(*funcs upon prefix..XXXX, where XXXX is of length len *) 
+Fixpoint BinaryMapLen_rec (func : N -> N)(len : nat)(prefix : N) : list N :=
   match len with
-  | O => func prefix :: acc
+  | O => [func prefix] (* only one number *)
   | S len' => 
-      (BinaryMapLen_rec func len' (double prefix) []) ++
-      (BinaryMapLen_rec func len' (succ_double prefix) []) ++ acc
+      (BinaryMapLen_rec func len' (double prefix)) ++ (* appending a 0 to prefix, len-- *)
+      (BinaryMapLen_rec func len' (succ_double prefix)) (* appending a 1 to prefix, len-- *)
   end. 
 
-(*maps func on all N's within length len*)
+(*maps func on all Ns within length len*)
 Definition BinaryMapLen (func : N -> N)(len : nat) : list N :=
-  BinaryMapLen_rec func len 0 []. 
+  BinaryMapLen_rec func len 0. 
 
 Compute BinaryMapLen N.square 4. (*Correct*)
 
-Print positive. 
 Open Scope list_scope. 
-Fixpoint BinaryMap_rec (func : N -> N)(p : positive) : list N :=
-  let double_sub := fun y => (BinaryMap_rec func y) ++
-      (BinaryMap_rec (fun x : N => func (x + (Npos y))) y) in
+(* This approach does work. But accumulated modifying func could be too complicated *)
+(*
+Fixpoint BinaryMap_pos (func : positive -> N)(p : positive) : list N :=
+  let sub := fun x => (BinaryMap_pos func x) ++ (* maps [1,  x] *)
+      (BinaryMap_pos (fun y => func (Pos.add y x)) x) in (* maps [x + 1, 2x] *)
   match p with
-  | xH => [func (Npos p)]
-  | xO p' => double_sub p'
-  | xI p' => double_sub p' ++ [func (Npos p)]
+  | xH => [func p]
+  | xO p' => sub p'
+  | xI p' => sub p' ++ [func p]
   end. 
 
-Compute BinaryMap_rec N.square 20. (* Correct *) 
+Definition BinaryMap (func : N -> N)(n : N) : list N :=
+  match n with
+  | N0 => [func N0]
+  | Npos p => [func N0] ++ (BinaryMap_pos (fun x => func (Npos x)) p)
+  end. 
+
+Compute BinaryMap N.square 20. (* Correct *) 
+*)
+
+Fixpoint BinaryMap_pos (func : positive -> N)(p : positive)(base : N) : list N :=
+  let sum := fun x => match base with
+  | N0 => x
+  | Npos q => Pos.add x q
+  end in
+  let sub := fun x => (BinaryMap_pos func x base) ++ (* maps [1,  x] *)
+      (BinaryMap_pos func x (Npos (sum x))) in (* maps [x + 1, 2x] *)
+  match p with
+  | xH => [func (sum xH)]
+  | xO p' => sub p'
+  | xI p' => sub p' ++ [func (sum p)]
+  end. 
+
+Definition BinaryMap (func : N -> N)(n : N) : list N :=
+  match n with
+  | N0 => [func N0]
+  | Npos p => [func N0] ++ (BinaryMap_pos (fun x => func (Npos x)) p 0)
+  end. 
+
+Compute BinaryMap N.square 10. (* Correct *) 
+(*
+Time Compute BinaryMap N.square 10000. (* Correct *) 
+Finished transaction in 1.209 secs 
+Both approach cost nearly the same time. 
+*)
+
+(* Finds the first positive in [1, p] that trusifies func. *)
+(* bugged 
+Fixpoint TryBinary_pos (func : positive -> bool)(p : positive) : option positive :=
+  let sub := fun x => match (TryBinary_pos func x) with
+  | Some r => Some r
+  | None => TryBinary_pos (fun y => func (Pos.add y x)) x
+  end in
+  match p with
+  | xH => if func xH then Some xH else None
+  | xO p' => sub p'
+  | xI p' => match sub p' with 
+    | Some r => Some r
+    | None => if func p then Some p else None
+    end
+  end. 
+*)
+(*
+Compute TryBinary_pos (Pos.leb 5) 20. 
+*)
+Close Scope list_scope. 
     
-Fixpoint TryBinary_rec (func : N -> bool)(len : nat)(prefix : N) : option N :=
+Fixpoint TryBinaryLen_rec (func : N -> bool)(len : nat)(prefix : N) : option N :=
   match len with
   | O => if func prefix then Some prefix else None
   | S len' =>
-      match TryBinary_rec func len' (double prefix) with
+      match TryBinaryLen_rec func len' (double prefix) with
       | Some n => Some n
-      | None => TryBinary_rec func len' (succ_double prefix)
+      | None => TryBinaryLen_rec func len' (succ_double prefix)
       end
   end.
 
 (*Find the smallest N within length len that satisfies func *)
-Definition TryBinary (func : N -> bool)(len : nat) : option N :=
-  TryBinary_rec func len 0. 
+Definition TryBinaryLen (func : N -> bool)(len : nat) : option N :=
+  TryBinaryLen_rec func len 0. 
 
 (*
 Compute (fix func (x : nat) : nat := 
@@ -170,15 +226,15 @@ Compute (fix func (x : nat) : nat :=
   *)
 
 (*
-Compute TryBinary (fun x => leb 20 x) 4. 
-Compute TryBinary (fun x => leb 20 x) 5. 
-Compute TryBinary (fun x => leb 20 x) 6. 
-Compute TryBinary (fun x => leb 20000000 x) 2000. 
+Compute TryBinaryLen (fun x => leb 20 x) 4. 
+Compute TryBinaryLen (fun x => leb 20 x) 5. 
+Compute TryBinaryLen (fun x => leb 20 x) 6. 
+Compute TryBinaryLen (fun x => leb 20000000 x) 2000. 
 Correct *)
 
 (* Find the smallest element in F_2m whose trace is 1*)
 Definition SolveTrace1_bfp(m gp : N) : option N :=
-  TryBinary (fun x => Trace_p m gp x =? 1) (N.to_nat m). 
+  TryBinaryLen (fun x => Trace_p m gp x =? 1) (N.to_nat m). 
 
 Definition FindRoot_alg3 (ml : N -> N -> N)(sq : N -> N)(m beta tau : N) : option N :=
   let (z, w) := 
