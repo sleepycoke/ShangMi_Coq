@@ -156,16 +156,16 @@ Compute BinaryMap N.square 20. (* Correct *)
 *)
 
 Fixpoint BinaryMap_pos (func : positive -> N)(p : positive)(base : N) : list N :=
-  let sum := fun x => match base with
-  | N0 => x
-  | Npos q => Pos.add x q
+  let current := match base with
+  | N0 => [func p]
+  | Npos q => [func (Pos.add p q)]
   end in
   let sub := fun x => (BinaryMap_pos func x base) ++ (* maps [1,  x] *)
-      (BinaryMap_pos func x (Npos (sum x))) in (* maps [x + 1, 2x] *)
+      (BinaryMap_pos func x (base + (Npos x))) in (* maps [x + 1, 2x] *)
   match p with
-  | xH => [func (sum xH)]
+  | xH => current
   | xO p' => sub p'
-  | xI p' => sub p' ++ [func (sum p)]
+  | xI p' => sub p' ++ current
   end. 
 
 Definition BinaryMap (func : N -> N)(n : N) : list N :=
@@ -174,7 +174,9 @@ Definition BinaryMap (func : N -> N)(n : N) : list N :=
   | Npos p => [func N0] ++ (BinaryMap_pos (fun x => func (Npos x)) p 0)
   end. 
 
+(*
 Compute BinaryMap N.square 10. (* Correct *) 
+*)
 (*
 Time Compute BinaryMap N.square 10000. (* Correct *) 
 Finished transaction in 1.209 secs 
@@ -182,24 +184,43 @@ Both approach cost nearly the same time.
 *)
 
 (* Finds the first positive in [1, p] that trusifies func. *)
-(* bugged 
-Fixpoint TryBinary_pos (func : positive -> bool)(p : positive) : option positive :=
-  let sub := fun x => match (TryBinary_pos func x) with
+Fixpoint TryBinary_pos (func : positive -> bool)(p : positive)(base : N) : option positive :=
+  let shifted := match base with
+  | N0 => p
+  | Npos q => Pos.add p q
+  end in
+  let sub := fun x => match TryBinary_pos func x base with
   | Some r => Some r
-  | None => TryBinary_pos (fun y => func (Pos.add y x)) x
+  | None => TryBinary_pos func x (base + (Npos x))
   end in
   match p with
-  | xH => if func xH then Some xH else None
+  | xH => if func shifted then Some shifted else None
   | xO p' => sub p'
-  | xI p' => match sub p' with 
+  | xI p' => match sub p' with
     | Some r => Some r
-    | None => if func p then Some p else None
+    | None => if func shifted then Some shifted else None
+    end
+  end.
+
+(*
+Compute TryBinary_pos (Pos.leb 5) 4 0. 
+Compute TryBinary_pos (Pos.leb 5) 40 0. 
+*)
+
+Definition TryBinary (func : N -> bool)(n : N) : option N :=
+  match n with 
+  | N0 => if func N0 then Some N0 else None
+  | Npos p => match TryBinary_pos (fun x => func (Npos x)) p 0 with
+    | Some r => Some (Npos r)
+    | None => None
     end
   end. 
-*)
+
 (*
-Compute TryBinary_pos (Pos.leb 5) 20. 
+Compute TryBinary (N.leb 5) 40. 
+Compute TryBinary (N.leb 5) 0. 
 *)
+
 Close Scope list_scope. 
     
 Fixpoint TryBinaryLen_rec (func : N -> bool)(len : nat)(prefix : N) : option N :=
