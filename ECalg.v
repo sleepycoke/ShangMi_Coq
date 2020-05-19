@@ -184,14 +184,14 @@ Both approach cost nearly the same time.
 *)
 
 (* Finds the first positive in [1, p] that trusifies func. *)
-Fixpoint TryBinary_pos (func : positive -> bool)(p : positive)(base : N) : option positive :=
+Fixpoint TryBinary_rec (func : positive -> bool)(p : positive)(base : N) : option positive :=
   let shifted := match base with
   | N0 => p
   | Npos q => Pos.add p q
   end in
-  let sub := fun x => match TryBinary_pos func x base with
+  let sub := fun x => match TryBinary_rec func x base with
   | Some r => Some r
-  | None => TryBinary_pos func x (base + (Npos x))
+  | None => TryBinary_rec func x (base + (Npos x))
   end in
   match p with
   | xH => if func shifted then Some shifted else None
@@ -202,15 +202,18 @@ Fixpoint TryBinary_pos (func : positive -> bool)(p : positive)(base : N) : optio
     end
   end.
 
+Definition TryBinary_pos (func : positive -> bool)(p : positive) : option positive :=
+  TryBinary_rec func p 0. 
+
 (*
-Compute TryBinary_pos (Pos.leb 5) 4 0. 
-Compute TryBinary_pos (Pos.leb 5) 40 0. 
+Compute TryBinary_pos (Pos.leb 5) 4. 
+Compute TryBinary_pos (Pos.leb 5) 40. 
 *)
 
 Definition TryBinary (func : N -> bool)(n : N) : option N :=
   match n with 
   | N0 => if func N0 then Some N0 else None
-  | Npos p => match TryBinary_pos (fun x => func (Npos x)) p 0 with
+  | Npos p => match TryBinary_pos (fun x => func (Npos x)) p with
     | Some r => Some (Npos r)
     | None => None
     end
