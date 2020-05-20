@@ -1,5 +1,7 @@
 Require Export ECAlg. 
 Require Export SM3. 
+ 
+Open Scope N_scope. 
 
 (* TODO RANDOMLY sample a number in [low, high] *)
 Definition SampleN (low : N)(high : N)(seed : N) : N :=

@@ -15,6 +15,8 @@ Fixpoint bS2bL_tail (bs : string)(acc : bL) : bL :=
       end
   end.
 
+Open Scope list_scope. 
+
 Definition bS2bL (bs : string) : bL :=
   bS2bL_tail bs []. 
 
@@ -305,3 +307,4 @@ Definition Field2N_m (alpha : bL) : N :=
   bL2N alpha. 
   *)
 
+Close Scope list_scope. 

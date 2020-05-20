@@ -65,6 +65,8 @@ Definition SigWithZAList_bfp (m gp : N)(a b n xG yG ZA dA xA yA M : bL)(klist : 
 Definition inRange (x lower upper : N) : bool :=
   andb (leb lower x) (leb x upper). 
 
+Open Scope N_scope. 
+
 (* None if passed, otherwise Some error message *)
 Definition VeriSig (hash : bL -> N)(ml : GE -> N -> GE)(ad : GE -> GE -> GE)(n xG yG xA yA : N)(r'bL s'bL Z_A M' : bL) : option string :=
   let (r', s') := ((bL2N r'bL), (bL2N s'bL)) in

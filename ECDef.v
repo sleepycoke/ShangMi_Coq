@@ -1,4 +1,5 @@
 Require Export DataTypes. 
+Open Scope list_scope. 
 
 (* Elliptic Curve Group element: O or coordinated points *)
 Inductive GE : Set :=
