@@ -166,17 +166,17 @@ Fixpoint TryFunWithList (func : N -> option N)(l : list N) : option N :=
 
 
 (*funcs upon prefix..XXXX, where XXXX is of length len *) 
-Fixpoint BinaryMapLen_rec (func : N -> N)(len : nat)(prefix : N) : list N :=
+Fixpoint BinaryMapLen_fix (func : N -> N)(len : nat)(prefix : N) : list N :=
   match len with
   | O => [func prefix] (* only one number *)
   | S len' => 
-      (BinaryMapLen_rec func len' (double prefix)) ++ (* appending a 0 to prefix, len-- *)
-      (BinaryMapLen_rec func len' (succ_double prefix)) (* appending a 1 to prefix, len-- *)
+      (BinaryMapLen_fix func len' (double prefix)) ++ (* appending a 0 to prefix, len-- *)
+      (BinaryMapLen_fix func len' (succ_double prefix)) (* appending a 1 to prefix, len-- *)
   end. 
 
 (*maps func on all Ns within length len*)
 Definition BinaryMapLen (func : N -> N)(len : nat) : list N :=
-  BinaryMapLen_rec func len 0. 
+  BinaryMapLen_fix func len 0. 
 
 (*
 Compute BinaryMapLen N.square 4. (*Correct*)
@@ -234,14 +234,14 @@ Both approach cost nearly the same time.
 
 (* TODO Consider utilizing TryBinary_Len for each 1 from left to right after N2bL *)
 (* Finds the first positive in [1, p] that trusifies func. *)
-Fixpoint TryBinary_rec (func : positive -> bool)(p : positive)(base : N) : option positive :=
+Fixpoint TryBinary_fix (func : positive -> bool)(p : positive)(base : N) : option positive :=
   let shifted := match base with
   | N0 => p
   | Npos q => Pos.add p q
   end in
-  let sub := fun x => match TryBinary_rec func x base with
+  let sub := fun x => match TryBinary_fix func x base with
   | Some r => Some r
-  | None => TryBinary_rec func x (base + (Npos x))
+  | None => TryBinary_fix func x (base + (Npos x))
   end in
   match p with
   | xH => if func shifted then Some shifted else None
@@ -254,7 +254,7 @@ Fixpoint TryBinary_rec (func : positive -> bool)(p : positive)(base : N) : optio
 
 
 Definition TryBinary_pos (func : positive -> bool)(p : positive) : option positive :=
-  TryBinary_rec func p 0. 
+  TryBinary_fix func p 0. 
 
 (*
 Compute TryBinary_pos (Pos.leb 5) 4. 
@@ -275,19 +275,19 @@ Compute TryBinary (N.leb 5) 40.
 Compute TryBinary (N.leb 5) 0. 
 *)
 
-Fixpoint TryBinaryLen_rec (func : N -> bool)(len : nat)(prefix : N) : option N :=
+Fixpoint TryBinaryLen_fix (func : N -> bool)(len : nat)(prefix : N) : option N :=
   match len with
   | O => if func prefix then Some prefix else None
   | S len' =>
-      match TryBinaryLen_rec func len' (double prefix) with
+      match TryBinaryLen_fix func len' (double prefix) with
       | Some n => Some n
-      | None => TryBinaryLen_rec func len' (succ_double prefix)
+      | None => TryBinaryLen_fix func len' (succ_double prefix)
       end
   end.
 
 (*Find the smallest N within length len that satisfies func *)
 Definition TryBinaryLen (func : N -> bool)(len : nat) : option N :=
-  TryBinaryLen_rec func len 0. 
+  TryBinaryLen_fix func len 0. 
 
 (*
 Compute (fix func (x : nat) : nat := 
