@@ -305,3 +305,84 @@ Compute TryBinaryLen (fun x => leb 20 x) 6.
 Compute TryBinaryLen (fun x => leb 20000000 x) 2000. 
 Correct *)
 
+Inductive timed (A : Type)(B : Type) : Type :=
+| Cvg : A -> timed A B (* the process returns A within the time limit *)
+| Tmo : B -> timed A B (* the process did not halt in time, not sure would ever halt *)
+    (* Returns B for continued process *)
+| Dvg : timed A B (* the process would never halt *)
+.
+
+Arguments Cvg {A} {B} _.
+Arguments Dvg {A} {B}.
+Arguments Tmo {A} {B} _.
+
+Fixpoint TryTrans_fix (A : Type)(func : N -> option A)(trans : N -> N)(initial : N)(last : N)
+  (loop_count : positive) : timed A N :=
+  let check_dvg := 
+      fun x : N =>
+        (let next := trans x in
+          if next =? initial then Dvg else Tmo next) in
+  match loop_count with
+  | xH =>
+    match func last with
+    | Some r => Cvg r
+    | None => check_dvg last
+    end
+  | xO lc' | xI lc' =>
+    (*if andb (negb first_pass) (last =? initial) then Dvg else (* finished a period *)*)
+    match TryTrans_fix A func trans initial last lc' with
+    | Cvg r => Cvg r
+    | Dvg => Dvg
+    | Tmo trans_r => 
+        match TryTrans_fix A func trans initial trans_r lc' with
+        | Cvg r => Cvg r
+        | Dvg => Dvg
+        | Tmo trans_r' => 
+            match loop_count with
+            | xO lc' => Tmo trans_r' 
+            | _ => 
+                match func trans_r' with
+                | Some r => Cvg r
+                | None => check_dvg trans_r'
+                end
+            end
+        end
+    end
+  end.
+
+(* If func returns Some A within loop_limit tests, then return Cvg *)
+(* If a period has been traversed, then return Dvg *)
+(* O.W. returns Imo next_input *)
+Definition TryTrans (A : Type)(func : N -> option A)(trans : N -> N)(initial : N)
+  (loop_limit : N) : timed A N :=
+  match loop_limit with
+  | N0 => Tmo initial
+  | Npos lp =>
+      TryTrans_fix A func trans initial initial lp 
+      (*
+      match TryTrans_fix A func trans initial initial lp true with
+      | Dvg => Dvg
+      | Cvg r => Cvg r
+      | Tmo last =>
+          if last =? initial then Dvg else Tmo last
+      end
+      *)
+  end. 
+ 
+ (*
+(* 3 -> 3 *)
+Compute TryTrans N (fun x => if (N.eqb 5 x) then Some x else None) (fun x => x mod 7) 3 2. 
+Compute TryTrans N (fun x => if (N.eqb 5 x) then Some x else None) (fun x => x mod 7) 3 1. 
+Compute TryTrans N (fun x => if (N.eqb 5 x) then Some x else None) (fun x => x mod 7) 3 0. 
+            
+(* 1 -> 2 -> 4 -> 1 *)
+Compute TryTrans N (fun x => if (N.eqb 5 x) then Some x else None) (fun x => (N.double x) mod 7) 1 2 . 
+Compute TryTrans N (fun x => if (N.eqb 5 x) then Some x else None) (fun x => (N.double x) mod 7) 1 3 . 
+Compute TryTrans N (fun x => if (N.eqb 5 x) then Some x else None) (fun x => (N.double x) mod 7) 1 4 . 
+
+(* 3 -> 6 -> 5 *)
+Compute TryTrans N (fun x => if (N.eqb 5 x) then Some x else None) (fun x => (N.double x) mod 7) 3 0. 
+Compute TryTrans N (fun x => if (N.eqb 5 x) then Some x else None) (fun x => (N.double x) mod 7) 3 1. 
+Compute TryTrans N (fun x => if (N.eqb 5 x) then Some x else None) (fun x => (N.double x) mod 7) 3 2. 
+Compute TryTrans N (fun x => if (N.eqb 5 x) then Some x else None) (fun x => (N.double x) mod 7) 3 7. 
+*)
