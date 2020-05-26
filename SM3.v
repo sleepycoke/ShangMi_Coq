@@ -36,7 +36,7 @@ Definition prePad64(s : bL) :=
 
 Definition Padding (m : bL) (l : N) : bL :=
   List.app ( iter (pad_k l) (fun (s : bL) => List.app s [false]) (List.app m [true])
-  ) (prePad64 (N2bL l)). 
+  ) (prePad64 (NtobL l)). 
 
 Definition n_of_B (l : N) := div (l + (pad_k l) + 65) 512. 
 
@@ -151,7 +151,7 @@ Definition HashN (m : bL) : N :=
 
 (*TODO Consider refactor SM3 with bL *)
 Definition Hash (m : bL) : bL :=
-  N2bL_len 256 (HashN m). 
+  NtobL_len 256 (HashN m). 
 
 (*
 Definition hex2bin_with_prefix (m_hex : string) :=
@@ -163,18 +163,18 @@ Definition remove_prefix (s : string) (pre_len : nat) : string :=
 Definition hex2bin (m_hex : string) :=
   remove_prefix (hex2bin_with_prefix m_hex) 2. 
 
-Definition bin2hex (m_bin : string) :=
+Definition biNtohex (m_bin : string) :=
   remove_prefix (HexString.of_N (BinaryString.to_N ("0b" ++ m_bin))) 2. 
 *)
 (* duplicate implementation
-Fixpoint bin2bL_tail (m_bin : string)(acc : bL) : bL :=
+Fixpoint biNtobL_tail (m_bin : string)(acc : bL) : bL :=
   match m_bin with
   | "" => acc
-  | String h m_bin' => bin2bL_tail m_bin' ((Ascii.eqb h "1") :: acc)
+  | String h m_bin' => biNtobL_tail m_bin' ((Ascii.eqb h "1") :: acc)
   end. 
 
-Definition bin2bL (m_bin : string) : bL :=
-  List.rev (bin2bL_tail m_bin []). 
+Definition biNtobL (m_bin : string) : bL :=
+  List.rev (biNtobL_tail m_bin []). 
 
 Fixpoint bL2bin_tail (m : bL)(acc : string) : string :=
   match m with

@@ -2,7 +2,7 @@ Require Export KeyEx.
 
 (*A2 - A5 *)
 Definition TryComputeTwithK (hash_v : bL -> bL)(v : nat)(klen : nat)
-  (ml : GE -> N -> GE)(p2Bl : N -> N -> BL)(n2bl : N -> bL)(k h : N)(G PB : GE)
+  (ml : GE -> N -> GE)(p2Bl : N -> N -> BL)(Ntobl : N -> bL)(k h : N)(G PB : GE)
   : optErr (option (bL * bL * bL * bL)) :=
   let C1 := ml G k in
   match C1 with
@@ -17,7 +17,7 @@ Definition TryComputeTwithK (hash_v : bL -> bL)(v : nat)(klen : nat)
         match kPB with
         | InfO => Error "kPB = InfO" (* impossible? *)
         | Cop (x2, y2) => 
-          let (x2bl, y2bl) := (n2bl x2, n2bl y2) in
+          let (x2bl, y2bl) := (Ntobl x2, Ntobl y2) in
           let t := KDF (x2bl ++ y2bl) klen hash_v v in
            if All0bL t then Normal None
            else Normal (Some (t, x2bl, y2bl, C1bl))
@@ -26,15 +26,15 @@ Definition TryComputeTwithK (hash_v : bL -> bL)(v : nat)(klen : nat)
   end. 
 
 (* A1 - A8 *)
-Fixpoint ComputeCwithklist (hash_v : bL -> bL)(v : nat)(ml : GE -> N -> GE)(p2Bl : N -> N -> BL)(n2bl : N -> bL)(h : N)(klist : list N)
+Fixpoint ComputeCwithklist (hash_v : bL -> bL)(v : nat)(ml : GE -> N -> GE)(p2Bl : N -> N -> BL)(Ntobl : N -> bL)(h : N)(klist : list N)
   (G PB : GE)(M : bL) : optErr bL :=
   match klist with
   | [] => Error "klist depleted"
   | k :: tl =>
-      match TryComputeTwithK hash_v v (length M) ml p2Bl n2bl k h G PB  with
-      | Error err => Error (err ++ " k = " ++ (N2hS k))
+      match TryComputeTwithK hash_v v (length M) ml p2Bl Ntobl k h G PB  with
+      | Error err => Error (err ++ " k = " ++ (NtohS k))
       | Normal None =>
-          ComputeCwithklist hash_v v ml p2Bl n2bl h tl G PB M
+          ComputeCwithklist hash_v v ml p2Bl Ntobl h tl G PB M
       | Normal (Some (t, x2bl, y2bl, C1bl)) =>
           let C2 := bLXOR M t in
           let C3 := hash_v (x2bl ++ M ++ y2bl) in
@@ -43,13 +43,13 @@ Fixpoint ComputeCwithklist (hash_v : bL -> bL)(v : nat)(ml : GE -> N -> GE)(p2Bl
   end. 
 
 Definition ComputeCwithklist_pf (hash_v : bL -> bL)(v : nat)(p a h : N)(klist : list N)(cp : cmp_type)(G PB : GE)(M : bL) : optErr bL :=
-  ComputeCwithklist hash_v v (pf_mul p a) (Point2BL_p cp) N2BbL h klist G PB M. 
+  ComputeCwithklist hash_v v (pf_mul p a) (Point2BL_p cp) NtoBbL h klist G PB M. 
 
 Definition ComputeCwithklist_bfp (hash_v : bL -> bL)(v : nat)(m gp a h : N)(klist : list N)(cp : cmp_type)(G PB : GE)(M : bL) : optErr bL :=
-  ComputeCwithklist hash_v v (bfp_mul m gp a) (Point2BL_b m cp) (N2BbL_len (N.to_nat m)) h klist G PB M. 
+  ComputeCwithklist hash_v v (bfp_mul m gp a) (Point2BL_b m cp) (NtoBbL_len (N.to_nat m)) h klist G PB M. 
 
 (* B1 - B7 *)
-Definition ComputeM' (hash_v : bL -> bL)(v : nat)(klen : nat)(ml : GE -> N -> GE)(OnCrv : N -> N -> bool)(Bl2p : BL -> option (N * N))(n2bl : N -> bL)(h dB : N)(C : bL) : optErr bL :=
+Definition ComputeM' (hash_v : bL -> bL)(v : nat)(klen : nat)(ml : GE -> N -> GE)(OnCrv : N -> N -> bool)(Bl2p : BL -> option (N * N))(Ntobl : N -> bL)(h dB : N)(C : bL) : optErr bL :=
   let (C1bl, C2C3) := partListBack C (Nat.add klen v) in
   match Bl2p (bL2BL C1bl) with
   | None => Error "Failed to uncompress C1"
@@ -64,7 +64,7 @@ Definition ComputeM' (hash_v : bL -> bL)(v : nat)(klen : nat)(ml : GE -> N -> GE
         match dBC1 with
         | InfO => Error "dBC1 = InfO"
         | Cop (x2, y2) =>
-            let (x2bl, y2bl) := (n2bl x2, n2bl y2) in
+            let (x2bl, y2bl) := (Ntobl x2, Ntobl y2) in
             let t := KDF (x2bl ++ y2bl) klen hash_v v in
             if All0bL t then Error "t is all 0s" else
             let (C2, C3) := partList C2C3 klen in
@@ -77,10 +77,10 @@ Definition ComputeM' (hash_v : bL -> bL)(v : nat)(klen : nat)(ml : GE -> N -> GE
   end. 
 
 Definition ComputeM'_pf (hash_v : bL -> bL)(v : nat)(klen : nat)(p a b h dB : N)(cp : cmp_type)(C : bL) : optErr bL :=
-  ComputeM' hash_v v klen (pf_mul p a) (OnCurve_pf p a b) (BL2Point_p cp p a b) N2BbL h dB C . 
+  ComputeM' hash_v v klen (pf_mul p a) (OnCurve_pf p a b) (BL2Point_p cp p a b) NtoBbL h dB C . 
 
 Definition ComputeM'_bfp (hash_v : bL -> bL)(v : nat)(klen : nat)(m gp a b h dB : N)(cp : cmp_type)(C : bL) : optErr bL :=
-  ComputeM' hash_v v klen (bfp_mul m gp a) (OnCurve_bfp gp a b) (BL2Point_bfp cp m gp a b) (N2BbL_len (N.to_nat m)) h dB C . 
+  ComputeM' hash_v v klen (bfp_mul m gp a) (OnCurve_bfp gp a b) (BL2Point_bfp cp m gp a b) (NtoBbL_len (N.to_nat m)) h dB C . 
 
 Module test_pf. 
 Definition p := hS2N "8542D69E 4C044F18 E8B92435 BF6FF7DE 45728391 5C45517D 722EDB8B 08F1DFC3".
@@ -171,11 +171,11 @@ Definition y1 := hS2N "00 B23B938D C0A94D1D F8F42CF4 5D2D6601 BF638C3D 7DE75A29 
 Definition x2 := hS2N "00 83E628CF 701EE314 1E8873FE 55936ADF 24963F5D C9C64805 66C80F8A 1D8CC51B".
 Definition y2 := hS2N "01 524C647F 0C0412DE FD468BDA 3AE0E5A8 0FCC8F5C 990FEE11 60292923 2DCD9F36". 
 Definition P2 := Cop (x2, y2). 
-Definition t := KDF ((N2BbL_len 257 x2) ++ (N2BbL_len 257 y2)) klen Hash constant_v. 
+Definition t := KDF ((NtoBbL_len 257 x2) ++ (NtoBbL_len 257 y2)) klen Hash constant_v. 
 (*Compute bL2hS t.*) (*Correct*)
 Definition C2 := bLXOR M t . 
 (*Compute bL2hS C2.*) (*Correct*)
-Definition C3 := Hash ((N2BbL_len 257 x2) ++ M ++ (N2BbL_len 257 y2)). 
+Definition C3 := Hash ((NtoBbL_len 257 x2) ++ M ++ (NtoBbL_len 257 y2)). 
 (*Compute bL2hS C3. *)(*Correct*) 
 (*
 Time Compute match ComputeCwithklist_bfp Hash constant_v m gp a h [k] ucp G PB M with

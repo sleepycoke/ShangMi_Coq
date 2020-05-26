@@ -91,7 +91,7 @@ Fixpoint power_tail (g : N)(e : bL)(q : N)(sq : N -> N)
 Definition power_general (g : N)(a : N)(q : N)(sq : N -> N)
   (mp : N -> N -> N)  : N :=
   let e := N.modulo a (q - 1) in
-  power_tail g (N2bL e) q sq mp 1. 
+  power_tail g (NtobL e) q sq mp 1. 
 
 Definition P_power (p : N)(g : N)(a : N) : N :=
   power_general g a p (P_sq p) (P_mul p). 
@@ -240,7 +240,7 @@ Fixpoint pf_mul_tail (p : N)(a : N)(P : GE)(kl : bL)(acc : GE) : GE :=
   end. 
 
 Definition pf_mul_old (p a: N)(P : GE)(k : N) : GE :=
-  pf_mul_tail p a P (N2bL k) InfO. 
+  pf_mul_tail p a P (NtobL k) InfO. 
 *)
 
 
@@ -294,7 +294,7 @@ Fixpoint GE_mul_tail (ad db : GE -> GE)(kl : bL)(acc : GE) : GE :=
   end. 
 
 Definition GE_mul (adder : GE -> GE -> GE)(db : GE -> GE)(P : GE)(k : N) : GE :=
-  GE_mul_tail (adder P) db (N2bL k) InfO.
+  GE_mul_tail (adder P) db (NtobL k) InfO.
 
 Definition pf_mul (p a : N)(P : GE)(k : N) : GE :=
   GE_mul (pf_add p a)(pf_double p a) P k. 

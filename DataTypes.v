@@ -44,25 +44,25 @@ Fixpoint BL2N_tail (Bl : BL)(acc : N) : N :=
 Fixpoint BL2N (Bl : BL) : N :=
   BL2N_tail Bl 0.
 
-Definition N2Byte (n : N) : byte :=
+Definition NtoByte (n : N) : byte :=
   match Byte.of_N n with
   | None => x00
   | Some b => b
   end.
 
-Fixpoint N2BL_tail (k : nat)(x : N)(acc : BL) : BL :=
+Fixpoint NtoBL_tail (k : nat)(x : N)(acc : BL) : BL :=
   match k with
   | O => acc
   | S k' => 
-      N2BL_tail k' (N.div x 256) (N2Byte (N.modulo x 256) :: acc)
+      NtoBL_tail k' (N.div x 256) (NtoByte (N.modulo x 256) :: acc)
   end.
 
 (*4.2.1 trunk from right*)
-Definition N2BL_len (k : nat)(x : N) : BL :=
-  N2BL_tail k x [].
+Definition NtoBL_len (k : nat)(x : N) : BL :=
+  NtoBL_tail k x [].
 
-Definition N2BL (x : N) : BL :=
-  N2BL_len (N.to_nat (N.div (N.add (N.size x) 7) 8)) x. 
+Definition NtoBL (x : N) : BL :=
+  NtoBL_len (N.to_nat (N.div (N.add (N.size x) 7) 8)) x. 
 
 (* Transform the first k(<= 8) bits into an N *)  
 Fixpoint bL2N_tail (bl : bL)(k : nat)(acc : N) : N :=
@@ -88,7 +88,7 @@ Definition bL2N_prefix (bl :bL)(k : nat) : N :=
 
 (* tranfrom the first k bits into a byte *)
 Definition bL2Byte (bl : bL)(k : nat) :=
-  N2Byte (bL2N_prefix bl k). 
+  NtoByte (bL2N_prefix bl k). 
 
 
 
@@ -105,19 +105,19 @@ Fixpoint bL2BL_tail (s : bL)(k : nat)(acc : BL) : BL :=
 Definition bL2BL (s : bL) : BL :=
   bL2BL_tail s (Nat.div (Nat.add(List.length s) 7%nat) 8%nat) []. 
 
-Fixpoint N2bL_tail (n : N)(k : nat)(acc : bL) : bL :=
+Fixpoint NtobL_tail (n : N)(k : nat)(acc : bL) : bL :=
   match k with
   | O => acc
   | S k' => 
-      N2bL_tail (N.div n 2) k' (N.odd n :: acc)
+      NtobL_tail (N.div n 2) k' (N.odd n :: acc)
   end.
 
 (* [] for 0, trunk from right. *)
-Definition N2bL_len (len : nat)(n : N) : bL :=
-  N2bL_tail n len []. 
+Definition NtobL_len (len : nat)(n : N) : bL :=
+  NtobL_tail n len []. 
 
-Definition N2bL (n : N) : bL :=
-  N2bL_len (N.to_nat (N.size n)) n.
+Definition NtobL (n : N) : bL :=
+  NtobL_len (N.to_nat (N.size n)) n.
 
 Definition bS2N (bs : string) : N :=
   bL2N (bStobL bs). 
@@ -133,25 +133,25 @@ Fixpoint BL2bL_tail (M : BL)(k : nat)(acc : bL) : bL :=
       match M with
       | [] => acc
       | h :: tl =>
-          BL2bL_tail tl k' (List.app acc (N2bL_len 8 (Byte.to_N h)))
+          BL2bL_tail tl k' (List.app acc (NtobL_len 8 (Byte.to_N h)))
       end
   end.
 
 Definition BL2bL (M : BL) : bL :=
   BL2bL_tail M (List.length M) [].
 
-Definition N2BbL (n : N) : bL := BL2bL (N2BL n). 
+Definition NtoBbL (n : N) : bL := BL2bL (NtoBL n). 
 
 (*Padding len to a multiplier of 8*)
 (*Croping from the rightside *)
-Definition N2BbL_len (len : nat)(n : N) : bL := 
-  BL2bL (N2BL_len (div_ceil_nat len 8%nat) n). 
+Definition NtoBbL_len (len : nat)(n : N) : bL := 
+  BL2bL (NtoBL_len (div_ceil_nat len 8%nat) n). 
 
-Definition N2bS (n : N) : string :=
-  bL2bS (N2bL n).
+Definition NtobS (n : N) : string :=
+  bL2bS (NtobL n).
 
-Definition N2bS_len (n : N)(len : nat) : string :=
-  bL2bS (N2bL_len len n).
+Definition NtobS_len (n : N)(len : nat) : string :=
+  bL2bS (NtobL_len len n).
 
 Definition rmsp (s : string) := (RepChar s " "%char ""%string). 
 Fixpoint hS2bS_tail (m_hex : string)(acc : string) : string :=
@@ -160,7 +160,7 @@ Fixpoint hS2bS_tail (m_hex : string)(acc : string) : string :=
   | String h tl =>
       match HexString.ascii_to_digit h with
       | None => ""
-      | Some v => hS2bS_tail tl (acc ++ N2bS_len v 4)
+      | Some v => hS2bS_tail tl (acc ++ NtobS_len v 4)
       end
   end. 
 
@@ -172,7 +172,7 @@ Definition hS2N (m_hex : string) : N :=
 
 (*
 Definition hChar2bL (m_hex : string) : bL :=
-  let rawbl := N2bL (hS2N m_hex) in
+  let rawbl := NtobL (hS2N m_hex) in
     List.app
     match (Nat.modulo (List.length rawbl) 4) with
     | 1%nat => [false; false; false] 
@@ -185,13 +185,13 @@ Definition hChar2bL (m_hex : string) : bL :=
 Definition hS2bL (hs : string) :=
   bStobL (hS2bS hs). 
 
-Definition N2hS (n : N) : string :=
+Definition NtohS (n : N) : string :=
   match n with
   | Npos p => HexString.Raw.of_pos p ""
   | N0 => ""
   end.  
 
-Definition N2hChar (n : N) : string :=
+Definition NtohChar (n : N) : string :=
   match n with
   | Npos p => HexString.Raw.of_pos p ""
   | N0 => "0"
@@ -204,7 +204,7 @@ Fixpoint bL2hS_tail (bl : bL)(hSLen : nat)(acc : string) : string :=
   let (pre, suf) := partListBack bl 4 in
     match suf with
     | [] => acc
-    | _ => bL2hS_tail pre len' ((N2hChar (bL2N suf)) ++ acc)
+    | _ => bL2hS_tail pre len' ((NtohChar (bL2N suf)) ++ acc)
     end
   end.
 
@@ -218,7 +218,7 @@ Fixpoint str2bL_tail (s : string)(acc : bL) :=
   match s with
   | "" => acc
   | String c tl =>
-      str2bL_tail tl (List.app acc (N2bL_len 8 (N_of_ascii c)))
+      str2bL_tail tl (List.app acc (NtobL_len 8 (N_of_ascii c)))
   end. 
 
 Definition str2bL (s : string) :=
@@ -281,12 +281,12 @@ Compute bLXOR (bStobL "111001") (bStobL "11111101").
 Inductive field_type : Set :=
   pri : field_type | ext : field_type .
 
-(* Same as N2BL *)
-Definition Field2BL_p :=  N2BL. 
+(* Same as NtoBL *)
+Definition Field2BL_p :=  NtoBL. 
 
 
 Definition Field2BL_b (m : N) :=
-  N2BL_len (N.to_nat (div_ceil_N m 8)). 
+  NtoBL_len (N.to_nat (div_ceil_N m 8)). 
  
 (*4.2.6*)
 Definition BL2Field_p (Bl : BL)(q : N) : option N :=

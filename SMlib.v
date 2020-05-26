@@ -232,7 +232,7 @@ Finished transaction in 1.209 secs
 Both approach cost nearly the same time. 
 *)
 
-(* TODO Consider utilizing TryBinary_Len for each 1 from left to right after N2bL *)
+(* TODO Consider utilizing TryBinary_Len for each 1 from left to right after NtobL *)
 (* Finds the first positive in [1, p] that trusifies func. *)
 Fixpoint TryBinary_fix (func : positive -> bool)(p : positive)(base : N) : option positive :=
   let shifted := match base with

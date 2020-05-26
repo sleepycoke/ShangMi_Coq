@@ -3,14 +3,14 @@ Require Export Signature.
 
 (* TODO Should we imp a general hash_v here? ignored for now *)
 (* j = ceil(klen/v) - i, from ceil(klen/v) - 1 to 0 *)
-(* i from 1 to ceil(klen/v), ct = N2bL_len 32 i*)
+(* i from 1 to ceil(klen/v), ct = NtobL_len 32 i*)
 (* TODO though klen/v could be as long as 2^32, I choose to use nat for 
  simplicity, which suffices for the tests, aka 128 klen *)
 (* Returns a reversed HaList *)
 (* hash_v returns a bL of length v *)
 Fixpoint ComputeHaList (j : nat)(i : N)(Z : bL)
   (hash_v : bL -> bL)(acc : list bL){struct j} :=
-  let HaList := hash_v (Z ++ (N2bL_len 32 i)) :: acc in
+  let HaList := hash_v (Z ++ (NtobL_len 32 i)) :: acc in
   match j with
   | O => HaList 
   | S j' => 
@@ -53,11 +53,11 @@ Definition ComputeV (ml : GE -> N -> GE)(ad : GE -> GE -> GE)(n h t x_tide  : N)
   ml (ad P (ml R x_tide)) (P_mul n h t). 
 Definition ComputeK (m : N)(hash_v : bL -> bL)(v : nat)(klen : nat)
   (x y : N)(ZA ZB : bL) : bL :=
-  let n2bl := if m =? 0 then N2BbL else N2BbL_len (N.to_nat m) in
-  KDF ((n2bl x) ++ (n2bl y) ++ ZA ++ ZB) klen hash_v v. 
+  let Ntobl := if m =? 0 then NtoBbL else NtoBbL_len (N.to_nat m) in
+  KDF ((Ntobl x) ++ (Ntobl y) ++ ZA ++ ZB) klen hash_v v. 
 Definition ComputeS (m : N)(hash_v : bL -> bL)(prehS : string)(ZA ZB : bL)(x y x1 y1 x2 y2 : N) : bL :=
-  let n2bl := if m =? 0 then N2BbL else N2BbL_len (N.to_nat m) in
-    hash_v ((hS2bL prehS) ++ (n2bl y) ++ (hash_v ((n2bl x) ++ ZA ++ ZB ++ (n2bl x1) ++ (n2bl y1) ++ (n2bl x2) ++ (n2bl y2)))). 
+  let Ntobl := if m =? 0 then NtoBbL else NtoBbL_len (N.to_nat m) in
+    hash_v ((hS2bL prehS) ++ (Ntobl y) ++ (hash_v ((Ntobl x) ++ ZA ++ ZB ++ (Ntobl x1) ++ (Ntobl y1) ++ (Ntobl x2) ++ (Ntobl y2)))). 
 
 (* A5 *)
 Definition ComputeT (n d x_tide r : N) : N := P_add n d (x_tide * r). 
@@ -183,14 +183,14 @@ Definition y2 := hS2N "54C9288C 82733EFD F7808AE7 F27D0E73 2F7C73A7 D9AC98B7 D87
 (* Time Compute ComputeR G r p a.       
 Compute (x2, y2). Correct *)
 
-(*Compute N2hS (ComputeTide w x2 p). Correct*)
+(*Compute NtohS (ComputeTide w x2 p). Correct*)
 Definition x2_tide := hS2N "B8F2B533 7B3DCF45 14E8BBC1 9D900EE5".
 Definition tB := hS2N "2B2E11CB F03641FC 3D939262 FC0B652A 70ACAA25 B5369AD3 8B375C02 65490C9F". 
-(*Compute N2hS (P_add dB (x2_tide * rB) n).  Correct *)
+(*Compute NtohS (P_add dB (x2_tide * rB) n).  Correct *)
 
 (* Compute ComputeW n. Correct should be 127*)
 Definition x1_tide := hS2N "E856C095 05324A6D 23150C40 8F162BF0". 
-(*Compute N2hS (ComputeTide w2 x1 p). Correct *) 
+(*Compute NtohS (ComputeTide w2 x1 p). Correct *) 
 Definition RA := Cop (x1, y1). 
 Definition RB := Cop (x2, y2). 
 Definition PA := Cop (xA, yA). 
@@ -216,7 +216,7 @@ Compute V.
 Time Compute pf_mul RA1 (h * tB) p a. Correct *)
 
 Definition Z := xVbL ++ yVbL ++ ZA ++ ZB. 
-Definition Z_short := (N2bL xV) ++ (N2bL yV) ++ ZA ++ ZB. 
+Definition Z_short := (NtobL xV) ++ (NtobL yV) ++ ZA ++ ZB. 
 Definition klen := 128%nat. 
  
 Definition KB := hS2bL "55B0AC62 A6B927BA 23703832 C853DED4". 
@@ -228,18 +228,18 @@ Definition SB := hS2bL "284C8F19 8F141B50 2E81250F 1581C7E9 EEB4CA69 90F9E02D F3
 (* Compute bL2hS (ComputeS "02" ZA ZB xV yV x1 y1 x2 y2 Hash). (*Correct*) *)
 
 (*
-Compute bL2hS (Hash(hS2bL "02" ++ (N2hbL yV) ++
-  (Hash((N2hbL xV) ++ ZA ++ ZB ++ (N2hbL x1) ++ (N2hbL y1) 
-    ++ (N2hbL x2) ++ (N2hbL y2))))). (* Incorrect *)
+Compute bL2hS (Hash(hS2bL "02" ++ (NtohbL yV) ++
+  (Hash((NtohbL xV) ++ ZA ++ ZB ++ (NtohbL x1) ++ (NtohbL y1) 
+    ++ (NtohbL x2) ++ (NtohbL y2))))). (* Incorrect *)
 
 Compute bL2hS (Hash(hS2bL "02" ++ (yVbL) ++
-  (Hash((xVbL) ++ ZA ++ ZB ++ (N2hbL x1) ++ (y1bL) 
-    ++ (N2hbL x2) ++ (N2hbL y2))))). (* Correct So we need to convert into BL*)
+  (Hash((xVbL) ++ ZA ++ ZB ++ (NtohbL x1) ++ (y1bL) 
+    ++ (NtohbL x2) ++ (NtohbL y2))))). (* Correct So we need to convert into BL*)
 
 
 Compute bL2hS (Hash(hS2bL "02" ++ (yVbL) ++
-  (Hash((xVbL) ++ ZA ++ ZB ++ (N2BbL x1) ++ (N2BbL y1)
-    ++ (N2BbL x2) ++ (N2BbL y2))))). (* Correct So we need to convert into BL*)
+  (Hash((xVbL) ++ ZA ++ ZB ++ (NtoBbL x1) ++ (NtoBbL y1)
+    ++ (NtoBbL x2) ++ (NtoBbL y2))))). (* Correct So we need to convert into BL*)
 *)
 (*Compute (RB, bL2hS KB, bL2hS SB). *)
 (*
@@ -338,11 +338,11 @@ Correct Same as KA*)
 (*
 Time Compute match RA' with
   |InfO => ("", "")
-  |Cop (x, y) => (N2hS x, N2hS y)
+  |Cop (x, y) => (NtohS x, NtohS y)
 end. 
 Time Compute match RB' with
   |InfO => ("", "")
-  |Cop (x, y) => (N2hS x, N2hS y)
+  |Cop (x, y) => (NtohS x, NtohS y)
 end. 
 *)
 (* Same as RA and RB *)
@@ -362,7 +362,7 @@ Time Compute match ComputeRBKBSB_bfp Hash constant_v klen m gp a b G n h ZA ZB R
     match rb with
     | InfO => ("", "")
     | Cop (xrb, yrb) =>
-        (N2hS xrb, N2hS yrb)
+        (NtohS xrb, NtohS yrb)
     end,
     bL2hS kb, bL2hS sb)
 end. 

@@ -23,7 +23,7 @@ Fixpoint Lucas_tail (p X Delta : N)(k : bL)(acc : N * N) : N * N :=
 
 (* X, Y > 0 *)
 Definition Lucas (p X Y k : N) :=
-  match N2bL k with
+  match NtobL k with
   | true :: k' => (* k > 0 *)
     Lucas_tail p X (((N.square X) + 4 * (p - Y)) mod p) k' (1, X)
   | _ => (0, 2) (* k = 0 *)

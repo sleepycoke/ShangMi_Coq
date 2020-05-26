@@ -5,7 +5,7 @@ Require Export SM3.
 (*5.5 trunk from right *)
 (*TODO I really cannot understand its definition *)
 Definition ENTL (ID : bL) :=
-  N2bL_len 16 (N.of_nat (List.length (ID))). 
+  NtobL_len 16 (N.of_nat (List.length (ID))). 
 
 Open Scope list. 
 
@@ -41,7 +41,7 @@ Definition SigWithZAList (ml : GE -> N -> GE)(a b n xG yG Z_A dA M : bL)(klist :
      match TrySigWithList ml (bL2N n)
      (bL2N xG) (bL2N yG) (bL2N dA) e klist with
         | None => None
-        | Some (r, s) => Some (M, ((N2bL r), (N2bL s)))
+        | Some (r, s) => Some (M, ((NtobL r), (NtobL s)))
      end. 
 
 Definition SigWithList (ml : GE -> N -> GE)(a b n xG yG ENTL_A ID_A dA xA yA M : bL)(klist : list N)
@@ -159,18 +159,18 @@ Correct!
 *)
 Definition rt := ((bL2N et) + (bL2N x1t)) mod (bL2N nIn). 
 (*
-Compute N2hS rt. (* Correct *) 
+Compute NtohS rt. (* Correct *) 
 *)
 
 Definition factor1 := P_inv (bL2N nIn)(1 + (bL2N dAIn)) .
 (*
-Compute N2hS factor1. (*Correct, should be inverse on field n*)
+Compute NtohS factor1. (*Correct, should be inverse on field n*)
 *)
 Definition factor2 := P_sub (bL2N nIn)(bL2N kt) (P_mul (bL2N nIn) rt (bL2N dAIn) ) . 
 Definition nN := bL2N nIn. 
 Definition st := P_mul nN factor1 factor2.
 (*
-Compute N2hS st.
+Compute NtohS st.
 *)
 (*Correct, 6FC6DAC3 2C5D5CF1 0C77DFB2 0F7C2EB6 67A45787 2FB09EC5 6327A67E C7DEEBE7 *)
 (*
@@ -222,11 +222,11 @@ Definition y1't := hS2N
 Definition P1t := pf_add (bL2N pIn) (bL2N aIn) (Cop (x0't, y0't)) (Cop (x00't, y00't)) .
 (*Compute P1t. Correct*)
 (*
-Compute N2hS (P_add nN (bL2N et) x1't).  (*Correct*)
+Compute NtohS (P_add nN (bL2N et) x1't).  (*Correct*)
 *)
 (*
 Time Compute VeriSig_pf HashN (bL2N pIn) (bL2N aIn) nN (bL2N xGIn)
-  (bL2N yGIn) (bL2N xAIn) (bL2N yAIn) (N2bL rt) (N2bL st) ZAt MIn. 
+  (bL2N yGIn) (bL2N xAIn) (bL2N yAIn) (NtobL rt) (NtobL st) ZAt MIn. 
 *)
 (*
 = None
@@ -261,7 +261,7 @@ Definition nN := bL2N n.
 Definition r := hS2bL "6D3FBA26 EAB2A105 4F5D1983 32E33581 7C8AC453 ED26D339 1CD4439D 825BF25B".
 Definition s := hS2bL "3124C568 8D95F0A1 0252A9BE D033BEC8 4439DA38 4621B6D6 FAD77F94 B74A9556". 
 Definition G := Cop (bL2N xG, bL2N yG).
-Definition a := N2bL_len 257 0. 
+Definition a := NtobL_len 257 0. 
 
 Definition Z_A := hS2bL "26352AF8 2EC19F20 7BBC6F94 74E11E90 CE0F7DDA CE03B27F 801817E8 97A81FD5". 
 
@@ -276,7 +276,7 @@ Time Compute bfp_mul m gp 0 G (bL2N k).
 Finished transaction in 1146.773 secs (1143.449u,1.716s) (successful) 
 *)
 (*
-Compute N2hS (P_add nN e x1). 
+Compute NtohS (P_add nN e x1). 
 *)
 (*
 Time Compute match SigWithZAList_bfp HashN m gp a b n xG yG Z_A dA xA yA M [bL2N k] with
