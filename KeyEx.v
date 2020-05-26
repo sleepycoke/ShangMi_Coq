@@ -8,8 +8,8 @@ Require Export Signature.
  simplicity, which suffices for the tests, aka 128 klen *)
 (* Returns a reversed HaList *)
 (* hash_v returns a bL of length v *)
-Fixpoint ComputeHaList (j : nat)(i : N)(Z : bL)(hash_v : bL -> bL)
-  (acc : list bL){struct j} :=
+Fixpoint ComputeHaList (j : nat)(i : N)(Z : bL)
+  (hash_v : bL -> bL)(acc : list bL){struct j} :=
   let HaList := hash_v (Z ++ (N2bL_len 32 i)) :: acc in
   match j with
   | O => HaList 
@@ -24,8 +24,10 @@ Fixpoint Computek (HaList' : list bL)(acc : bL) : bL :=
   | h :: tl => Computek tl (acc ++ h)
   end. 
 
-Definition KDF (Z : bL)(klen : nat)(hash_v : bL -> bL)(v : nat) : bL :=
-  let HaList := ComputeHaList ((div_ceil_nat klen v) - 1) 1 Z hash_v [] in
+Definition KDF (Z : bL)(klen : nat)(hash_v : bL -> bL)
+  (v : nat) : bL :=
+  let HaList := 
+    ComputeHaList ((div_ceil_nat klen v) - 1) 1 Z hash_v [] in
   match HaList with
   | [] => [] (*HaList should not be empty *)
   | HaLast :: tl =>

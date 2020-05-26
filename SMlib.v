@@ -239,17 +239,20 @@ Fixpoint TryBinary_fix (func : positive -> bool)(p : positive)(base : N) : optio
   | N0 => p
   | Npos q => Pos.add p q
   end in
-  let sub := fun x => match TryBinary_fix func x base with
-  | Some r => Some r
-  | None => TryBinary_fix func x (base + (Npos x))
-  end in
+  let sub := 
+    fun x => 
+      match TryBinary_fix func x base with
+      | Some r => Some r
+      | None => TryBinary_fix func x (base + (Npos x))
+      end in
   match p with
   | xH => if func shifted then Some shifted else None
   | xO p' => sub p'
-  | xI p' => match sub p' with
-    | Some r => Some r
-    | None => if func shifted then Some shifted else None
-    end
+  | xI p' => 
+      match sub p' with
+      | Some r => Some r
+      | None => if func shifted then Some shifted else None
+      end
   end.
 
 
@@ -264,16 +267,20 @@ Compute TryBinary_pos (Pos.leb 5) 40.
 Definition TryBinary (func : N -> bool)(n : N) : option N :=
   match n with 
   | N0 => if func N0 then Some N0 else None
-  | Npos p => match TryBinary_pos (fun x => func (Npos x)) p with
-    | Some r => Some (Npos r)
-    | None => None
-    end
+  | Npos p => 
+      match TryBinary_pos (fun x => func (Npos x)) p with
+      | Some r => Some (Npos r)
+      | None => None
+      end
   end. 
 
 (*
 Compute TryBinary (N.leb 5) 40. 
 Compute TryBinary (N.leb 5) 0. 
 *)
+
+Definition TryBinarySampler (func : N -> bool)(smpl : N -> N)(n : N) :=
+	TryBinary (fun x => func(smpl x)) n. 
 
 Fixpoint TryBinaryLen_fix (func : N -> bool)(len : nat)(prefix : N) : option N :=
   match len with
@@ -306,10 +313,13 @@ Compute TryBinaryLen (fun x => leb 20000000 x) 2000.
 Correct *)
 
 Inductive timed (A : Type)(B : Type) : Type :=
-| Cvg : A -> timed A B (* the process returns A within the time limit *)
-| Tmo : B -> timed A B (* the process did not halt in time, not sure would ever halt *)
-    (* Returns B for continued process *)
-| Dvg : timed A B (* the process would never halt *)
+(* the process returns A within the time limit *)
+| Cvg : A -> timed A B 
+(* the process did not halt in time, not sure would ever halt *)
+(* Returns B for continued process *)
+| Tmo : B -> timed A B 
+(* the process would never halt *)
+| Dvg : timed A B 
 .
 
 Arguments Cvg {A} {B} _.
