@@ -38,8 +38,8 @@ Fixpoint TrySigWithList (ml : GE -> N -> GE)(n xG yG dA e : N)(klist : list N) :
 Definition SigWithZAList (ml : GE -> N -> GE)(a b n xG yG Z_A dA M : bL)(klist : list N)
    : option (bL * (bL * bL)) :=
    let e := HashN (Z_A ++ M) in
-     match TrySigWithList ml (bL2N n)
-     (bL2N xG) (bL2N yG) (bL2N dA) e klist with
+     match TrySigWithList ml (bLtoN n)
+     (bLtoN xG) (bLtoN yG) (bLtoN dA) e klist with
         | None => None
         | Some (r, s) => Some (M, ((NtobL r), (NtobL s)))
      end. 
@@ -51,15 +51,15 @@ Definition SigWithList (ml : GE -> N -> GE)(a b n xG yG ENTL_A ID_A dA xA yA M :
 
 Definition SigWithList_pf (p a b n xG yG ENTL_A ID_A dA xA yA M : bL)(klist : list N)
    : option (bL * (bL * bL)) :=
-   SigWithList (pf_mul (bL2N p) (bL2N a)) a b n xG yG ENTL_A ID_A dA xA yA M klist. 
+   SigWithList (pf_mul (bLtoN p) (bLtoN a)) a b n xG yG ENTL_A ID_A dA xA yA M klist. 
 
 Definition SigWithList_bfp (m gp : N)(a b n xG yG ENTL_A ID_A dA xA yA M : bL)(klist : list N)
    : option (bL * (bL * bL)) :=
-   SigWithList (bfp_mul m gp (bL2N a)) a b n xG yG ENTL_A ID_A dA xA yA M klist. 
+   SigWithList (bfp_mul m gp (bLtoN a)) a b n xG yG ENTL_A ID_A dA xA yA M klist. 
 
 Definition SigWithZAList_bfp (m gp : N)(a b n xG yG ZA dA xA yA M : bL)(klist : list N)
    : option (bL * (bL * bL)) :=
-   SigWithZAList (bfp_mul m gp (bL2N a)) a b n xG yG ZA dA M klist. 
+   SigWithZAList (bfp_mul m gp (bLtoN a)) a b n xG yG ZA dA M klist. 
 
 (* true if x \in [lower, upper] *)
 Definition inRange (x lower upper : N) : bool :=
@@ -69,7 +69,7 @@ Open Scope N_scope.
 
 (* None if passed, otherwise Some error message *)
 Definition VeriSig (hash : bL -> N)(ml : GE -> N -> GE)(ad : GE -> GE -> GE)(n xG yG xA yA : N)(r'bL s'bL Z_A M' : bL) : option string :=
-  let (r', s') := ((bL2N r'bL), (bL2N s'bL)) in
+  let (r', s') := ((bLtoN r'bL), (bLtoN s'bL)) in
   if negb (inRange r' 1 (n - 1)) then Some "r' out of range" else
   if negb (inRange s' 1 (n - 1)) then Some "s' out of range" else
   let e' := hash (Z_A ++ M') in
@@ -146,8 +146,8 @@ Definition x1t := hS2bL "110FCDA5 7615705D 5E7B9324 AC4B856D 23E6D918 8B2AE477 5
 
 Definition y1t := hS2bL "1C65D68A 4A08601D F24B431E 0CAB4EBE 084772B3 817E8581 1A8510B2 DF7ECA1A". 
 
-Definition GIn := Cop ((bL2N xGIn), (bL2N yGIn)). 
-Definition kG := pf_mul (bL2N pIn) (bL2N aIn) GIn (bL2N kt).    
+Definition GIn := Cop ((bLtoN xGIn), (bLtoN yGIn)). 
+Definition kG := pf_mul (bLtoN pIn) (bLtoN aIn) GIn (bLtoN kt).    
 
 (*Time Compute kG. (*TODO is that possible to make it faster?  *)
   Cop
@@ -157,24 +157,24 @@ Definition kG := pf_mul (bL2N pIn) (bL2N aIn) GIn (bL2N kt).
 Finished transaction in 618.101 secs (617.552u,0.299s) (successful)
 Correct! 
 *)
-Definition rt := ((bL2N et) + (bL2N x1t)) mod (bL2N nIn). 
+Definition rt := ((bLtoN et) + (bLtoN x1t)) mod (bLtoN nIn). 
 (*
 Compute NtohS rt. (* Correct *) 
 *)
 
-Definition factor1 := P_inv (bL2N nIn)(1 + (bL2N dAIn)) .
+Definition factor1 := P_inv (bLtoN nIn)(1 + (bLtoN dAIn)) .
 (*
 Compute NtohS factor1. (*Correct, should be inverse on field n*)
 *)
-Definition factor2 := P_sub (bL2N nIn)(bL2N kt) (P_mul (bL2N nIn) rt (bL2N dAIn) ) . 
-Definition nN := bL2N nIn. 
+Definition factor2 := P_sub (bLtoN nIn)(bLtoN kt) (P_mul (bLtoN nIn) rt (bLtoN dAIn) ) . 
+Definition nN := bLtoN nIn. 
 Definition st := P_mul nN factor1 factor2.
 (*
 Compute NtohS st.
 *)
 (*Correct, 6FC6DAC3 2C5D5CF1 0C77DFB2 0F7C2EB6 67A45787 2FB09EC5 6327A67E C7DEEBE7 *)
 (*
-Time Compute match SigWithList_pf HashN pIn aIn bIn nIn xGIn yGIn ENTLa IDa dAIn xAIn yAIn MIn [bL2N kt] with
+Time Compute match SigWithList_pf HashN pIn aIn bIn nIn xGIn yGIn ENTLa IDa dAIn xAIn yAIn MIn [bLtoN kt] with
 | None => None
 | Some (M, (r, s)) => Some (bL2str M, ((bL2hS r), (bL2hS s)))
 end. 
@@ -189,12 +189,12 @@ end.
 
 Definition tt := P_add nN rt st .
 
-Definition x0't := hS2N "7DEACE5F D121BC38 5A3C6317 249F413D 28C17291 A60DFD83 B835A453 92D22B0A". 
+Definition x0't := hStoN "7DEACE5F D121BC38 5A3C6317 249F413D 28C17291 A60DFD83 B835A453 92D22B0A". 
 
-Definition y0't := hS2N "2E49D5E5 279E5FA9 1E71FD8F 693A64A3 C4A94611 15A4FC9D 79F34EDC 8BDDEBD0". 
+Definition y0't := hStoN "2E49D5E5 279E5FA9 1E71FD8F 693A64A3 C4A94611 15A4FC9D 79F34EDC 8BDDEBD0". 
 
 (*
-Time Compute pf_mul  (bL2N pIn) (bL2N aIn) GIn st.  
+Time Compute pf_mul  (bLtoN pIn) (bLtoN aIn) GIn st.  
 Cop
          (56953972629032959544647951044806105100227418879105314443365623701807475862282,
          20936847120531059614594560449863630384405530616210027663248420985042997472208)
@@ -202,13 +202,13 @@ Cop
 Finished transaction in 641.294 secs (640.154u,0.485s) (successful)
 Correct! 
 *)
-Definition x00't := hS2N "1657FA75 BF2ADCDC 3C1F6CF0 5AB7B45E 04D3ACBE 8E4085CF A669CB25 64F17A9F". 
+Definition x00't := hStoN "1657FA75 BF2ADCDC 3C1F6CF0 5AB7B45E 04D3ACBE 8E4085CF A669CB25 64F17A9F". 
 
-Definition y00't := hS2N "19F0115F 21E16D2F 5C3A485F 8575A128 BBCDDF80 296A62F6 AC2EB842 DD058E50". 
+Definition y00't := hStoN "19F0115F 21E16D2F 5C3A485F 8575A128 BBCDDF80 296A62F6 AC2EB842 DD058E50". 
 
-Definition P_At := Cop (bL2N xAIn, bL2N yAIn). 
+Definition P_At := Cop (bLtoN xAIn, bLtoN yAIn). 
 (*
-Time Compute pf_mul P_At tt (bL2N pIn) (bL2N aIn) . 
+Time Compute pf_mul P_At tt (bLtoN pIn) (bLtoN aIn) . 
    = Cop
          (10106326974500318093811212845647691935066743080403682598448107247190051748511,
          11731984404579341477271988893658593900522406460222700443798045098506979741264)
@@ -216,17 +216,17 @@ Time Compute pf_mul P_At tt (bL2N pIn) (bL2N aIn) .
 Finished transaction in 623.69 secs (621.976u,0.888s) (successful)
 Correct! 
 *)
-Definition x1't := hS2N "110FCDA5 7615705D 5E7B9324 AC4B856D 23E6D918 8B2AE477 59514657 CE25D112". 
-Definition y1't := hS2N
+Definition x1't := hStoN "110FCDA5 7615705D 5E7B9324 AC4B856D 23E6D918 8B2AE477 59514657 CE25D112". 
+Definition y1't := hStoN
   "1C65D68A 4A08601D F24B431E 0CAB4EBE 084772B3 817E8581 1A8510B2 DF7ECA1A". 
-Definition P1t := pf_add (bL2N pIn) (bL2N aIn) (Cop (x0't, y0't)) (Cop (x00't, y00't)) .
+Definition P1t := pf_add (bLtoN pIn) (bLtoN aIn) (Cop (x0't, y0't)) (Cop (x00't, y00't)) .
 (*Compute P1t. Correct*)
 (*
-Compute NtohS (P_add nN (bL2N et) x1't).  (*Correct*)
+Compute NtohS (P_add nN (bLtoN et) x1't).  (*Correct*)
 *)
 (*
-Time Compute VeriSig_pf HashN (bL2N pIn) (bL2N aIn) nN (bL2N xGIn)
-  (bL2N yGIn) (bL2N xAIn) (bL2N yAIn) (NtobL rt) (NtobL st) ZAt MIn. 
+Time Compute VeriSig_pf HashN (bLtoN pIn) (bLtoN aIn) nN (bLtoN xGIn)
+  (bLtoN yGIn) (bLtoN xAIn) (bLtoN yAIn) (NtobL rt) (NtobL st) ZAt MIn. 
 *)
 (*
 = None
@@ -253,20 +253,20 @@ Definition k := hS2bL "36CD79FC 8E24B735 7A8A7B4A 46D454C3 97703D64 98158C60 539
 Definition IDa := hS2bL "414C 49434531 32334059 41484F4F 2E434F4D".
 Definition ENTLa := hS2bL "0090". 
 
-Definition e := hS2N "AD673CBD A3114171 29A9EAA5 F9AB1AA1 633AD477 18A84DFD 46C17C6F A0AA3B12". 
-Definition x1 := hS2N "00 3FD87D69 47A15F94 25B32EDD 39381ADF D5E71CD4 BB357E3C 6A6E0397 EEA7CD66". 
-Definition y1 := hS2N "00 80771114 6D73951E 9EB373A6 58214054 B7B56D1D 50B4CD6E B32ED387 A65AA6A2". 
+Definition e := hStoN "AD673CBD A3114171 29A9EAA5 F9AB1AA1 633AD477 18A84DFD 46C17C6F A0AA3B12". 
+Definition x1 := hStoN "00 3FD87D69 47A15F94 25B32EDD 39381ADF D5E71CD4 BB357E3C 6A6E0397 EEA7CD66". 
+Definition y1 := hStoN "00 80771114 6D73951E 9EB373A6 58214054 B7B56D1D 50B4CD6E B32ED387 A65AA6A2". 
  
-Definition nN := bL2N n. 
+Definition nN := bLtoN n. 
 Definition r := hS2bL "6D3FBA26 EAB2A105 4F5D1983 32E33581 7C8AC453 ED26D339 1CD4439D 825BF25B".
 Definition s := hS2bL "3124C568 8D95F0A1 0252A9BE D033BEC8 4439DA38 4621B6D6 FAD77F94 B74A9556". 
-Definition G := Cop (bL2N xG, bL2N yG).
+Definition G := Cop (bLtoN xG, bLtoN yG).
 Definition a := NtobL_len 257 0. 
 
 Definition Z_A := hS2bL "26352AF8 2EC19F20 7BBC6F94 74E11E90 CE0F7DDA CE03B27F 801817E8 97A81FD5". 
 
 (*
-Time Compute bfp_mul m gp 0 G (bL2N k). 
+Time Compute bfp_mul m gp 0 G (bLtoN k). 
   *)
 (*
 * Cop
@@ -279,7 +279,7 @@ Finished transaction in 1146.773 secs (1143.449u,1.716s) (successful)
 Compute NtohS (P_add nN e x1). 
 *)
 (*
-Time Compute match SigWithZAList_bfp HashN m gp a b n xG yG Z_A dA xA yA M [bL2N k] with
+Time Compute match SigWithZAList_bfp HashN m gp a b n xG yG Z_A dA xA yA M [bLtoN k] with
   | None => None
   | Some (m',  (r, s)) => 
     Some (bL2str m', ((bL2hS r), (bL2hS s)))
@@ -287,7 +287,7 @@ Time Compute match SigWithZAList_bfp HashN m gp a b n xG yG Z_A dA xA yA M [bL2N
 *)
 (*Correct*)
 (*
-Time Compute VeriSig_bfp HashN m gp (bL2N a) (bL2N n) (bL2N xG) (bL2N yG) (bL2N xA) (bL2N yA) r s Z_A M.
+Time Compute VeriSig_bfp HashN m gp (bLtoN a) (bLtoN n) (bLtoN xG) (bLtoN yG) (bLtoN xA) (bLtoN yA) r s Z_A M.
 = None
      : option string
      *)

@@ -224,7 +224,7 @@ Definition BL2PointStep1 (rcv : N -> bool -> option (N * N))(cp : cmp_type)(q : 
       match S with
       | [] => None
       | PC :: X1 =>
-          let xp := BL2N X1 in
+          let xp := BLtoN X1 in
             match PC with
             | x02 => (rcv xp false)
             | x03 => (rcv xp true) 
@@ -237,7 +237,7 @@ Definition BL2PointStep1 (rcv : N -> bool -> option (N * N))(cp : cmp_type)(q : 
       | PC :: X1Y1 =>
           let (X1, Y1) := partList X1Y1 (Nat.div (List.length X1Y1)  2%nat) in
             match PC with
-            | x04 => Some (BL2N X1, BL2N Y1)
+            | x04 => Some (BLtoN X1, BLtoN Y1)
             | _ => None
             end
       end
@@ -247,7 +247,7 @@ Definition BL2PointStep1 (rcv : N -> bool -> option (N * N))(cp : cmp_type)(q : 
       | PC :: X1Y1 =>
           let (X1, Y1) := partList X1Y1 (Nat.div (List.length X1Y1)  2%nat) in
           let sampleList := Nlist q in
-            let xp := BL2N X1 in
+            let xp := BLtoN X1 in
               match PC with (* I choose e.2.2 TODO how to choose? *)
               | x06 => (rcv xp false)
               | x07 => (rcv xp true) 

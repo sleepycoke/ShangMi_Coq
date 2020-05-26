@@ -41,7 +41,7 @@ Definition Padding (m : bL) (l : N) : bL :=
 Definition n_of_B (l : N) := div (l + (pad_k l) + 65) 512. 
 
 Definition Block (i : nat)(m : bL)(l : N) : N :=
-  bL2N (subList (Nat.mul i 512%nat) 512 (Padding m l)).
+  bLtoN (subList (Nat.mul i 512%nat) 512 (Padding m l)).
 
 (* j <= 15 *)
 Fixpoint W_list_init_rec (j : nat)(Bi : N)(acc : list N) : list N :=

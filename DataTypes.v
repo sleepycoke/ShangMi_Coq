@@ -33,16 +33,16 @@ Fixpoint bL2bS_tail (bl : bL)(acc : string) : string :=
 Definition bL2bS (bl : bL) : string :=
   bL2bS_tail bl "". 
 
-Fixpoint BL2N_tail (Bl : BL)(acc : N) : N :=
+Fixpoint BLtoN_tail (Bl : BL)(acc : N) : N :=
   match Bl with
   | [] => acc
   | h :: tl =>
-      BL2N_tail tl (acc * 256 + (Byte.to_N h)) 
+      BLtoN_tail tl (acc * 256 + (Byte.to_N h)) 
   end.
 
 (*4.2.2*)
-Fixpoint BL2N (Bl : BL) : N :=
-  BL2N_tail Bl 0.
+Fixpoint BLtoN (Bl : BL) : N :=
+  BLtoN_tail Bl 0.
 
 Definition NtoByte (n : N) : byte :=
   match Byte.of_N n with
@@ -65,7 +65,7 @@ Definition NtoBL (x : N) : BL :=
   NtoBL_len (N.to_nat (N.div (N.add (N.size x) 7) 8)) x. 
 
 (* Transform the first k(<= 8) bits into an N *)  
-Fixpoint bL2N_tail (bl : bL)(k : nat)(acc : N) : N :=
+Fixpoint bLtoN_tail (bl : bL)(k : nat)(acc : N) : N :=
   match k with
   | O => acc
   | S k' => 
@@ -73,22 +73,22 @@ Fixpoint bL2N_tail (bl : bL)(k : nat)(acc : N) : N :=
       | [] => acc
       | h :: tl => 
           match h with
-          | false => bL2N_tail tl k' (N.double acc)
-          | true => bL2N_tail tl k' (N.add 1 (N.double acc))
+          | false => bLtoN_tail tl k' (N.double acc)
+          | true => bLtoN_tail tl k' (N.add 1 (N.double acc))
           end
       end
   end.
 
 (*4.2.2*)
-Definition bL2N (bl : bL) :=
-  bL2N_tail bl (List.length bl) 0.
+Definition bLtoN (bl : bL) :=
+  bLtoN_tail bl (List.length bl) 0.
 
-Definition bL2N_prefix (bl :bL)(k : nat) : N :=
-  bL2N_tail bl k 0.
+Definition bLtoN_prefix (bl :bL)(k : nat) : N :=
+  bLtoN_tail bl k 0.
 
 (* tranfrom the first k bits into a byte *)
 Definition bL2Byte (bl : bL)(k : nat) :=
-  NtoByte (bL2N_prefix bl k). 
+  NtoByte (bLtoN_prefix bl k). 
 
 
 
@@ -119,8 +119,8 @@ Definition NtobL_len (len : nat)(n : N) : bL :=
 Definition NtobL (n : N) : bL :=
   NtobL_len (N.to_nat (N.size n)) n.
 
-Definition bS2N (bs : string) : N :=
-  bL2N (bStobL bs). 
+Definition bStoN (bs : string) : N :=
+  bLtoN (bStobL bs). 
 
 
 (*4.2.4*)
@@ -167,12 +167,12 @@ Fixpoint hS2bS_tail (m_hex : string)(acc : string) : string :=
 Definition hS2bS (m_hex : string) : string :=
   hS2bS_tail (rmsp m_hex) "".
 
-Definition hS2N (m_hex : string) : N :=
+Definition hStoN (m_hex : string) : N :=
   HexString.Raw.to_N (rmsp m_hex) 0. 
 
 (*
 Definition hChar2bL (m_hex : string) : bL :=
-  let rawbl := NtobL (hS2N m_hex) in
+  let rawbl := NtobL (hStoN m_hex) in
     List.app
     match (Nat.modulo (List.length rawbl) 4) with
     | 1%nat => [false; false; false] 
@@ -204,7 +204,7 @@ Fixpoint bL2hS_tail (bl : bL)(hSLen : nat)(acc : string) : string :=
   let (pre, suf) := partListBack bl 4 in
     match suf with
     | [] => acc
-    | _ => bL2hS_tail pre len' ((NtohChar (bL2N suf)) ++ acc)
+    | _ => bL2hS_tail pre len' ((NtohChar (bLtoN suf)) ++ acc)
     end
   end.
 
@@ -290,7 +290,7 @@ Definition Field2BL_b (m : N) :=
  
 (*4.2.6*)
 Definition BL2Field_p (Bl : BL)(q : N) : option N :=
-  (fun (alpha : N)  => if leb q alpha then None else Some alpha) (BL2N Bl).  
+  (fun (alpha : N)  => if leb q alpha then None else Some alpha) (BLtoN Bl).  
 
 Definition BL2Field_b (Bl : BL)(m : N) : option N :=
   BL2Field_p Bl (N.shiftl 1 m). 
@@ -303,8 +303,8 @@ Definition BL2Field_b (Bl : BL) : bL :=
 (*4.2.7*)
 (* Still no need to convert since we are using N *)
 (*
-Definition Field2N_m (alpha : bL) : N :=
-  bL2N alpha. 
+Definition FieldtoN_m (alpha : bL) : N :=
+  bLtoN alpha. 
   *)
 
 Close Scope list_scope. 
