@@ -126,26 +126,26 @@ Definition bStoN (bs : string) : N :=
 (*4.2.4*)
 (*2019-10-09, realized that I need to keep preceding 0s 
 * And it is only used in KeyEx.v yet. *)
-Fixpoint BL2bL_tail (M : BL)(k : nat)(acc : bL) : bL :=
+Fixpoint BLtobL_tail (M : BL)(k : nat)(acc : bL) : bL :=
   match k with
   | O => acc
   | S k'=> 
       match M with
       | [] => acc
       | h :: tl =>
-          BL2bL_tail tl k' (List.app acc (NtobL_len 8 (Byte.to_N h)))
+          BLtobL_tail tl k' (List.app acc (NtobL_len 8 (Byte.to_N h)))
       end
   end.
 
-Definition BL2bL (M : BL) : bL :=
-  BL2bL_tail M (List.length M) [].
+Definition BLtobL (M : BL) : bL :=
+  BLtobL_tail M (List.length M) [].
 
-Definition NtoBbL (n : N) : bL := BL2bL (NtoBL n). 
+Definition NtoBbL (n : N) : bL := BLtobL (NtoBL n). 
 
 (*Padding len to a multiplier of 8*)
 (*Croping from the rightside *)
 Definition NtoBbL_len (len : nat)(n : N) : bL := 
-  BL2bL (NtoBL_len (div_ceil_nat len 8%nat) n). 
+  BLtobL (NtoBL_len (div_ceil_nat len 8%nat) n). 
 
 Definition NtobS (n : N) : string :=
   bLtobS (NtobL n).
@@ -171,7 +171,7 @@ Definition hStoN (m_hex : string) : N :=
   HexString.Raw.to_N (rmsp m_hex) 0. 
 
 (*
-Definition hChar2bL (m_hex : string) : bL :=
+Definition hChartobL (m_hex : string) : bL :=
   let rawbl := NtobL (hStoN m_hex) in
     List.app
     match (Nat.modulo (List.length rawbl) 4) with
@@ -182,7 +182,7 @@ Definition hChar2bL (m_hex : string) : bL :=
     end
     rawbl. 
     *)
-Definition hS2bL (hs : string) :=
+Definition hStobL (hs : string) :=
   bStobL (hS2bS hs). 
 
 Definition NtohS (n : N) : string :=
@@ -214,15 +214,15 @@ Definition bLtohS (bl : bL) : string :=
 Definition bS2hS (m_bin : string) : string :=
   bLtohS (bStobL m_bin). 
 
-Fixpoint str2bL_tail (s : string)(acc : bL) :=
+Fixpoint strtobL_tail (s : string)(acc : bL) :=
   match s with
   | "" => acc
   | String c tl =>
-      str2bL_tail tl (List.app acc (NtobL_len 8 (N_of_ascii c)))
+      strtobL_tail tl (List.app acc (NtobL_len 8 (N_of_ascii c)))
   end. 
 
-Definition str2bL (s : string) :=
-  str2bL_tail s [].
+Definition strtobL (s : string) :=
+  strtobL_tail s [].
 
 Fixpoint BL2str_tail (Bl : BL)(acc : string) :=
   match Bl with
@@ -297,7 +297,7 @@ Definition BL2Field_b (Bl : BL)(m : N) : option N :=
 
 (*
 Definition BL2Field_b (Bl : BL) : bL :=
-  BL2bL Bl. 
+  BLtobL Bl. 
 *)
 
 (*4.2.7*)
