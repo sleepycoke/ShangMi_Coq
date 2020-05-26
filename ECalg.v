@@ -213,9 +213,9 @@ Definition Point2BL (f2Bl : N -> BL)(cp : cmp_type)(xp : N)(yp : N) : BL :=
       end
   end. 
 
-Definition Point2BL_p := Point2BL Field2BL_p.  
+Definition Point2BL_p := Point2BL FieldtoBL_p.  
 
-Definition Point2BL_b (m : N) := Point2BL (Field2BL_b m).  
+Definition Point2BL_b (m : N) := Point2BL (FieldtoBL_b m).  
 
 (*4.2.9*)
 Definition BLtoPointStep1 (rcv : N -> bool -> option (N * N))(cp : cmp_type)(q : N)(S : BL) : option (N * N) :=

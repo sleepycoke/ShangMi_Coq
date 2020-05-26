@@ -282,10 +282,10 @@ Inductive field_type : Set :=
   pri : field_type | ext : field_type .
 
 (* Same as NtoBL *)
-Definition Field2BL_p :=  NtoBL. 
+Definition FieldtoBL_p :=  NtoBL. 
 
 
-Definition Field2BL_b (m : N) :=
+Definition FieldtoBL_b (m : N) :=
   NtoBL_len (N.to_nat (div_ceil_N m 8)). 
  
 (*4.2.6*)
