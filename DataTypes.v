@@ -211,7 +211,7 @@ Fixpoint bLtohS_tail (bl : bL)(hSLen : nat)(acc : string) : string :=
 Definition bLtohS (bl : bL) : string :=
   bLtohS_tail bl (Nat.div (Nat.add (length bl) 3%nat) 4%nat) "".
 
-Definition bS2hS (m_bin : string) : string :=
+Definition bStohS (m_bin : string) : string :=
   bLtohS (bStobL m_bin). 
 
 Fixpoint strtobL_tail (s : string)(acc : bL) :=

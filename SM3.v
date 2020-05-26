@@ -195,7 +195,7 @@ Definition Hash_hex (m_hex : string) :=
 
 (*
 Definition exp_m := "616263".  
-Definition exp_padded := bS2hS (bLtobS (Padding (bStobL(hStobS exp_m)) (6 * 4))). 
+Definition exp_padded := bStohS (bLtobS (Padding (bStobL(hStobS exp_m)) (6 * 4))). 
 
 Definition B0 := (Block 0 (bStobL (hStobS exp_m)) (6 * 4)).
 
