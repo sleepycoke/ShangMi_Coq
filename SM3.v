@@ -191,13 +191,13 @@ Definition pre_pad_0 (s : string)(mod_size : N) : string :=
   Z.iter (Z.modulo (Z.opp (Z.of_nat (String.length s))) (Z.of_N mod_size)) (append "0") s.    
 
 Definition Hash_hex (m_hex : string) :=
-  HashN (bS2bL (pre_pad_0 (hS2bS m_hex) 4)). 
+  HashN (bStobL (pre_pad_0 (hS2bS m_hex) 4)). 
 
 (*
 Definition exp_m := "616263".  
-Definition exp_padded := bS2hS (bL2bS (Padding (bS2bL(hS2bS exp_m)) (6 * 4))). 
+Definition exp_padded := bS2hS (bL2bS (Padding (bStobL(hS2bS exp_m)) (6 * 4))). 
 
-Definition B0 := (Block 0 (bS2bL (hS2bS exp_m)) (6 * 4)).
+Definition B0 := (Block 0 (bStobL (hS2bS exp_m)) (6 * 4)).
 
 (*
 Compute HexString.of_N B0. 
@@ -209,7 +209,7 @@ Compute HexString.of_N (W' 63 B0). (* Correct. *)
 Compute HexString.of_N (W' 1 B0). (* Correct. *) 
 Compute hS2bS exp_m. 
 Compute n_of_B 24.
-Compute HexString.of_N (V 1 (bS2bL "011000010110001001100011") 24). 
+Compute HexString.of_N (V 1 (bStobL "011000010110001001100011") 24). 
 
 Compute HexString.of_N IV. 
 Compute HexString.of_N (Reg 0 IV B0). 
@@ -218,7 +218,7 @@ Compute HexString.of_N (Reg 64 IV B0). (*Correct*)
 Compute HexString.of_N ((Reg 64 IV B0) $ IV). (*Correct*)
 
 (* "0x66c7f0f462eeedd9d1f2d46bdc10e4e24167c4875cf2f7a2297da02b8f4ba8e0" *)
-Compute HexString.of_N (HashN (bS2bL "011000010110001001100011")). (* Correct *) 
+Compute HexString.of_N (HashN (bStobL "011000010110001001100011")). (* Correct *) 
 Compute HexString.of_N (Hash_hex exp_m). (* Correct *) 
 
 Definition exp_m2 := "61626364616263646162636461626364616263646162636461626364616263646162636461626364616263646162636461626364616263646162636461626364".

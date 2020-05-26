@@ -5,20 +5,20 @@ Require Export Coq.Strings.Ascii.
 Definition BL := list byte. 
 (* BitList is indeed a list of bool*)
 Definition bL := list bool. 
-Fixpoint bS2bL_tail (bs : string)(acc : bL) : bL :=
+Fixpoint bStobL_tail (bs : string)(acc : bL) : bL :=
   match bs with
   | EmptyString => acc 
   | String head tl =>
       match ascii_to_digit head with
-      | Some 1 => bS2bL_tail tl (List.app acc [true])
-      | _ => bS2bL_tail tl (List.app acc [false])
+      | Some 1 => bStobL_tail tl (List.app acc [true])
+      | _ => bStobL_tail tl (List.app acc [false])
       end
   end.
 
 Open Scope list_scope. 
 
-Definition bS2bL (bs : string) : bL :=
-  bS2bL_tail bs []. 
+Definition bStobL (bs : string) : bL :=
+  bStobL_tail bs []. 
 
 Fixpoint bL2bS_tail (bl : bL)(acc : string) : string :=
   match bl with
@@ -120,7 +120,7 @@ Definition N2bL (n : N) : bL :=
   N2bL_len (N.to_nat (N.size n)) n.
 
 Definition bS2N (bs : string) : N :=
-  bL2N (bS2bL bs). 
+  bL2N (bStobL bs). 
 
 
 (*4.2.4*)
@@ -183,7 +183,7 @@ Definition hChar2bL (m_hex : string) : bL :=
     rawbl. 
     *)
 Definition hS2bL (hs : string) :=
-  bS2bL (hS2bS hs). 
+  bStobL (hS2bS hs). 
 
 Definition N2hS (n : N) : string :=
   match n with
@@ -212,7 +212,7 @@ Definition bL2hS (bl : bL) : string :=
   bL2hS_tail bl (Nat.div (Nat.add (length bl) 3%nat) 4%nat) "".
 
 Definition bS2hS (m_bin : string) : string :=
-  bL2hS (bS2bL m_bin). 
+  bL2hS (bStobL m_bin). 
 
 Fixpoint str2bL_tail (s : string)(acc : bL) :=
   match s with
@@ -269,12 +269,12 @@ Definition bLXOR (a b : bL) :=
   (bLXOR_tail (rev a) (rev b) []).
 
 (*
-Compute bLXOR (bS2bL "111") (bS2bL "1"). 
-Compute bLXOR (bS2bL "110") (bS2bL "1"). 
-Compute bLXOR (bS2bL "011") (bS2bL "1"). 
-Compute bLXOR (bS2bL "11111101") (bS2bL "111"). 
-Compute bLXOR (bS2bL "111") (bS2bL "11111101"). 
-Compute bLXOR (bS2bL "111001") (bS2bL "11111101"). 
+Compute bLXOR (bStobL "111") (bStobL "1"). 
+Compute bLXOR (bStobL "110") (bStobL "1"). 
+Compute bLXOR (bStobL "011") (bStobL "1"). 
+Compute bLXOR (bStobL "11111101") (bStobL "111"). 
+Compute bLXOR (bStobL "111") (bStobL "11111101"). 
+Compute bLXOR (bStobL "111001") (bStobL "11111101"). 
 *)
 
 (*4.2.5*)
