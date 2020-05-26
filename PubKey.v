@@ -77,10 +77,10 @@ Definition ComputeM' (hash_v : bL -> bL)(v : nat)(klen : nat)(ml : GE -> N -> GE
   end. 
 
 Definition ComputeM'_pf (hash_v : bL -> bL)(v : nat)(klen : nat)(p a b h dB : N)(cp : cmp_type)(C : bL) : optErr bL :=
-  ComputeM' hash_v v klen (pf_mul p a) (OnCurve_pf p a b) (BL2Point_p cp p a b) NtoBbL h dB C . 
+  ComputeM' hash_v v klen (pf_mul p a) (OnCurve_pf p a b) (BLtoPoint_p cp p a b) NtoBbL h dB C . 
 
 Definition ComputeM'_bfp (hash_v : bL -> bL)(v : nat)(klen : nat)(m gp a b h dB : N)(cp : cmp_type)(C : bL) : optErr bL :=
-  ComputeM' hash_v v klen (bfp_mul m gp a) (OnCurve_bfp gp a b) (BL2Point_bfp cp m gp a b) (NtoBbL_len (N.to_nat m)) h dB C . 
+  ComputeM' hash_v v klen (bfp_mul m gp a) (OnCurve_bfp gp a b) (BLtoPoint_bfp cp m gp a b) (NtoBbL_len (N.to_nat m)) h dB C . 
 
 Module test_pf. 
 Definition p := hStoN "8542D69E 4C044F18 E8B92435 BF6FF7DE 45728391 5C45517D 722EDB8B 08F1DFC3".

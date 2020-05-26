@@ -218,7 +218,7 @@ Definition Point2BL_p := Point2BL Field2BL_p.
 Definition Point2BL_b (m : N) := Point2BL (Field2BL_b m).  
 
 (*4.2.9*)
-Definition BL2PointStep1 (rcv : N -> bool -> option (N * N))(cp : cmp_type)(q : N)(S : BL) : option (N * N) :=
+Definition BLtoPointStep1 (rcv : N -> bool -> option (N * N))(cp : cmp_type)(q : N)(S : BL) : option (N * N) :=
   match cp with
   | cmp => 
       match S with
@@ -257,23 +257,23 @@ Definition BL2PointStep1 (rcv : N -> bool -> option (N * N))(cp : cmp_type)(q : 
   end. 
 
 
-Definition BL2PointStep2 (OnCrv : N -> N -> bool)(point : N * N) : option (N * N) :=
+Definition BLtoPointStep2 (OnCrv : N -> N -> bool)(point : N * N) : option (N * N) :=
   let (xp, yp) := point in
     (*if N.eqb (P_sq p yp) (((P_power p xp 3) + a * xp + b) mod p) then Some point*)
     if OnCrv xp yp then Some point
     else None. 
 
 (*TODO square_root uses Nlist and thus crashes the memory *)
-Definition BL2Point_p (cp : cmp_type)(p : N)(a : N)(b : N)(S : BL) : option (N * N) :=
-  match BL2PointStep1 (recover_p p a b) cp p S with
+Definition BLtoPoint_p (cp : cmp_type)(p : N)(a : N)(b : N)(S : BL) : option (N * N) :=
+  match BLtoPointStep1 (recover_p p a b) cp p S with
   | None => None
-  | Some point => BL2PointStep2 (OnCurve_pf p a b) point 
+  | Some point => BLtoPointStep2 (OnCurve_pf p a b) point 
   end. 
 
-Definition BL2Point_bfp (cp : cmp_type)(m gp a b : N)(S : BL) : option (N * N) :=
-  match BL2PointStep1 (recover_b m gp a b) cp (N.shiftl 1 m) S with
+Definition BLtoPoint_bfp (cp : cmp_type)(m gp a b : N)(S : BL) : option (N * N) :=
+  match BLtoPointStep1 (recover_b m gp a b) cp (N.shiftl 1 m) S with
   | None => None
-  | Some point => BL2PointStep2 (OnCurve_bfp gp a b) point
+  | Some point => BLtoPointStep2 (OnCurve_bfp gp a b) point
   end. 
 
 (* B.2.1 *)

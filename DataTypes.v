@@ -224,18 +224,18 @@ Fixpoint strtobL_tail (s : string)(acc : bL) :=
 Definition strtobL (s : string) :=
   strtobL_tail s [].
 
-Fixpoint BL2str_tail (Bl : BL)(acc : string) :=
+Fixpoint BLtostr_tail (Bl : BL)(acc : string) :=
   match Bl with
   | [] => acc
   | h :: tl =>
-      BL2str_tail tl (acc ++ (String (ascii_of_N (Byte.to_N h)) ""))
+      BLtostr_tail tl (acc ++ (String (ascii_of_N (Byte.to_N h)) ""))
   end. 
  
-Definition BL2str (Bl : BL) :=
-  BL2str_tail Bl "". 
+Definition BLtostr (Bl : BL) :=
+  BLtostr_tail Bl "". 
 
 Definition bLtostr (bl : bL) := 
-  BL2str (bLtoBL bl). 
+  BLtostr (bLtoBL bl). 
 
 
 Fixpoint bLeqb (bl1 bl2 : bL) : bool :=
@@ -289,14 +289,14 @@ Definition Field2BL_b (m : N) :=
   NtoBL_len (N.to_nat (div_ceil_N m 8)). 
  
 (*4.2.6*)
-Definition BL2Field_p (Bl : BL)(q : N) : option N :=
+Definition BLtoField_p (Bl : BL)(q : N) : option N :=
   (fun (alpha : N)  => if leb q alpha then None else Some alpha) (BLtoN Bl).  
 
-Definition BL2Field_b (Bl : BL)(m : N) : option N :=
-  BL2Field_p Bl (N.shiftl 1 m). 
+Definition BLtoField_b (Bl : BL)(m : N) : option N :=
+  BLtoField_p Bl (N.shiftl 1 m). 
 
 (*
-Definition BL2Field_b (Bl : BL) : bL :=
+Definition BLtoField_b (Bl : BL) : bL :=
   BLtobL Bl. 
 *)
 
