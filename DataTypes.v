@@ -154,18 +154,18 @@ Definition NtobS_len (n : N)(len : nat) : string :=
   bLtobS (NtobL_len len n).
 
 Definition rmsp (s : string) := (RepChar s " "%char ""%string). 
-Fixpoint hS2bS_tail (m_hex : string)(acc : string) : string :=
+Fixpoint hStobS_tail (m_hex : string)(acc : string) : string :=
   match m_hex with
   | "" => acc
   | String h tl =>
       match HexString.ascii_to_digit h with
       | None => ""
-      | Some v => hS2bS_tail tl (acc ++ NtobS_len v 4)
+      | Some v => hStobS_tail tl (acc ++ NtobS_len v 4)
       end
   end. 
 
-Definition hS2bS (m_hex : string) : string :=
-  hS2bS_tail (rmsp m_hex) "".
+Definition hStobS (m_hex : string) : string :=
+  hStobS_tail (rmsp m_hex) "".
 
 Definition hStoN (m_hex : string) : N :=
   HexString.Raw.to_N (rmsp m_hex) 0. 
@@ -183,7 +183,7 @@ Definition hChartobL (m_hex : string) : bL :=
     rawbl. 
     *)
 Definition hStobL (hs : string) :=
-  bStobL (hS2bS hs). 
+  bStobL (hStobS hs). 
 
 Definition NtohS (n : N) : string :=
   match n with
