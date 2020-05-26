@@ -20,18 +20,18 @@ Open Scope list_scope.
 Definition bStobL (bs : string) : bL :=
   bStobL_tail bs []. 
 
-Fixpoint bL2bS_tail (bl : bL)(acc : string) : string :=
+Fixpoint bLtobS_tail (bl : bL)(acc : string) : string :=
   match bl with
   | [] => acc
   | head :: tl =>
       match head with
-      | true => bL2bS_tail tl (acc ++ "1")
-      | false => bL2bS_tail tl (acc ++ "0")
+      | true => bLtobS_tail tl (acc ++ "1")
+      | false => bLtobS_tail tl (acc ++ "0")
       end
   end.
 
-Definition bL2bS (bl : bL) : string :=
-  bL2bS_tail bl "". 
+Definition bLtobS (bl : bL) : string :=
+  bLtobS_tail bl "". 
 
 Fixpoint BLtoN_tail (Bl : BL)(acc : N) : N :=
   match Bl with
@@ -87,23 +87,23 @@ Definition bLtoN_prefix (bl :bL)(k : nat) : N :=
   bLtoN_tail bl k 0.
 
 (* tranfrom the first k bits into a byte *)
-Definition bL2Byte (bl : bL)(k : nat) :=
+Definition bLtoByte (bl : bL)(k : nat) :=
   NtoByte (bLtoN_prefix bl k). 
 
 
 
 (*4.2.3*)
-Fixpoint bL2BL_tail (s : bL)(k : nat)(acc : BL) : BL :=
+Fixpoint bLtoBL_tail (s : bL)(k : nat)(acc : BL) : BL :=
   match k with
   | O => acc 
   | S k' =>
-      (fun sl => bL2BL_tail (fst sl) k' 
-      (List.app [bL2Byte (snd sl) 8] acc)) (partListBack s 8)
+      (fun sl => bLtoBL_tail (fst sl) k' 
+      (List.app [bLtoByte (snd sl) 8] acc)) (partListBack s 8)
   end.
 
 
-Definition bL2BL (s : bL) : BL :=
-  bL2BL_tail s (Nat.div (Nat.add(List.length s) 7%nat) 8%nat) []. 
+Definition bLtoBL (s : bL) : BL :=
+  bLtoBL_tail s (Nat.div (Nat.add(List.length s) 7%nat) 8%nat) []. 
 
 Fixpoint NtobL_tail (n : N)(k : nat)(acc : bL) : bL :=
   match k with
@@ -148,10 +148,10 @@ Definition NtoBbL_len (len : nat)(n : N) : bL :=
   BL2bL (NtoBL_len (div_ceil_nat len 8%nat) n). 
 
 Definition NtobS (n : N) : string :=
-  bL2bS (NtobL n).
+  bLtobS (NtobL n).
 
 Definition NtobS_len (n : N)(len : nat) : string :=
-  bL2bS (NtobL_len len n).
+  bLtobS (NtobL_len len n).
 
 Definition rmsp (s : string) := (RepChar s " "%char ""%string). 
 Fixpoint hS2bS_tail (m_hex : string)(acc : string) : string :=
@@ -197,22 +197,22 @@ Definition NtohChar (n : N) : string :=
   | N0 => "0"
   end. 
 
-Fixpoint bL2hS_tail (bl : bL)(hSLen : nat)(acc : string) : string :=
+Fixpoint bLtohS_tail (bl : bL)(hSLen : nat)(acc : string) : string :=
   match hSLen with
   | O => acc
   | S len' =>
   let (pre, suf) := partListBack bl 4 in
     match suf with
     | [] => acc
-    | _ => bL2hS_tail pre len' ((NtohChar (bLtoN suf)) ++ acc)
+    | _ => bLtohS_tail pre len' ((NtohChar (bLtoN suf)) ++ acc)
     end
   end.
 
-Definition bL2hS (bl : bL) : string :=
-  bL2hS_tail bl (Nat.div (Nat.add (length bl) 3%nat) 4%nat) "".
+Definition bLtohS (bl : bL) : string :=
+  bLtohS_tail bl (Nat.div (Nat.add (length bl) 3%nat) 4%nat) "".
 
 Definition bS2hS (m_bin : string) : string :=
-  bL2hS (bStobL m_bin). 
+  bLtohS (bStobL m_bin). 
 
 Fixpoint str2bL_tail (s : string)(acc : bL) :=
   match s with
@@ -234,8 +234,8 @@ Fixpoint BL2str_tail (Bl : BL)(acc : string) :=
 Definition BL2str (Bl : BL) :=
   BL2str_tail Bl "". 
 
-Definition bL2str (bl : bL) := 
-  BL2str (bL2BL bl). 
+Definition bLtostr (bl : bL) := 
+  BL2str (bLtoBL bl). 
 
 
 Fixpoint bLeqb (bl1 bl2 : bL) : bool :=

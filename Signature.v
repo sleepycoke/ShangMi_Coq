@@ -97,9 +97,9 @@ Definition IDa := hS2bL "414C 49434531 32334059 41484F4F 2E434F4D".
 Definition ENTLa := hS2bL "0090". 
 (*
 Compute IDa. 
-Compute bL2hS (ENTL IDa).  
+Compute bLtohS (ENTL IDa).  
 
-Compute bL2bS ENTLa. 
+Compute bLtobS ENTLa. 
 *)
 
 Definition pIn := hS2bL 
@@ -125,19 +125,19 @@ Definition yAIn := hS2bL
 Definition ZAt := ComputeZ ENTLa IDa aIn bIn xGIn yGIn xAIn yAIn. 
 (*F4A38489 E32B45B6 F876E3AC 2168CA39 2362DC8F 23459C1D 1146FC3D BFB7BC9A*)
 (*
-Compute bL2hS ZAt. (* Correct *)
+Compute bLtohS ZAt. (* Correct *)
 *)
 
 Definition M_bart := ZAt ++ MIn. 
 
 (*
-Compute bL2hS M_bart. 
+Compute bLtohS M_bart. 
 *)
 
 Definition et := Hash M_bart.
 
 (*
-Compute bL2hS et. 
+Compute bLtohS et. 
 *)
 
 Definition kt := hS2bL "6CB28D99 385C175C 94F94E93 4817663F C176D925 DD72B727 260DBAAE 1FB2F96F".
@@ -176,7 +176,7 @@ Compute NtohS st.
 (*
 Time Compute match SigWithList_pf HashN pIn aIn bIn nIn xGIn yGIn ENTLa IDa dAIn xAIn yAIn MIn [bLtoN kt] with
 | None => None
-| Some (M, (r, s)) => Some (bL2str M, ((bL2hS r), (bL2hS s)))
+| Some (M, (r, s)) => Some (bLtostr M, ((bLtohS r), (bLtohS s)))
 end. 
 *)
 (* Correct Finished transaction in 615.163 secs *)
@@ -282,7 +282,7 @@ Compute NtohS (P_add nN e x1).
 Time Compute match SigWithZAList_bfp HashN m gp a b n xG yG Z_A dA xA yA M [bLtoN k] with
   | None => None
   | Some (m',  (r, s)) => 
-    Some (bL2str m', ((bL2hS r), (bL2hS s)))
+    Some (bLtostr m', ((bLtohS r), (bLtohS s)))
   end. 
 *)
 (*Correct*)

@@ -176,15 +176,15 @@ Fixpoint biNtobL_tail (m_bin : string)(acc : bL) : bL :=
 Definition biNtobL (m_bin : string) : bL :=
   List.rev (biNtobL_tail m_bin []). 
 
-Fixpoint bL2bin_tail (m : bL)(acc : string) : string :=
+Fixpoint bLtobin_tail (m : bL)(acc : string) : string :=
   match m with
   | [] => acc
-  | true :: tl => bL2bin_tail tl (String.append acc "1")
-  | false :: tl => bL2bin_tail tl (String.append acc "0")
+  | true :: tl => bLtobin_tail tl (String.append acc "1")
+  | false :: tl => bLtobin_tail tl (String.append acc "0")
   end. 
 
-Definition bL2bin (m : bL) : string :=
-  (bL2bin_tail m ""). 
+Definition bLtobin (m : bL) : string :=
+  (bLtobin_tail m ""). 
 
 *)
 Definition pre_pad_0 (s : string)(mod_size : N) : string :=
@@ -195,7 +195,7 @@ Definition Hash_hex (m_hex : string) :=
 
 (*
 Definition exp_m := "616263".  
-Definition exp_padded := bS2hS (bL2bS (Padding (bStobL(hS2bS exp_m)) (6 * 4))). 
+Definition exp_padded := bS2hS (bLtobS (Padding (bStobL(hS2bS exp_m)) (6 * 4))). 
 
 Definition B0 := (Block 0 (bStobL (hS2bS exp_m)) (6 * 4)).
 

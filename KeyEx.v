@@ -220,33 +220,33 @@ Definition Z_short := (NtobL xV) ++ (NtobL yV) ++ ZA ++ ZB.
 Definition klen := 128%nat. 
  
 Definition KB := hS2bL "55B0AC62 A6B927BA 23703832 C853DED4". 
-(* Compute bL2hS (KDF Z klen Hash constant_v). (*Correct*) *)
-(* Compute bL2hS (KDF Z_short klen Hash constant_v). (*Incorrect*) *)
+(* Compute bLtohS (KDF Z klen Hash constant_v). (*Correct*) *)
+(* Compute bLtohS (KDF Z_short klen Hash constant_v). (*Incorrect*) *)
 
 Definition SB := hS2bL "284C8F19 8F141B50 2E81250F 1581C7E9 EEB4CA69 90F9E02D F388B454 71F5BC5C". 
 
-(* Compute bL2hS (ComputeS "02" ZA ZB xV yV x1 y1 x2 y2 Hash). (*Correct*) *)
+(* Compute bLtohS (ComputeS "02" ZA ZB xV yV x1 y1 x2 y2 Hash). (*Correct*) *)
 
 (*
-Compute bL2hS (Hash(hS2bL "02" ++ (NtohbL yV) ++
+Compute bLtohS (Hash(hS2bL "02" ++ (NtohbL yV) ++
   (Hash((NtohbL xV) ++ ZA ++ ZB ++ (NtohbL x1) ++ (NtohbL y1) 
     ++ (NtohbL x2) ++ (NtohbL y2))))). (* Incorrect *)
 
-Compute bL2hS (Hash(hS2bL "02" ++ (yVbL) ++
+Compute bLtohS (Hash(hS2bL "02" ++ (yVbL) ++
   (Hash((xVbL) ++ ZA ++ ZB ++ (NtohbL x1) ++ (y1bL) 
     ++ (NtohbL x2) ++ (NtohbL y2))))). (* Correct So we need to convert into BL*)
 
 
-Compute bL2hS (Hash(hS2bL "02" ++ (yVbL) ++
+Compute bLtohS (Hash(hS2bL "02" ++ (yVbL) ++
   (Hash((xVbL) ++ ZA ++ ZB ++ (NtoBbL x1) ++ (NtoBbL y1)
     ++ (NtoBbL x2) ++ (NtoBbL y2))))). (* Correct So we need to convert into BL*)
 *)
-(*Compute (RB, bL2hS KB, bL2hS SB). *)
+(*Compute (RB, bLtohS KB, bLtohS SB). *)
 (*
 Time Compute  
   match ComputeRBKBSB_pf Hash constant_v klen p a b G n h ZA ZB RA PA rB dB with
   | Normal (r, k, s) =>
-      Normal (r, bL2hS k, bL2hS s)
+      Normal (r, bLtohS k, bLtohS s)
   | Error str => Error str
   end.
 *)
@@ -267,7 +267,7 @@ Definition result3 := ComputeKAS1SA_pf Hash constant_v klen p a b rA dA n h PB R
 (*
 Time Compute match result3 with
 | Error err => Error err
-| Normal (ka, s1, sa) => Normal (bL2hS ka, bL2hS s1, bL2hS sa)
+| Normal (ka, s1, sa) => Normal (bLtohS ka, bLtohS s1, bLtohS sa)
 end. 
 = Normal
          ("55b0ac62a6b927ba23703832c853ded4",
@@ -283,7 +283,7 @@ Compute VeriS2eqSA ZA ZB SA xV yV x1 y1 x2 y2 Hash.
 
 Definition Z2 := hS2bL "00 83E628CF 701EE314 1E8873FE 55936ADF 24963F5D C9C64805 66C80F8A 1D8CC51B 01 524C647F 0C0412DE FD468BDA 3AE0E5A8 0FCC8F5C 990FEE11 60292923 2DCD9F36".
 (*983BCF 106AB2DC C92F8AEA C6C60BF2 98BB0117*)
-(*Compute bL2hS (KDF Z2 152 Hash constant_v).*) (*Correct*)
+(*Compute bLtohS (KDF Z2 152 Hash constant_v).*) (*Correct*)
 
 End test_pf. 
   *)
@@ -326,13 +326,13 @@ Definition xV := hStoN "00 DADD0874 06221D65 7BC3FA79 FF329BB0 22E9CB7D DFCFCCFE
 Definition yV := hStoN "01 F0464B1E 81684E5E D6EF281B 55624EF4 6CAA3B2D 37484372 D91610B6 98252CC9". 
 Definition SB := hS2bL "4EB47D28 AD3906D6 244D01E0 F6AEC73B 0B51DE15 74C13798 184E4833 DBAE295A". 
 (*
-Compute bL2hS (ComputeS_bf (N.to_nat m) "02" ZA ZB xV yV x1 y1 x2 y2 Hash). 
+Compute bLtohS (ComputeS_bf (N.to_nat m) "02" ZA ZB xV yV x1 y1 x2 y2 Hash). 
 Correc. Same as SB *)
 Definition xU := hStoN "00 DADD0874 06221D65 7BC3FA79 FF329BB0 22E9CB7D DFCFCCFE 277BE8CD 4AE9B954". 
 Definition yU := hStoN "01 F0464B1E 81684E5E D6EF281B 55624EF4 6CAA3B2D 37484372 D91610B6 98252CC9". 
 Definition KA := hS2bL "4E587E5C 66634F22 D973A7D9 8BF8BE23".
 (*
-Compute bL2hS (ComputeK m Hash constant_v klen xU yU ZA ZB). 
+Compute bLtohS (ComputeK m Hash constant_v klen xU yU ZA ZB). 
 Correct Same as KA*)
 
 (*
@@ -364,7 +364,7 @@ Time Compute match ComputeRBKBSB_bfp Hash constant_v klen m gp a b G n h ZA ZB R
     | Cop (xrb, yrb) =>
         (NtohS xrb, NtohS yrb)
     end,
-    bL2hS kb, bL2hS sb)
+    bLtohS kb, bLtohS sb)
 end. 
 *)
 (*= Normal
@@ -379,7 +379,7 @@ Finished transaction in 2817.141 secs (2815.495u,0.988s) (successful)
 (*
 Time Compute match ComputeKAS1SA_bfp Hash constant_v klen m gp a b rA dA n h PB RA RB ZA ZB SB with
 | Error err => Error err
-| Normal (ka, s1, sa) => Normal (bL2hS ka, bL2hS s1, bL2hS sa)
+| Normal (ka, s1, sa) => Normal (bLtohS ka, bLtohS s1, bLtohS sa)
 end. 
 *)
 (*

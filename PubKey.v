@@ -51,7 +51,7 @@ Definition ComputeCwithklist_bfp (hash_v : bL -> bL)(v : nat)(m gp a h : N)(klis
 (* B1 - B7 *)
 Definition ComputeM' (hash_v : bL -> bL)(v : nat)(klen : nat)(ml : GE -> N -> GE)(OnCrv : N -> N -> bool)(Bl2p : BL -> option (N * N))(Ntobl : N -> bL)(h dB : N)(C : bL) : optErr bL :=
   let (C1bl, C2C3) := partListBack C (Nat.add klen v) in
-  match Bl2p (bL2BL C1bl) with
+  match Bl2p (bLtoBL C1bl) with
   | None => Error "Failed to uncompress C1"
   | Some (x1, y1) =>
     if negb (OnCrv x1 y1) then Error "C1 not on curve"
@@ -104,7 +104,7 @@ Time Check match TryComputeTwithK k p a h ucp G PB klen Hash constant_v with
   | Error s => Error s
   | Normal None => Normal None
   | Normal (Some (a, b, c, d)) =>
-      Normal (Some (bL2hS a, bL2hS b, bL2hS c, bL2hS d))
+      Normal (Some (bLtohS a, bLtohS b, bLtohS c, bLtohS d))
 end. 
 *)
 
@@ -122,7 +122,7 @@ Correct
 (*
 Time Compute match ComputeCwithklist_pf Hash constant_v p a h [k] ucp (Cop (xG, yG)) (Cop (xB, yB)) M with
 | Error s => Error s
-| Normal bl => Normal (bL2hS bl)
+| Normal bl => Normal (bLtohS bl)
 end. 
 *)
 (*
@@ -137,7 +137,7 @@ Definition C := hS2bL "04245C26 FB68B1DD DDB12C4B 6BF9F2B6 D5FE60A3 83B0D18D 1C4
 (*
 Time Compute match ComputeM'_pf Hash constant_v klen p a b h dB ucp C with
 | Error s => Error s
-| Normal bl => Normal (bL2hS bl)
+| Normal bl => Normal (bLtohS bl)
 end. 
 *)
 (*
@@ -172,15 +172,15 @@ Definition x2 := hStoN "00 83E628CF 701EE314 1E8873FE 55936ADF 24963F5D C9C64805
 Definition y2 := hStoN "01 524C647F 0C0412DE FD468BDA 3AE0E5A8 0FCC8F5C 990FEE11 60292923 2DCD9F36". 
 Definition P2 := Cop (x2, y2). 
 Definition t := KDF ((NtoBbL_len 257 x2) ++ (NtoBbL_len 257 y2)) klen Hash constant_v. 
-(*Compute bL2hS t.*) (*Correct*)
+(*Compute bLtohS t.*) (*Correct*)
 Definition C2 := bLXOR M t . 
-(*Compute bL2hS C2.*) (*Correct*)
+(*Compute bLtohS C2.*) (*Correct*)
 Definition C3 := Hash ((NtoBbL_len 257 x2) ++ M ++ (NtoBbL_len 257 y2)). 
-(*Compute bL2hS C3. *)(*Correct*) 
+(*Compute bLtohS C3. *)(*Correct*) 
 (*
 Time Compute match ComputeCwithklist_bfp Hash constant_v m gp a h [k] ucp G PB M with
 | Error s => Error s
-| Normal bl => Normal (bL2hS bl)
+| Normal bl => Normal (bLtohS bl)
 end. 
 *)
 (*
@@ -201,7 +201,7 @@ Correct *)
 (*
 Time Compute match ComputeM'_bfp Hash constant_v klen m gp a b h dB ucp C with
 | Error s => Error s
-| Normal bl => Normal (bL2hS bl)
+| Normal bl => Normal (bLtohS bl)
 end. 
 *)
 (*
