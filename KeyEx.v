@@ -11,7 +11,7 @@ I choose to use nat for
 (* hash_v returns a bL of length v *)
 Fixpoint ComputeHaList (j : nat)(i : N)(Z : bL)
   (hash_v : bL -> bL)(acc : list bL){struct j} :=
-  let HaList := hash_v (Z ++ (N2bL_len 32 i)) :: acc in
+  let HaList := hash_v (Z ++ (NtobL_len 32 i)) :: acc in
   match j with
   | O => HaList 
   | S j' => 
