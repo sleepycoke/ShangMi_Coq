@@ -401,9 +401,11 @@ Definition GE_mul_ps (pstoac : GE_PC_std -> GE)
 Definition pf_mul_ps (p a : N)(P : GE)(k : N) : GE :=
   GE_mul_ps (PC_std_to_AC p)(pf_add_ps p a)(pf_double_ps p a) P k . 
 
-
 Definition pf_mul_ac (p a : N)(P : GE)(k : N) : GE :=
   GE_mul_ac (pf_add_ac p a)(pf_double_ac p a) P k. 
+
+Definition pf_mul := pf_mul_ps. 
+Definition pf_add := pf_add_ac. 
 
 Definition bfp_mul (m gp a : N)(P : GE)(k : N) : GE :=
   GE_mul_ac (bfp_add m gp a) (bfp_double m gp a) P k.   

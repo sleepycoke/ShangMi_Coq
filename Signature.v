@@ -35,31 +35,31 @@ Fixpoint TrySigWithList (ml : GE -> N -> GE)(n xG yG dA e : N)(klist : list N) :
 
 (* 6.1 *)
 (* TODO How to generate klist? *)
-Definition SigWithZAList (ml : GE -> N -> GE)(a b n xG yG Z_A dA M : bL)(klist : list N)
+Definition SigWithZAList (hash : bL -> N)(ml : GE -> N -> GE)(a b n xG yG Z_A dA M : bL)(klist : list N)
    : option (bL * (bL * bL)) :=
-   let e := HashN (Z_A ++ M) in
+   let e := hash (Z_A ++ M) in
      match TrySigWithList ml (bLtoN n)
      (bLtoN xG) (bLtoN yG) (bLtoN dA) e klist with
         | None => None
         | Some (r, s) => Some (M, ((NtobL r), (NtobL s)))
      end. 
 
-Definition SigWithList (ml : GE -> N -> GE)(a b n xG yG ENTL_A ID_A dA xA yA M : bL)(klist : list N)
+Definition SigWithList (hash : bL -> N)(ml : GE -> N -> GE)(a b n xG yG ENTL_A ID_A dA xA yA M : bL)(klist : list N)
    : option (bL * (bL * bL)) :=
    let Z_A := ComputeZ ENTL_A ID_A a b xG yG xA yA in
-   SigWithZAList ml a b n xG yG Z_A dA M klist. 
+   SigWithZAList hash ml a b n xG yG Z_A dA M klist. 
 
-Definition SigWithList_pf (p a b n xG yG ENTL_A ID_A dA xA yA M : bL)(klist : list N)
+Definition SigWithList_pf (hash : bL -> N)(p a b n xG yG ENTL_A ID_A dA xA yA M : bL)(klist : list N)
    : option (bL * (bL * bL)) :=
-   SigWithList (pf_mul (bLtoN p) (bLtoN a)) a b n xG yG ENTL_A ID_A dA xA yA M klist. 
+   SigWithList hash (pf_mul (bLtoN p) (bLtoN a)) a b n xG yG ENTL_A ID_A dA xA yA M klist. 
 
-Definition SigWithList_bfp (m gp : N)(a b n xG yG ENTL_A ID_A dA xA yA M : bL)(klist : list N)
+Definition SigWithList_bfp (hash : bL -> N)(m gp : N)(a b n xG yG ENTL_A ID_A dA xA yA M : bL)(klist : list N)
    : option (bL * (bL * bL)) :=
-   SigWithList (bfp_mul m gp (bLtoN a)) a b n xG yG ENTL_A ID_A dA xA yA M klist. 
+   SigWithList hash (bfp_mul m gp (bLtoN a)) a b n xG yG ENTL_A ID_A dA xA yA M klist. 
 
-Definition SigWithZAList_bfp (m gp : N)(a b n xG yG ZA dA xA yA M : bL)(klist : list N)
+Definition SigWithZAList_bfp (hash : bL -> N)(m gp : N)(a b n xG yG ZA dA xA yA M : bL)(klist : list N)
    : option (bL * (bL * bL)) :=
-   SigWithZAList (bfp_mul m gp (bLtoN a)) a b n xG yG ZA dA M klist. 
+   SigWithZAList hash (bfp_mul m gp (bLtoN a)) a b n xG yG ZA dA M klist. 
 
 (* true if x \in [lower, upper] *)
 Definition inRange (x lower upper : N) : bool :=
@@ -149,13 +149,16 @@ Definition y1t := hStobL "1C65D68A 4A08601D F24B431E 0CAB4EBE 084772B3 817E8581 
 Definition GIn := Cop ((bLtoN xGIn), (bLtoN yGIn)). 
 Definition kG := pf_mul (bLtoN pIn) (bLtoN aIn) GIn (bLtoN kt).    
 
-(*Time Compute kG. (*TODO is that possible to make it faster?  *)
+(*
+Time Compute kG. (*TODO is that possible to make it faster?  *)
   Cop
          (7717240450715166391686062596461402834004556820190931887479426615912677363986,
          12844692015861483985796897070387313459524129685989174230708833771946472557082)
      : FEp
 Finished transaction in 618.101 secs (617.552u,0.299s) (successful)
-Correct! 
+Correct! (AC)
+Finished transaction in 28.037 secs (27.933u,0.054s) (successful)
+(mul_ps add_ac)
 *)
 Definition rt := ((bLtoN et) + (bLtoN x1t)) mod (bLtoN nIn). 
 (*
@@ -179,7 +182,8 @@ Time Compute match SigWithList_pf HashN pIn aIn bIn nIn xGIn yGIn ENTLa IDa dAIn
 | Some (M, (r, s)) => Some (bLtostr M, ((bLtohS r), (bLtohS s)))
 end. 
 *)
-(* Correct Finished transaction in 615.163 secs *)
+(* Correct Finished transaction in 615.163 secs AC*)
+(*  33.448 secs pf_mul_ps + pf_add_ac*)
 (*Some
          ("message digest",
          ("40f1ec59f793d9f49e09dcef49130d4194f79fb1eed2caa55bacdb49c4e755d1",
