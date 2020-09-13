@@ -1,259 +1,237 @@
-Require Export Field. 
+Require Import NArith.
+Require Export ECField. 
+Open Scope N_scope. 
+(* Elliptic Curve Group element: O or coordinated points *)
+(* Affine Coordinates *)
+Inductive GE (fd : ECField) : Type :=
+  InfO : GE fd | Cop : (U fd) * (U fd) -> GE fd. 
 
+(* Projective Coordinates *)
+(* Decide to use Standard Projective Coordinates only*)
+Inductive GE_PC (fd : ECField) : Type :=
+  Tri : (U fd) * (U fd) * (U fd) -> GE_PC fd. 
+Definition InfO_PC (fd : ECField) := Tri fd (id0 fd, id1 fd, id0 fd).
 
+Section ecdef_sec.
+Variable fd : ECField.
+Definition u := U fd.
+Definition wp : N -> u := wrapper fd.
+Definition i0 := id0 fd.
+Definition i1 := id1 fd.
+Definition eq : u -> u -> bool := eql fd.
+Definition eq0 := eq i0. 
+Definition op := opp fd.
+Definition iv := inv fd.
+Definition ad := add fd.
+Definition sb := sub fd.
+Definition ml := mul fd.
+Definition dv := div fd.
+Definition sq := squ fd.
+Definition db := dbl fd.
+Definition pw := pow fd.
+Variable a b : u.
+
+Definition grp := GE fd. 
+Definition o := InfO fd. 
+Definition cop := Cop fd. 
+Definition gpc := GE_PC fd. 
+Definition tri := Tri fd.
+Definition f2 := wp 2. 
+Definition f3 := wp 3. 
+Definition f4 := wp 4. 
+Definition f8 := wp 8. 
+Set Printing Parentheses.
+
+Notation "- x" := (op x). 
+Infix "+" := ad.
+Infix "-" := sb.
+Infix "*" := ml. 
+Infix "/" := dv.
+Infix "^" := pw. 
+Infix "=?" := eq.
 (* Test whether (x, y) is on the elliptic-curve defined by a b p *)
+(*
 Definition OnCurve_pf (p a b x y : N) : bool := 
-  ((N.square y) mod p =? ((P_power p x 3) + a * x + b) mod p). 
+  ((N.square y) mod p =? ((P_pow p x 3) + a * x + b) mod p). 
+*)
 
+
+(* Regular Condition on Primal Fields *)
+Definition pf_rgl_cdt (fd : ECField)(a b : U fd) : Prop :=
+  let (f4, f27) := ((wrapper fd 4), (wrapper fd 27)) in
+  let ad1 := mul fd f4 (pow fd a 3) in
+  let ad2 := mul fd f27 (squ fd b) in
+  eql fd (add fd ad1 ad2) (id0 fd) = false. 
+
+
+Inductive ECurve (fd : ECField): Type :=
+  | pf_curve (a b : U fd)(rgl : pf_rgl_cdt fd a b)
+  | bf_curve (a b : U fd)(rgl : b <> id0 fd). 
+
+Definition OnCurve (fd : ECField)(curve : ECurve fd) 
+  (x y : U fd) : bool := 
+  match squ fd, eql fd, pow fd, add fd, mul fd
+   with sq, eq, ex, ad, ml =>
+    match curve with 
+    | pf_curve _ a b _ => 
+      eq (sq y) (ad (ad (ex x 3) (ml a x)) b)
+    | bf_curve _ a b _ => 
+      eq (ad (sq y) (ml x y)) (ad (ad (ex x 3) (ml a (sq x))) b)
+    end
+  end. 
+
+(*
 Definition OnCurve_bf (ml : N -> N -> N)(sq cb : N -> N)(a b x y : N) : bool :=
   B_add (sq y) (ml x y) =? B_add (B_add (cb x) (ml a (sq x))) b. 
 
+
 Definition OnCurve_bfp (gp a b x y : N) : bool :=
   OnCurve_bf (Bp_mul gp) (Bp_sq gp) (Bp_cb gp) a b x y. 
+*)
 
-(* Elliptic Curve Group element: O or coordinated points *)
-(* Affine Coordinates *)
-Inductive GE : Set :=
-  InfO : GE | Cop : N * N -> GE. 
-
-(* Projective Coordinates *)
-Inductive GE_PC : Set :=
-  Tri : N * N * N -> GE_PC. 
-Definition InfO_PC := Tri (0, 1, 0).
-(* Standard Projective Coordinates *)
-Inductive GE_PC_std : Set :=
-  Wrap_std : GE_PC -> GE_PC_std. 
-Definition InfO_ps := Wrap_std InfO_PC. 
-
-Definition Tri_ps (t : N * N * N) :=
-  Wrap_std (Tri t). 
-
-(* Jacobian Projective Coordinates *)
-Inductive GE_PC_jac : Set :=
-  Wrap_jac : GE_PC -> GE_PC_jac. 
-Definition Tri_pj (t : N * N * N) :=
-  Wrap_jac (Tri t). 
-Definition InfO_pj := Wrap_jac InfO_PC. 
-
-Definition AC_to_PC (af_ele : GE) : GE_PC :=
+Definition AC_to_PC (af_ele : grp) : GE_PC fd :=
   match af_ele with
-  | InfO => Tri (0, 1, 0)
-  | Cop (x, y) => Tri (x, y, 1)
-  end. 
-
-Definition AC_to_PC_std (af_ele : GE) : GE_PC_std :=
-  Wrap_std (AC_to_PC af_ele). 
-
-Definition ACtoPC_jac (af_ele : GE) : GE_PC_jac :=
-  Wrap_jac (AC_to_PC af_ele). 
-
-Definition PC_std_to_AC (p : N)(std_ele : GE_PC_std) : GE :=
-  match std_ele with
-  | Wrap_std (Tri (_, _, 0)) => InfO
-  | Wrap_std (Tri (x, y, z)) => 
-    Cop (P_div p x z, P_div p y z)
+  | InfO _ => tri (i0, i1, i0)
+  | Cop _ (x, y) => tri (x, y, id1 fd)
+  end.
+  
+Definition PC_to_AC (P: gpc) : GE fd :=
+  match P with
+  | Tri _ (x, y, z) => 
+    if z =? i0 then o else
+      cop (x / z, y / z)
     end. 
-
 (*
 Compute PC_std_to_AC 23 (Wrap_std (Tri (0, 1, 0))).
 Compute PC_std_to_AC 23 (Wrap_std (Tri (7, 7, 7))).
 Compute PC_std_to_AC 23 (Wrap_std (Tri (5, 5, 7))).
 *)
 
-Definition GE_eqb (P1 P2 : GE) : bool :=
+Definition GE_eqb (P1 P2 : grp) : bool :=
   match P1, P2 with
-  | InfO, InfO => true
-  | InfO, _ => false
-  | _, InfO => false
-  | Cop (x1, y1), Cop (x2, y2) =>
+  | InfO _, InfO _ => true
+  | InfO _, _ => false
+  | _, InfO _ => false
+  | Cop _ (x1, y1), Cop _ (x2, y2) =>
       andb (x1 =? x2) (y1 =? y2)
   end.
 
-Definition GE_PC_std_eqb (p : N)(P1 P2 : GE_PC_std) : bool :=
+Definition GE_PC_eqb (P1 P2 : gpc) : bool :=
   match P1, P2 with 
-    Wrap_std (Tri (x1, y1, z1)),
-    Wrap_std (Tri (x2, y2, z2)) =>
-    match z1, z2 with
-    | 0, 0 => true
-    | 0, _ => false
-    | _, 0 => false
-    | _, _ =>
-      andb ((x1 * z2) mod p =? (x2 * z1) mod p)
-        ((y1 * z2) mod p =? (y2 * z1) mod p)
+    Tri _ (x1, y1, z1), Tri _ (x2, y2, z2) =>
+    let eq := eql fd in
+    let eq0 := eq (id0 fd) in
+    let ml := mul fd in
+    match eq0 z1, eq0 z2 with
+    | true, true => true
+    | true, false => false
+    | false, true => false
+    | false, false =>
+      (x1 * z2 =? x2 * z1) && (y1 * z2 =? y2 * z1)
+    end 
+  end.
+
+(* Whether P1 + P2 = 0 *)
+Definition GE_PC_invb_pf (P1 P2 : gpc) : bool :=
+  match P1, P2 with 
+    Tri _ (x1, y1, z1),
+    Tri _ (x2, y2, z2) =>
+    match eq0 z1, eq0 z2 with
+    | true, true => true
+    | true, false => false
+    | false, true => false
+    | false, fasle =>
+      (x1 * z2 =? x2 * z1) && (eq0 (y1 * z2 + y2 * z1))
     end 
   end. 
 
-Definition GE_PC_std_invb_pf (p : N)(P1 P2 : GE_PC_std) : bool :=
-  match P1, P2 with 
-    Wrap_std (Tri (x1, y1, z1)),
-    Wrap_std (Tri (x2, y2, z2)) =>
-    match z1, z2 with
-    | 0, 0 => true
-    | 0, _ => false
-    | _, 0 => false
-    | _, _ =>
-      andb ((x1 * z2) mod p =? (x2 * z1) mod p)
-        ((y1 * z2 + y2 * z1) mod p =? 0)
-    end 
-  end. 
 
-(* TODO *)
-(*
-  Definition GE_PC_std_invb_bf (p : N)(P1 P2 : GE_PC_std) : bool :=
-  match P1, P2 with 
-    Wrap_std (Tri (x1, y1, z1)),
-    Wrap_std (Tri (x2, y2, z2)) =>
-    match z1, z2 with
-    | 0, 0 => true
-    | 0, _ => false
-    | _, 0 => false
-    | _, _ =>
-      andb ((x1 * z2) mod p =? (x2 * z1) mod p)
-        ((y1 * z2 + y2 * z1) mod p =? 0)
-    end 
-  end. 
-*)
-(* 
-Compute GE_PC_std_eqb 7 
-  (Wrap_std (Tri (1, 1, 2)))
-  (Wrap_std (Tri (4, 4, 1))). 
-= true. Correct. 
-
-Compute GE_PC_std_inv 7
-  (Wrap_std (Tri (1, 1, 2)))
-  (Wrap_std (Tri (4, 3, 1))). 
-= true. Correct. *)
 
 (* A.1.2.3.1 *)
 (* Double for Standard Projective Cooridnates 
   over Prime Fields*)
 (* z1 * z2 = 0 imples z3 = 0 *)
 (* So need no for InfO case *)
-Definition pf_double_ps (p a : N)(P : GE_PC_std) : GE_PC_std :=
-  match P with (Wrap_std (Tri (x1, y1, z1))) =>
-  let lambda1 := (3 * (N.square x1) + a * (N.square z1)) mod p in
-  let lambda2 := (2 * y1 * z1) mod p in
-  let lambda3 := (N.square y1) mod p in
-  let lambda4 := (lambda3 * x1 * z1) mod p in
-  let lambda5 := (N.square lambda2) mod p in
-  let lambda6 := P_sub p (P_sq p lambda1)  ((8 * lambda4) mod p) in
-  let x3 := (lambda2 * lambda6) mod p in
-  let y3 := P_sub (lambda1 * (P_sub p (4 * lambda4) lambda6)) 
-    (2 * lambda5 * lambda3)  in
-  let y3 := (lambda1 * (4 * lambda4 + p - lambda6) + p -
-    ((2 * lambda5 * lambda3) mod p)) mod p in
-  let z3 := (lambda2 * lambda5) mod p in
-    Tri_ps (x3, y3, z3)
+Definition pf_double_pc (P : gpc) : gpc :=
+  match P with Tri _ (x1, y1, z1) =>
+    let lambda1 := f3  * (sq x1) + a * (sq z1) in
+    let lambda2 := f2 * (y1 * z1) in
+    let lambda3 := sq y1 in
+    let lambda4 := lambda3 * x1 * z1 in
+    let lambda5 := sq lambda2 in
+    let lambda6 := (sq lambda1) - f8 * lambda4 in
+    let x3 := lambda2 * lambda6 in
+    let y3 := lambda1 * (f4 * lambda4 - lambda6) - f2 * lambda5 * lambda3 in
+    let z3 := lambda2 * lambda5 in
+      tri (x3, y3, z3)
   end. 
 
 (* Add for Standard Projective Cooridnates *)
-Definition pf_add_ps (p a : N)(P1 P2 : GE_PC_std) : GE_PC_std :=
-  if GE_PC_std_invb_pf p P1 P2 then Wrap_std (Tri (0, 1, 1)) else
-  if GE_PC_std_eqb p P1 P2 then pf_double_ps p a P1 else
-  match P1, P2 with 
-    Wrap_std (Tri (x1, y1, z1)), Wrap_std (Tri (x2, y2, z2)) =>
-    match z1, z2 with
-    | 0, _ => P2
-    | _, 0 => P1
+Definition pf_add_pc (P1 P2 : gpc) : gpc :=
+  if GE_PC_invb_pf P1 P2 then tri (id0 fd, id1 fd, id1 fd) else
+  if GE_PC_eqb P1 P2 then pf_double_pc P1 else
+  match P1, P2 with Tri _ (x1, y1, z1), Tri _ (x2, y2, z2) =>
+    match eq0 z1, eq0 z2 with
+    | true, _ => P2
+    | _, true => P1
     | _, _ =>
-      let ad := P_add p in
-      let sb := P_sub p in
-      let ml := P_mul p in
-      let sq := P_sq p in
-      let lambda1 := ml x1 z2 in
-      let lambda2 := ml x2 z1 in
-      let lambda3 := sb lambda1 lambda2 in
-      let lambda4 := ml y1 z2 in
-      let lambda5 := ml y2 z1 in
-      let lambda6 := sb lambda4 lambda5 in
-      let lambda7 := ad lambda1 lambda2 in
-      let lambda8 := ml z1 z2 in
+      let lambda1 := x1 * z2 in
+      let lambda2 := x2 * z1 in
+      let lambda3 := lambda1 - lambda2 in
+      let lambda4 := y1 * z2 in
+      let lambda5 := y2 * z1 in
+      let lambda6 := lambda4 * lambda5 in
+      let lambda7 := lambda1 * lambda2 in
+      let lambda8 := z1 * z2 in
       let lambda9 := sq lambda3 in
-      let lambda10 := ml lambda3 lambda9 in
-      let lambda11 := sb (ml lambda8 (sq lambda6))
-        (ml lambda7 lambda9) in
-      let x3 := ml lambda3 lambda11 in
-      let y3 := sb (ml lambda6 (sb (ml lambda9 lambda1) lambda11))
-        (ml lambda4 lambda10) in 
-      let z3 := ml lambda10 lambda8 in
-      Tri_ps (x3, y3, z3)
+      let lambda10 := lambda3 * lambda9 in
+      let lambda11 := lambda8 * (sq lambda6) - lambda7 * lambda9 in
+      let x3 := lambda3 * lambda11 in
+      let y3 := lambda6 * (lambda9 * lambda1 - lambda11) - lambda4 * lambda10 in 
+      let z3 := lambda10 * lambda8 in
+      tri (x3, y3, z3)
     end
   end.
 
 
-
-(* What is this function? *)
-(*
-Open Scope positive_scope. 
-Fixpoint P_sqr_pos (n q : positive) : N :=
-  match n with
-  | 1 => 1
-  | p~1 => 
-      match ((P_sqr_pos p q) + (Npos p)) mod (Npos q) with
-      | N0 => 1
-      | Npos m => (Npos m~0~1) mod (Npos q)
-      end
-  | p~0 => 
-      match (P_sqr_pos p q) with
-      | N0 => 0
-      | Npos m => (Npos m~0) mod (Npos q)
-      end
-  end. 
-Close Scope positive_scope. 
- 
-Definition P_sqr (n q : N) :=
-  match q with
-  | 0 => n 
-  | Npos q' => 
-    match n with
-    | 0 => 0
-    | Npos n' =>
-        P_sqr_pos n' q'
-    end
-  end. 
-
-Compute P_sqr 4 13. 
-*)
-
 (* 3.2.3.1*)
-Definition pf_double_ac (p : N)(a : N)(P1 : GE) :=
-  match P1 with
-  | InfO => InfO
-  | Cop (x1, y1) =>
-      let lambda := P_div p (3 * (P_sq p x1) + a) (double y1) in
-      let x3 := P_sub p (square lambda) ((double x1) mod p) in
-      let y3 := P_sub p (lambda * (P_sub p x1 x3)) y1 in
-        Cop (x3, y3)
+
+Definition pf_double_ac (P : grp):=
+  match P with
+  | InfO _ => o
+  | Cop _ (x1, y1) =>
+      let lambda := (f3 * (sq x1) + a) / (f2 * y1) in
+      let x3 := (sq lambda) - (f2 * x1) in
+      let y3 := lambda * (x1 - x3) - y1 in
+        cop (x3, y3)
   end. 
- 
-Definition pf_add_ac (p a : N)(P1 P2 : GE) : GE :=
+
+Definition pf_add_ac (P1 P2 : grp): grp :=
   match P1, P2 with
-  | InfO, _ => P2
-  | _, InfO => P1
-  | Cop (x1, y1), Cop (x2, y2) =>
-      match x1 =? x2, y1 + y2 =? p with
-      | true, true => InfO
-      | true, false => pf_double_ac p a P1
+  | InfO _, _ => P2
+  | _, InfO _ => P1
+  | Cop _ (x1, y1), Cop _ (x2, y2) =>
+      match x1 =? x2, y1 =? - y2 with
+      | true, true => o 
+      | true, false => pf_double_ac P1
       | false, _ => 
-        let lambda := P_div p (P_sub p y2 y1) (P_sub p x2 x1) in
-          let x3 := ((square lambda) + 2 * p - x1 - x2) mod p in
-          let y3 := P_sub p (lambda * (P_sub p x1 x3)) y1 in
-            Cop (x3, y3)
+        let lambda := (y2 - y1) / (x2 - x1) in
+          let x3 := (sq lambda) - x1 - x2 in
+          let y3 := (lambda * (x1 - x3)) - y1 in
+            cop (x3, y3)
       end
   end. 
 
-  
-
+(*
 (* 3.2.3.2 *)
-Definition bf_double (ml dv : N -> N -> N)(sq : N -> N)
-  (a : N)(P1 : GE): GE :=
+Definition bf_double : GE fd :=
   match P1 with
-  | InfO => InfO
-  | Cop (x1, y1) =>
-      let lambda := B_add x1 (dv y1 x1) in
+  | InfO _ => o
+  | Cop _ (x1, y1) =>
+      let lambda := B_add x1 (y1 / x1) in
       let x3 := B_add (B_add (sq lambda) lambda) a in
-      let y3 := B_add (sq x1) (ml (B_add lambda 1) x3) in
-        Cop (x3, y3)
+      let y3 := B_add (sq x1) (B_add lambda 1) * x3 in
+        cop (x3, y3)
   end. 
 
 Definition bfp_double (m gp a : N)(P1 : GE): GE :=
@@ -278,58 +256,108 @@ Definition bf_add (ml dv : N -> N -> N)(sq : N -> N)(a : N)(P1 P2 : GE) : GE :=
 
 Definition bfp_add (m gp a : N)(P1 P2 : GE) : GE :=
   bf_add (Bp_mul gp) (Bp_div m gp) (Bp_sq gp) a P1 P2. 
-
+*)
 
 (* A.3.2 *)
-Fixpoint GE_mul_tail (A : Type)(ad db : A -> A)(kl : bL)
-  (acc : A) : A :=
+Fixpoint GE_mul_tail (A : Type)(adder dbler : A -> A)(kl : bL) (acc : A) : A :=
   match kl with
   | [] => acc
   | head :: tl =>
-      let double := db acc in
-        GE_mul_tail A ad db tl 
+      let double := dbler acc in
+        GE_mul_tail A adder dbler tl 
           match head with
           | false => double
-          | true => ad double
+          | true => adder double
           end
   end. 
 
-Definition GE_mul_ac (adder : GE -> GE -> GE)(db : GE -> GE)
-  (P : GE)(k : N) : GE :=
-  GE_mul_tail GE (adder P) db (NtobL k) InfO.
+Definition GE_mul_ac (adder : grp -> grp -> grp)(dbler : grp -> grp)
+    (P : grp)(k : N) : grp :=
+  GE_mul_tail grp (adder P) dbler (NtobL k) o.
 
-Definition GE_mul_ps (pstoac : GE_PC_std -> GE)
-(adder : GE_PC_std -> GE_PC_std -> GE_PC_std)
-(db : GE_PC_std -> GE_PC_std)(P : GE)(k : N) : GE :=
-  let p : GE_PC_std := AC_to_PC_std P in
-  let r := GE_mul_tail GE_PC_std (adder p) db (NtobL k) InfO_ps in
-  pstoac r. 
+Definition GE_mul_pc (pc_to_ac : gpc -> grp)
+(adder : gpc -> gpc -> gpc)
+(dbler : gpc -> gpc)(P : grp)(k : N) : grp :=
+  let p : gpc := AC_to_PC P in
+  let r := GE_mul_tail gpc (adder p) dbler (NtobL k) (InfO_PC fd) in
+  pc_to_ac r. 
 
-Definition pf_mul_ps (p a : N)(P : GE)(k : N) : GE :=
-  GE_mul_ps (PC_std_to_AC p)(pf_add_ps p a)(pf_double_ps p a) P k . 
+(*TODO Consider merge with GE_mul_pc *)
+Definition pf_mul_pc (P : grp)(k : N) : grp :=
+  GE_mul_pc PC_to_AC (pf_add_pc)(pf_double_pc) P k . 
 
-Definition pf_mul_ac (p a : N)(P : GE)(k : N) : GE :=
-  GE_mul_ac (pf_add_ac p a)(pf_double_ac p a) P k. 
+Definition pf_mul_ac (P : grp)(k : N) : grp :=
+  GE_mul_ac pf_add_ac pf_double_ac P k. 
 
-Definition pf_mul := pf_mul_ps. 
+Definition pf_mul := pf_mul_pc. 
 Definition pf_add := pf_add_ac. 
 
-Definition bfp_mul (m gp a : N)(P : GE)(k : N) : GE :=
-  GE_mul_ac (bfp_add m gp a) (bfp_double m gp a) P k.   
-
-
-(* Example 3 *)
 (*
-Compute pf_double_ac 19 1 (Cop (10, 2)) . (* Correct (15, 16)*)
-Compute pf_add_ac 19 1 (Cop (10, 2)) (Cop (9, 6)) . (* Correct (16, 3) *)
-Compute pf_mul_ac 19 1 (Cop (10, 2)) 2 . (* Correct (15, 16)*)
-Compute pf_mul_ps 19 1 (Cop (10, 2)) 2 . (* Correct (15, 16)*)
-Compute AC_to_PC_std (Cop(10, 2)). 
-Compute pf_double_ps 19 1 (Tri_ps (10, 2, 1)) . 
-(* Incorrect (10, 17, 7)*)
-Compute PC_std_to_AC 19 (Tri_ps (10, 17, 7)).
-(* Incorrect (15, 16) *) 
+Definition bfp_mul (m gp a : N)(P : GE)(fd : N) : GE :=
+  GE_mul_ac (bfp_add m gp a) (bfp_double m gp a) P fd.   
 *)
+
+Definition GE_builder (xy : N * N) : GE fd :=
+  match xy with (x, y) => Cop fd (wp x, wp y) end. 
+
+Print Cop.
+Print Tri. 
+
+Definition GE_PC_builder (xyz : N * N * N) : GE_PC fd :=
+  match xyz with (x, y, z) => Tri fd (wp x, wp y, wp z) end. 
+
+End ecdef_sec. 
+
+Definition GE_printer {fd : ECField}(P : GE fd) := 
+  match P with 
+  | InfO _ => (0, 0) 
+  | Cop _ (x , y) => (unwrapper fd x, unwrapper fd y)
+  end.
+
+Definition GE_PC_printer {fd : ECField}(P : GE_PC fd) := 
+  match P with 
+  | Tri _ (x, y, z) => (unwrapper fd x, unwrapper fd y, unwrapper fd z)
+  end.
+
+Fact gt7 : 7 > 3. Proof. lia. Qed. 
+Definition fd7 := pf_builder 7 gt7. 
+Compute GE_PC_eqb fd7 (GE_PC_builder fd7 (1, 1, 2))
+ (GE_PC_builder fd7 (4, 4, 1)). 
+(*= true. Correct. *)
+
+Compute GE_PC_invb_pf fd7 
+ (GE_PC_builder fd7 (1, 1, 2)) (GE_PC_builder fd7 (4, 3, 1)). 
+(*= true. Correct. *)
+
+Section test.
+(* Example 3 Page 12 *)
+Fact gt19_3 : 19 > 3.
+Proof. lia. Qed. 
+Definition fd19 : ECField := pf_builder 19 gt19_3 . 
+(*
+Compute GE_printer (pf_double_ac fd19 (wrapper fd19 1) (GE_builder fd19 (10, 2))) .
+*)
+(* Correct (15, 16)*)
+(*
+Compute GE_printer 
+(pf_add_ac fd19 (wrapper fd19 1) (GE_builder fd19 (10, 2)) (GE_builder fd19 (9, 6))) . 
+*)
+(* Correct (16, 3) *)
+(*
+Compute GE_printer (pf_mul_ac fd19 (wrapper fd19 1) (GE_builder fd19 (10, 2)) 2) .
+*)
+(* Correct (15, 16)*)
+(*Compute GE_printer (pf_mul_pc fd19 (wrapper fd19 1) (GE_builder fd19 (10, 2)) 2) .
+*)
+(* Correct (15, 16)*)
+(*
+Compute GE_PC_printer (pf_double_pc fd19 (wrapper fd19 1)
+ (GE_PC_builder fd19 (10, 2, 1))) . *)
+(* Correct (10, 17, 7)*)
+(*
+Definition wpp := wrapper fd19. 
+Compute PC_to_AC fd19 (Tri fd19 (wpp 10,wpp 17,wpp 7)).
+*)(* Correct (15, 16) *) 
 (* Example 6 *)
 (*
 Definition alpha := 2%N. 
@@ -350,22 +378,12 @@ Compute bfp_mul 5 37 1 P1 2 . (* 8, 31 correct *)
 Compute bfp_add 5 37 1 P1 P2 .  (* 30, 21 correct *)
 *)
 
-
-
-
-
-
-
-
-
-
-
-
+End test. 
 
 Definition decode_TPB (code : N * N) : N :=
   match code with
-  | (m, k)  =>
-      (N.shiftl 1 m) + (N.shiftl 1 k) + 1
+  | (m, fd)  =>
+      (N.shiftl 1 m) + (N.shiftl 1 fd) + 1
   end. 
 
 Definition decode_PPB (code : N * (N * N * N)) : N :=
@@ -428,16 +446,16 @@ Fixpoint pf_mul_tail (p : N)(a : N)(P : GE)(kl : bL)(acc : GE) : GE :=
       pf_mul_tail p a P tl (pf_add p a P (pf_double p a acc))
   end. 
 
-Definition pf_mul_old (p a: N)(P : GE)(k : N) : GE :=
-  pf_mul_tail p a P (NtobL k) InfO. 
+Definition pf_mul_old (p a: N)(P : GE)(fd : N) : GE :=
+  pf_mul_tail p a P (NtobL fd) InfO. 
 *)
 
 (*
-Fixpoint pf_mul_naive (p a : N)(P : GE)(k : nat) : GE :=
-  match k with
+Fixpoint pf_mul_naive (p a : N)(P : GE)(fd : nat) : GE :=
+  match fd with
   | O => InfO
-  | S k' => 
-      pf_add p a P (pf_mul_naive p a P k')
+  | S fd' => 
+      pf_add p a P (pf_mul_naive p a P fd')
   end. 
 *)
 
