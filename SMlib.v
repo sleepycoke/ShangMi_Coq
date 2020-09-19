@@ -15,6 +15,7 @@ Require Export Byte.
 Export ListNotations. 
 
 Export N. 
+
 Definition word_size := 32%N. 
 Definition half_word_size := 16%N. 
 Definition modulus_ws := shiftl 1 word_size.

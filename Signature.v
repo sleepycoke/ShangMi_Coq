@@ -8,11 +8,13 @@ Definition ENTL (ID : bL) :=
   NtobL_len 16 (N.of_nat (List.length (ID))). 
 
 Open Scope list. 
+Section ecdef_sec.
 
 Definition ComputeZ (ENTL_A ID_A a b xG yG xA yA : bL) :=
   Hash (ENTL_A ++ ID_A ++ a ++ b ++ xG ++ yG ++ xA ++ yA).
 
-Definition TrySigWithk (ml : GE -> N -> GE)(n xG yG dA e k : N) : option (N * N) :=
+Definition TrySigWithk (n xG yG dA e k : N)
+   : option (N * N) :=
   match ml (Cop (xG, yG)) k with
   | InfO => None
   | Cop (x1, y1) => 

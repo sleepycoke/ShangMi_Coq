@@ -123,7 +123,7 @@ Definition Reg (j : nat)(Vi : N)(Bi : N) : N :=
 
 
 (* j in [0, 64] Vi is of 256 bit *)
-Fixpoint Reg_ntail (j : nat) (Vi : N) (Bi : N) :=
+Definition Reg_ntail (j : nat) (Vi : N) (Bi : N) :=
   match j with
   | O => Vi
   | S j' =>

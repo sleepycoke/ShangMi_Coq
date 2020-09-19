@@ -51,15 +51,15 @@ Definition square_root (p g : N) : option N :=
   if N.eqb g 0 then Some 0
   else if N.eqb (N.modulo p 4) 3 then 
     let u := N.div p 4 in
-      let y := P_power p g (u + 1) in
+      let y := P_pow p g (u + 1) in
         let z := P_sq p y in
           if N.eqb z g then Some y else None
   else if N.eqb (N.modulo p 8) 5 then
     let u := (N.div p 8) in
-      let z := P_power p g (N.double u + 1) in
+      let z := P_pow p g (N.double u + 1) in
         let t := N.modulo z p in
-        if N.eqb t 1 then Some (P_power p g (u + 1))
-        else if N.eqb t (p - 1) then Some ((g * 2 * (P_power p (g * 4) u)) mod p)
+        if N.eqb t 1 then Some (P_pow p g (u + 1))
+        else if N.eqb t (p - 1) then Some ((g * 2 * (P_pow p (g * 4) u)) mod p)
         else None 
   else (* N.eqb (N.modulo p 8) 1 *)  
     let u := N.div p 8 in
@@ -141,7 +141,7 @@ Definition FindRoot_bfp (m gp beta : N) : option N :=
     | Some tau => FindRoot_alg3 (Bp_mul gp) (Bp_sq gp) m beta tau
     end. 
 
-
+(*
 (* A.5.3 *)
 Definition recover_b (m gp a b xp : N)(yp_tide : bool) : option (N * N):=
   if xp =? 0 then Some (xp, (Bp_power m gp b (N.shiftl 1 (m - 1)))) else
@@ -154,7 +154,7 @@ Definition recover_b (m gp a b xp : N)(yp_tide : bool) : option (N * N):=
      let yp := Bp_mul gp xp (if (Bool.eqb yp_tide z_tide) then z else z + 1) in
       Some (xp, yp)
   end. 
-
+*)
 
 
 
@@ -270,12 +270,13 @@ Definition BLtoPoint_p (cp : cmp_type)(p : N)(a : N)(b : N)(S : BL) : option (N 
   | Some point => BLtoPointStep2 (OnCurve_pf p a b) point 
   end. 
 
+(*
 Definition BLtoPoint_bfp (cp : cmp_type)(m gp a b : N)(S : BL) : option (N * N) :=
   match BLtoPointStep1 (recover_b m gp a b) cp (N.shiftl 1 m) S with
   | None => None
   | Some point => BLtoPointStep2 (OnCurve_bfp gp a b) point
   end. 
-
+*)
 (* B.2.1 *)
 (* Using Binary GCD instead of Euclidean Alg, just as Pos.gcd does *)
 Open Scope positive_scope. 
