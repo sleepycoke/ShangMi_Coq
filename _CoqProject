@@ -1,1 +1,1 @@
--R . ""
+-R . "" COQEXTRAFLAGS += -native-compiler yes
