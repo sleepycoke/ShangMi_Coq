@@ -1,7 +1,7 @@
 Require Export ECDef. 
   
 (*A.5.2*)
-Definition tide_p (yp : N) : bool :=
+Definition tilde_p (yp : N) : bool :=
   N.odd yp. 
 
 (*B.1.3*)
@@ -74,13 +74,13 @@ Definition square_root (p g : N) : option N :=
         (Nlist p) (* Should provide a random sequence *). 
 
 (* A.5.2 *)
-Definition recover_p (p a b xp : N)(y_tide : bool) : option (N * N) :=
+Definition recover_p (p a b xp : N)(y_tilde : bool) : option (N * N) :=
   let alpha := (xp * xp * xp + a * xp + b) mod p in
     let beta := square_root p alpha in
       match beta with
       | None => None
       | Some beta' =>
-          if Bool.eqb (odd beta') y_tide then Some (xp, beta')
+          if Bool.eqb (odd beta') y_tilde then Some (xp, beta')
           else Some (xp, (p - beta'))
       end.
 
@@ -143,15 +143,15 @@ Definition FindRoot_bfp (m gp beta : N) : option N :=
 
 (*
 (* A.5.3 *)
-Definition recover_b (m gp a b xp : N)(yp_tide : bool) : option (N * N):=
+Definition recover_b (m gp a b xp : N)(yp_tilde : bool) : option (N * N):=
   if xp =? 0 then Some (xp, (Bp_power m gp b (N.shiftl 1 (m - 1)))) else
   let beta := B_add (B_add xp a) (Bp_mul gp b (Bp_sq gp (Bp_inv m gp xp))) in
   match FindRoot_bfp m gp beta with
   | None => None
   | Some z => 
-     let z_tide := N.odd z in
-     (* b.4 compares yp !=? z_tide, which I think is a typo *)
-     let yp := Bp_mul gp xp (if (Bool.eqb yp_tide z_tide) then z else z + 1) in
+     let z_tilde := N.odd z in
+     (* b.4 compares yp !=? z_tilde, which I think is a typo *)
+     let yp := Bp_mul gp xp (if (Bool.eqb yp_tilde z_tilde) then z else z + 1) in
       Some (xp, yp)
   end. 
 *)
@@ -185,7 +185,7 @@ Fixpoint mul_m_tail (x : bL)(y : bL)(acc : bL) : bL :=
 Definition mul_m (x : bL)(y : bL) : bL :=
   mul_m_tail x y []. 
 
-Definition tide_m (xp : bL)(yp : bL) : bool :=
+Definition tilde_m (xp : bL)(yp : bL) : bool :=
   List.last (mul_m yp (inv_m xp)) false. 
 *)
 
@@ -199,15 +199,15 @@ Definition Point2BL (f2Bl : N -> BL)(cp : cmp_type)(xp : N)(yp : N) : BL :=
   let X1 := f2Bl xp in (* a *)
   match cp with
   | cmp => (* b *)
-      let yp_tide := tide_p yp in
-      match yp_tide with
+      let yp_tilde := tilde_p yp in
+      match yp_tilde with
       | false => x02 :: X1
       | true => x03 :: X1
       end
   | ucp => (* c *)
       x04 :: (X1 ++ (f2Bl yp))
   | mix => (* d *)
-      match tide_p yp with
+      match tilde_p yp with
       | false => (x06 :: X1) ++ (f2Bl yp)
       | true => (x07 :: X1) ++ (f2Bl yp)
       end

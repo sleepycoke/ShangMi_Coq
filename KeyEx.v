@@ -54,9 +54,9 @@ Definition ComputeW (n : N) : N :=
 
 (*B1 - B9*)
 Definition ComputeV (ml : GE -> N -> GE)
-  (ad : GE -> GE -> GE)(n h t x_tide  : N)
+  (ad : GE -> GE -> GE)(n h t x_tilde  : N)
   (P R : GE): GE :=
-  ml (ad P (ml R x_tide)) (P_mul n h t). 
+  ml (ad P (ml R x_tilde)) (P_mul n h t). 
 Definition ComputeK (m : N)(hash_v : bL -> bL)(v : nat)
   (klen : nat)(x y : N)(ZA ZB : bL) : bL :=
   let Ntobl := 
@@ -72,8 +72,8 @@ Definition ComputeS (m : N)(hash_v : bL -> bL)
     (Ntobl y1) ++ (Ntobl x2) ++ (Ntobl y2)))). 
 
 (* A5 *)
-Definition ComputeT (n d x_tide r : N) : N :=
- P_add n d (x_tide * r). 
+Definition ComputeT (n d x_tilde r : N) : N :=
+ P_add n d (x_tilde * r). 
 Definition ComputeRBKBSB (hash_v : bL -> bL)(v : nat)
   (klen : nat)(comk : (bL -> bL) -> nat ->nat -> N 
     -> N -> bL -> bL -> bL)
@@ -88,17 +88,17 @@ Definition ComputeRBKBSB (hash_v : bL -> bL)(v : nat)
   | Cop (x2, y2) =>
       (* w2 := 2^w < n by definiton of w *)
       let w := ComputeW n in
-      let x2_tide := ComputeTide w x2 in
-      let tB := ComputeT n dB x2_tide rB in
+      let x2_tilde := ComputeTide w x2 in
+      let tB := ComputeT n dB x2_tilde rB in
       (* B5 *)
       match RA with
       | InfO => Error "RA = InfO"
       | Cop (x1, y1) => 
       if negb (OnCrv x1 y1) 
       then Error "RA is not on the curve" else 
-        let x1_tide := ComputeTide w x1 in
+        let x1_tilde := ComputeTide w x1 in
         (* B6 *)
-        let V := ComputeV ml ad n h tB x1_tide PA RA in
+        let V := ComputeV ml ad n h tB x1_tilde PA RA in
         match V with
         | InfO => Error "V = InfO"
         | Cop (xV, yV) =>
@@ -139,16 +139,16 @@ Definition ComputeKAS1SA (hash_v : bL -> bL)(v : nat)
   | InfO => Error "RA = InfO"
   | Cop (x1, y1) =>
       let w := ComputeW n in
-      let x1_tide := ComputeTide w x1 in
-      let tA := ComputeT n dA x1_tide rA in
+      let x1_tilde := ComputeTide w x1 in
+      let tA := ComputeT n dA x1_tilde rA in
       match RB with
       (*RB cannot be InfO since rB < n*)
       | InfO => Error "RB = InfO" 
       | Cop (x2, y2) =>
         if negb (OnCrv x2 y2) 
           then Error "RB is not on curve"
-        else let x2_tide := ComputeTide w x2 in
-        let U := ComputeV ml ad n h tA x2_tide PB RB in  
+        else let x2_tilde := ComputeTide w x2 in
+        let U := ComputeV ml ad n h tA x2_tilde PB RB in  
         match U with
         | InfO => Error "U = InfO"
         | Cop (xU, yU) =>
@@ -256,14 +256,14 @@ Definition y2 := hStoN "54C9288C 82733EFD F7808AE7
 Compute (x2, y2). Correct *)
 
 (*Compute NtohS (ComputeTide w x2 p). Correct*)
-Definition x2_tide := hStoN "B8F2B533 7B3DCF45 14E8BBC1 
+Definition x2_tilde := hStoN "B8F2B533 7B3DCF45 14E8BBC1 
 9D900EE5".
 Definition tB := hStoN "2B2E11CB F03641FC 3D939262 
 FC0B652A 70ACAA25 B5369AD3 8B375C02 65490C9F". 
-(*Compute NtohS (P_add dB (x2_tide * rB) n).  Correct *)
+(*Compute NtohS (P_add dB (x2_tilde * rB) n).  Correct *)
 
 (* Compute ComputeW n. Correct should be 127*)
-Definition x1_tide := 
+Definition x1_tilde := 
   hStoN "E856C095 05324A6D 23150C40 8F162BF0". 
 (*Compute NtohS (ComputeTide w2 x1 p). Correct *) 
 Definition RA := Cop (x1, y1). 
@@ -275,7 +275,7 @@ Definition xA0 := hStoN "2079015F 1A2A3C13 2B67CA90
 Definition yA0 := hStoN "6B3FE6FB 0F5D5664 DCA16128 
   B5E7FCFD AFA5456C 1E5A914D 1300DB61 F37888ED". 
 (*Compute Cop (xA0, yA0). 
-Time Compute ComputeR RA x1_tide p a. Correct *)
+Time Compute ComputeR RA x1_tilde p a. Correct *)
 Definition RA0 := Cop (xA0, yA0). 
 Definition xA1 := hStoN "1C006A3B FF97C651 B7F70D0D 
   E0FC09D2 3AA2BE7A 8E9FF7DA F32673B4 16349B92".
