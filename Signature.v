@@ -53,23 +53,22 @@ End gml_sec.
 (* 6.1 *)
 (* TODO How to generate klist? *)
 Definition SigWithList (curve : ECurve)
-  (n xG yG ENTL_A ID_A dA xA yA M : bL)(klist : list N)
+  (nbL xGbL yGbL ENTL_A ID_A dAbL xAbL yAbL M : bL)(klist : list N)
   : option (bL * (bL * bL)) :=
   let gml := 
     match curve with 
-    | pf_curve a _ _ => pf_mul a
-    | bf_curve a _ _ => pf_mul a (*TODO bf case*)
+    | pf_curve a' _ _ => pf_mul a'
+    | bf_curve a' _ _ => pf_mul a' (*TODO bf case*)
     end in
   let (a, b) := match curve with 
-    | pf_curve a' b' _ => (uw a', uw b') 
-    | bf_curve a' b' _ => (uw a', uw b')
+    | pf_curve a' b' _ | bf_curve a' b' _ => (uw a', uw b')
   end in
-  let Z_A := ComputeZ ENTL_A ID_A (NtobL a) (NtobL b) xG yG xA yA in
+  let Z_A := ComputeZ ENTL_A ID_A (NtoBbL a) (NtoBbL b) xGbL yGbL xAbL yAbL in
   let e := bLtoN (hash (Z_A ++ M)) in
-    match TrySigWithList gml (GE_wp fd (bLtoN xG, bLtoN yG))
-      (bLtoN n) (bLtoN dA) e klist with
+    match TrySigWithList gml (GE_wp fd (bLtoN xGbL, bLtoN yGbL))
+      (bLtoN nbL) (bLtoN dAbL) e klist with
       | None => None
-      | Some (r, s) => Some (M, ((NtobL r), (NtobL s)))
+      | Some (r, s) => Some (M, ((NtoBbL r), (NtoBbL s)))
     end.
     
 (*
@@ -95,8 +94,7 @@ Open Scope N_scope.
 
 (* None if passed, otherwise Some error message *)
 Definition VeriSig_inner (gml : grp -> N -> grp)(gad : grp -> grp -> grp)
-  (n xG yG xA yA : N)(r'bL s'bL Z_A M' : bL) : option string :=
-  let (r', s') := ((bLtoN r'bL), (bLtoN s'bL)) in
+  (n xG yG xA yA r' s' : N)(Z_A M' : bL) : option string :=
   if negb (inRange r' 1 (n - 1)) then Some "r' out of range" else
   if negb (inRange s' 1 (n - 1)) then Some "s' out of range" else
   let e' := bLtoN (hash (Z_A ++ M')) in
@@ -111,14 +109,15 @@ Definition VeriSig_inner (gml : grp -> N -> grp)(gad : grp -> grp -> grp)
       if R =? r' then None else Some "R != r'"
   end. 
 
-Definition VeriSig (curve : ECurve)(a n xG yG xA yA : N)
-  (r'bL s'bL Z_A M' : bL) : option string :=
+Definition VeriSig (curve : ECurve)(n xG yG xA yA r' s' Z_A M' : bL)
+ : option string :=
   let (gml, gad) := 
     match curve with 
     | pf_curve a _ _ => (pf_mul a, pf_add a)
     | bf_curve a _ _ => (pf_mul a, pf_add a) (*TODO bf case*)
     end in
-  VeriSig_inner gml gad n xG yG xA yA r'bL s'bL Z_A M'.
+  VeriSig_inner gml gad (bLtoN n) (bLtoN xG) (bLtoN yG)
+   (bLtoN xA) (bLtoN yA) (bLtoN r') (bLtoN s') Z_A M'.
 
 (*
 Definition VeriSig_pf (p a n xG yG xA yA : N)(r'bL s'bL Z_A M' : bL) : option string :=
