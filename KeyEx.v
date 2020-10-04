@@ -41,11 +41,10 @@ Definition KDF (Z : bL)(klen : nat)(hash_v : bL -> bL)
   end. 
 
 (* A1 - A3 *)
-Definition ComputeR (ml : GE -> N -> GE)(G : GE)(r : N)
- : GE :=
-  ml G r. 
+Definition ComputeR (ml : GE -> N -> GE)(G : GE)(r : N) : GE :=
+   ml G r. 
 
-Definition ComputeTide (w x : N) : N :=
+Definition ComputeTilde (w x : N) : N :=
       let w2 := N.shiftl 1 w in
       w2 + (N.land x (w2 - 1) ). 
 
@@ -88,7 +87,7 @@ Definition ComputeRBKBSB (hash_v : bL -> bL)(v : nat)
   | Cop (x2, y2) =>
       (* w2 := 2^w < n by definiton of w *)
       let w := ComputeW n in
-      let x2_tilde := ComputeTide w x2 in
+      let x2_tilde := ComputeTilde w x2 in
       let tB := ComputeT n dB x2_tilde rB in
       (* B5 *)
       match RA with
@@ -96,7 +95,7 @@ Definition ComputeRBKBSB (hash_v : bL -> bL)(v : nat)
       | Cop (x1, y1) => 
       if negb (OnCrv x1 y1) 
       then Error "RA is not on the curve" else 
-        let x1_tilde := ComputeTide w x1 in
+        let x1_tilde := ComputeTilde w x1 in
         (* B6 *)
         let V := ComputeV ml ad n h tB x1_tilde PA RA in
         match V with
@@ -139,7 +138,7 @@ Definition ComputeKAS1SA (hash_v : bL -> bL)(v : nat)
   | InfO => Error "RA = InfO"
   | Cop (x1, y1) =>
       let w := ComputeW n in
-      let x1_tilde := ComputeTide w x1 in
+      let x1_tilde := ComputeTilde w x1 in
       let tA := ComputeT n dA x1_tilde rA in
       match RB with
       (*RB cannot be InfO since rB < n*)
@@ -147,7 +146,7 @@ Definition ComputeKAS1SA (hash_v : bL -> bL)(v : nat)
       | Cop (x2, y2) =>
         if negb (OnCrv x2 y2) 
           then Error "RB is not on curve"
-        else let x2_tilde := ComputeTide w x2 in
+        else let x2_tilde := ComputeTilde w x2 in
         let U := ComputeV ml ad n h tA x2_tilde PB RB in  
         match U with
         | InfO => Error "U = InfO"
@@ -255,7 +254,7 @@ Definition y2 := hStoN "54C9288C 82733EFD F7808AE7
 (* Time Compute ComputeR G r p a.       
 Compute (x2, y2). Correct *)
 
-(*Compute NtohS (ComputeTide w x2 p). Correct*)
+(*Compute NtohS (ComputeTilde w x2 p). Correct*)
 Definition x2_tilde := hStoN "B8F2B533 7B3DCF45 14E8BBC1 
 9D900EE5".
 Definition tB := hStoN "2B2E11CB F03641FC 3D939262 
@@ -265,7 +264,7 @@ FC0B652A 70ACAA25 B5369AD3 8B375C02 65490C9F".
 (* Compute ComputeW n. Correct should be 127*)
 Definition x1_tilde := 
   hStoN "E856C095 05324A6D 23150C40 8F162BF0". 
-(*Compute NtohS (ComputeTide w2 x1 p). Correct *) 
+(*Compute NtohS (ComputeTilde w2 x1 p). Correct *) 
 Definition RA := Cop (x1, y1). 
 Definition RB := Cop (x2, y2). 
 Definition PA := Cop (xA, yA). 
