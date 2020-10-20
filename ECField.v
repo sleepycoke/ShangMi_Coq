@@ -1,51 +1,7 @@
 Require Export DataTypes. 
 Open Scope list_scope. 
 (*TODO rename *)
-
-(* Primal field arithmetics. *)
-Definition P_add (p x y : N) :=
-  (x + y) mod p. 
-
-Definition P_mul (p x y : N) :=
-  (x * y) mod p.
-
-Definition P_opp (p x : N) :=
-  (p - (x mod p)) mod p. 
-
-Definition P_sub (p x y : N) :=
-  P_add p x (P_opp p y). 
-
-Definition P_sq (p x : N) :=
-  (N.square x) mod p. 
   
-(*B.1.1*)
-Fixpoint power_tail (g : N)(e : bL)(q : N)(sq : N -> N)
-  (mp : N ->  N -> N)(acc : N) : N :=
-  match e with
-  | [] => acc
-  | h :: tl =>
-      power_tail g tl q sq mp
-      match h with
-      | true => (mp (sq acc) g) 
-      | false => (sq acc)
-      end
-  end.
-
-(* Returns g ^ a, q is the size of the field *) 
-Definition power_general (g : N)(a : N)(q : N)(sq : N -> N)
-  (mp : N -> N -> N)  : N :=
-  let e := N.modulo a (q - 1) in
-  power_tail g (NtobL e) q sq mp 1. 
-
-Definition P_pow (p : N)(g : N)(a : N) : N :=
-  power_general g a p (P_sq p) (P_mul p). 
-
-(* B.1.2 *)
-Definition P_inv (p g : N) :=
-  P_pow p g (p - 2). 
-Definition P_div (p : N)(x : N)(y : N) : N :=
-  P_mul p x (P_inv p y). 
-
 (* Binary fields arithmetics *)
 Definition B_add (x y : N) : N :=
   N.lxor x y.
@@ -102,41 +58,18 @@ Definition Bp_cb (gp x : N) :=
   Bp_mul gp x (Bp_sq gp x). 
 
 (* Polynomial Base *)
-Definition Bp_pow (m : N)(gp : N)(g : N)(a : N) : N :=
+(*Definition Bp_pow (m : N)(gp : N)(g : N)(a : N) : N :=
   power_general g a (N.shiftl 1 m)(Bp_sq gp)(Bp_mul gp). 
 
 Definition Bp_inv (m gp g : N) : N :=
   Bp_pow m gp g ((N.shiftl 1 m) - 2).
 
 Definition Bp_div (m gp x y : N) : N :=
-  Bp_mul gp x (Bp_inv m gp y). 
+  Bp_mul gp x (Bp_inv m gp y). *)
 
-(* The order of a primal field, a prime number greater than 3 *)
-Record prime_order : Type := mkpo {order : N; gt3 : order > 3 }. 
 
-(* The type of an element of F_p *)
-Record Fpe (po : prime_order) : Type := 
-  mkFpe {val : N; inrng : val < order po}. 
-(* The type of an element of F_2m *)
-Record Fbe (len : N) : Type := mkFbe {num : N; inlen : N.size num <= len}. 
-(* U is the type of elements *)
 
-(* U is the type of field elements. id0 is the identity of addition.
-id1 is the identity of multiplication. The rest are operators on the field.  *)
-Record ECField : Type := mkField {U : Type; wrapper : N -> U; unwrapper : U -> N;
-  id0 : U; id1 : U; eql : U -> U -> bool; opp : U -> U;
-     inv : U -> U; add : U -> U -> U; sub : U -> U -> U;
-       mul : U -> U -> U; div : U -> U -> U; dbl : U -> U;
-         squ : U -> U; pow : U -> N -> U}. 
-
-Inductive FieldType : Type := primal_field | binary_field.  
-(*
-Inductive EC_Field : Type :=
-  | primal : ECField -> EC_Field
-  | binary : ECField -> EC_Field.
-*)
-
-Lemma id0_inrng (po : prime_order) : 0 < order po. 
+(*Lemma id0_inrng (po : prime_order) : 0 < order po. 
 Proof.
 destruct po as [p H]. 
 simpl. inversion H.
@@ -157,89 +90,4 @@ Definition id0_builder_pf (po : prime_order) : Fpe po :=
 
 Definition id1_builder_pf (po : prime_order) : Fpe po :=
   mkFpe po 1 (id1_inrng po). 
-
-Lemma mod_inrng (po : prime_order) (a : N) :
-  a mod (order po) < (order po).
-Proof.
-intros. 
-destruct po as [p H]. 
-assert (H0: p <> 0). {
-  inversion H. unfold not. unfold eq. 
-  intros. rewrite H0 in H1. inversion H1.      
- }
-apply mod_lt. apply H0. 
-Qed.
-
-Definition pfe_builder (po: prime_order)(n : N) : Fpe po :=
-    mkFpe po (n mod (order po)) (mod_inrng po n). 
-
-Definition pfe_id0_bd (po : prime_order) : Fpe po :=
-  pfe_builder po 0. 
-
-Lemma add_inrng (po : prime_order)(x y : Fpe po) : 
-  P_add (order po) (val po x) (val po y) < (order po). 
-Proof. apply mod_inrng. Qed.
-
-Lemma opp_inrng (po : prime_order)(x : Fpe po) : 
-  P_opp (order po) (val po x) < (order po). 
-Proof. apply mod_inrng. Qed.
-
-Lemma sub_inrng (po : prime_order)(x y : Fpe po) : 
-  P_sub (order po) (val po x) (val po y) < (order po). 
-Proof. apply mod_inrng. Qed.
-
-Lemma dbl_inrng (po : prime_order)(x : Fpe po) : 
-  (N.double  (val po x)) mod (order po) < (order po). 
-Proof. apply mod_inrng. Qed.
-
-Lemma sq_inrng (po : prime_order)(x : Fpe po) : 
-  P_sq (order po) (val po x) < (order po). 
-Proof. apply mod_inrng. Qed.
-
-Lemma pow_inrng (po : prime_order)(g : Fpe po)(a : N): 
-  P_pow (order po) (val po g) a < (order po). 
-Proof. 
-Admitted. 
-
-Lemma mul_inrng (po : prime_order)(x y : Fpe po) : 
-  P_mul (order po) (val po x) (val po y) < (order po). 
-Proof. apply mod_inrng. Qed.
-
-Lemma div_inrng (po : prime_order)(x y : Fpe po) : 
-  P_div (order po) (val po x) (val po y) < (order po). 
-Proof. apply mod_inrng. Qed.
-
-Lemma inv_inrng (po : prime_order)(x : Fpe po) : 
-  P_inv (order po) (val po x) < (order po). 
-Proof. Admitted. 
-
-Definition po_eq (po : prime_order)(x y : Fpe po) : bool :=
-  (val po x) =? (val po y). 
-Definition po_add (po : prime_order)(x y : Fpe po) : Fpe po :=
-    mkFpe po (P_add (order po) (val po x) (val po y)) (add_inrng po x y). 
-Definition po_sub (po : prime_order)(x y : Fpe po) : Fpe po :=
-    mkFpe po (P_sub (order po) (val po x) (val po y)) (sub_inrng po x y). 
-Definition po_mul (po : prime_order)(x y : Fpe po) : Fpe po :=
-    mkFpe po (P_mul (order po) (val po x) (val po y)) (mul_inrng po x y). 
-Definition po_div (po : prime_order)(x y : Fpe po) : Fpe po :=
-    mkFpe po (P_div (order po) (val po x) (val po y)) (div_inrng po x y). 
-Definition po_opp (po : prime_order)(x : Fpe po) : Fpe po :=
-    mkFpe po (P_opp (order po) (val po x)) (opp_inrng po x). 
-Definition po_inv (po : prime_order)(x : Fpe po) : Fpe po :=
-    mkFpe po (P_inv (order po) (val po x)) (inv_inrng po x). 
-Definition po_dbl (po : prime_order)(x : Fpe po) : Fpe po :=
-    mkFpe po ( (N.double (val po x)) mod (order po) ) (dbl_inrng po x). 
-Definition po_sq (po : prime_order)(x : Fpe po) : Fpe po :=
-    mkFpe po (P_sq (order po) (val po x)) (sq_inrng po x). 
-Definition po_pow (po : prime_order)(g : Fpe po)(a : N) : Fpe po :=
-    mkFpe po (P_pow (order po) (val po g) a) (pow_inrng po g a). 
-
-(* TODO Consider make pf_builder a constructor of ECField *)
-Definition pf_builder (p : N)(gt3 : p > 3) : ECField :=
-  let po := mkpo p gt3 in
-  let U := Fpe po in
-  mkField U (pfe_builder po) (val po)
-  (pfe_builder po 0) (pfe_builder po 1) (po_eq po)
-  (po_opp po) (po_inv po) (po_add po) (po_sub po) (po_mul po)
-  (po_div po) (po_dbl po) (po_sq po) (po_pow po).
-   
+  *)

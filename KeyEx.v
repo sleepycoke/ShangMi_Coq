@@ -1,5 +1,7 @@
 Require Export Signature. 
 
+
+
 (* TODO Should we imp a general hash_v here? 
 ignored for now *)
 (* j = ceil(klen/v) - i, from ceil(klen/v) - 1 to 0 *)
@@ -40,9 +42,17 @@ Definition KDF (Z : bL)(klen : nat)(hash_v : bL -> bL)
         (Computek tl []) ++ HaiEx
   end. 
 
+Section keyex_sec.
+
+Context {fd : ECField}. 
+Definition grp := GE fd. 
+
 (* A1 - A3 *)
-Definition ComputeR (ml : GE -> N -> GE)(G : GE)(r : N) : GE :=
-   ml G r. 
+Definition ComputeR (crv : ECurve)(G : grp)(r : N) : grp :=
+  match crv with
+  | pf_curve a _ _ => pf_mul a G r
+  | bf_curve a _ _ => pf_mul a G r (*TODO bf*)
+  end. 
 
 Definition ComputeTilde (w x : N) : N :=
       let w2 := N.shiftl 1 w in

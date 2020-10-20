@@ -3,6 +3,7 @@ Require Export ECField.
 Open Scope N_scope. 
 
 Section ecdef_sec.
+Import ecarith_mod. 
 
 (* Elliptic Curve Group element: O or coordinated points *)
 (* Affine Coordinates *)
@@ -17,8 +18,10 @@ Definition InfO_PC (fd : ECField) := Tri fd (id0 fd, id1 fd, id0 fd).
 
 (*Wraps an N * N to a GE*)
 Definition GE_wp (fd : ECField)(xy : N * N) : GE fd :=
-  let wp := wrapper fd in
-    match xy with (x, y) => Cop fd (wp x, wp y) end. 
+  let wp := wrp fd in
+    match xy with (x, y) => Cop fd (wp x, wp y) end.
+    
+Print ad. 
 
 (*Wraps an N * N * N to a GE_PC*)
 Definition GE_PC_wp (fd : ECField)(xyz : N * N * N) : GE_PC fd :=
@@ -44,27 +47,8 @@ Definition GE_PC_uwp {fd : ECField}(P : GE_PC fd) :=
     ((N.square y) mod p =? ((P_pow p x 3) + a * x + b) mod p). 
 
 End ecdef_sec. 
-
-Section ecarith_sec.
-
+Section ecarith_sec. 
 Context {fd : ECField}. 
-Definition u := U fd.
-Definition wp : N -> u := wrapper fd.
-Definition uw : u -> N := unwrapper fd.
-Definition i0 := id0 fd.
-Definition i1 := id1 fd.
-Definition eq : u -> u -> bool := eql fd.
-Definition eq0 := eq i0. 
-Definition op := opp fd.
-Definition iv := inv fd.
-Definition ad := add fd.
-Definition sb := sub fd.
-Definition ml := mul fd.
-Definition dv := div fd.
-Definition sq := squ fd.
-Definition db := dbl fd.
-Definition pw := pow fd.
-
 Definition grp := GE fd. 
 Definition o := InfO fd. 
 Definition o_pc := InfO_PC fd. 
@@ -76,24 +60,6 @@ Definition f3 := wp 3.
 Definition f4 := wp 4. 
 Definition f8 := wp 8. 
 
-Notation "- x" := (op x). 
-Infix "+" := ad.
-Infix "-" := sb.
-Infix "*" := ml. 
-Infix "/" := dv.
-Infix "^" := pw. 
-Infix "=?" := eq.
-
-(* Regular Condition on Primal Fields *)
-Definition pf_rgl_cdt (a b : u) : Prop :=
-  let (f4, f27) := (wp 4, wp 27) in
-  let ad1 := f4 * a^3 in
-  let ad2 := f27 * (sq b) in
-    ad1 + ad2 =? i0 = false. 
-
-Inductive ECurve : Type :=
-  | pf_curve (a b : u) (rgl : pf_rgl_cdt a b) 
-  | bf_curve (a b : u) (rgl : b =? i0 = false) . 
 
 Definition OnCurve (curve : ECurve) (x y : u) : bool := 
   match curve with 
