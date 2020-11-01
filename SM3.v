@@ -1,6 +1,7 @@
 Require Export SMlib.
 Require Export DataTypes. 
  
+Open Scope N_scope. 
 Open Scope list_scope. 
 
 Definition IV := 
@@ -38,7 +39,7 @@ Definition Padding (m : bL) (l : N) : bL :=
   List.app ( iter (pad_k l) (fun (s : bL) => List.app s [false]) (List.app m [true])
   ) (prePad64 (NtobL l)). 
 
-Definition n_of_B (l : N) := div (l + (pad_k l) + 65) 512. 
+Definition n_of_B (l : N) := (l + (pad_k l) + 65) / 512. 
 
 Definition Block (i : nat)(m : bL)(l : N) : N :=
   bLtoN (subList (Nat.mul i 512%nat) 512 (Padding m l)).

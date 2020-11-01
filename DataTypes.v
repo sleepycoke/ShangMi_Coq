@@ -1,281 +1,4 @@
-Require Export SMlib.
-Require Export Coq.Strings.Ascii.
-
-(* ByteList is indeed a list of bytes*)
-Definition BL := list byte. 
-(* BitList is indeed a list of bool*)
-Definition bL := list bool. 
-Fixpoint bStobL_tail (bs : string)(acc : bL) : bL :=
-  match bs with
-  | EmptyString => acc 
-  | String head tl =>
-      match ascii_to_digit head with
-      | Some 1 => bStobL_tail tl (List.app acc [true])
-      | _ => bStobL_tail tl (List.app acc [false])
-      end
-  end.
-
-Open Scope list_scope. 
-
-Definition bStobL (bs : string) : bL :=
-  bStobL_tail bs []. 
-
-Fixpoint bLtobS_tail (bl : bL)(acc : string) : string :=
-  match bl with
-  | [] => acc
-  | head :: tl =>
-      match head with
-      | true => bLtobS_tail tl (acc ++ "1")
-      | false => bLtobS_tail tl (acc ++ "0")
-      end
-  end.
-
-Definition bLtobS (bl : bL) : string :=
-  bLtobS_tail bl "". 
-
-Fixpoint BLtoN_tail (Bl : BL)(acc : N) : N :=
-  match Bl with
-  | [] => acc
-  | h :: tl =>
-      BLtoN_tail tl (acc * 256 + (Byte.to_N h)) 
-  end.
-
-(*4.2.2*)
-Definition BLtoN (Bl : BL) : N :=
-  BLtoN_tail Bl 0.
-
-Definition NtoByte (n : N) : byte :=
-  match Byte.of_N n with
-  | None => x00
-  | Some b => b
-  end.
-
-Fixpoint NtoBL_tail (k : nat)(x : N)(acc : BL) : BL :=
-  match k with
-  | O => acc
-  | S k' => 
-      NtoBL_tail k' (N.div x 256) (NtoByte (N.modulo x 256) :: acc)
-  end.
-
-(*4.2.1 trunk from right*)
-Definition NtoBL_len (k : nat)(x : N) : BL :=
-  NtoBL_tail k x [].
-
-Definition NtoBL (x : N) : BL :=
-  NtoBL_len (N.to_nat (N.div (N.add (N.size x) 7) 8)) x. 
-
-(* Transform the first k(<= 8) bits into an N *)  
-Fixpoint bLtoN_tail (bl : bL)(k : nat)(acc : N) : N :=
-  match k with
-  | O => acc
-  | S k' => 
-      match bl with
-      | [] => acc
-      | h :: tl => 
-          match h with
-          | false => bLtoN_tail tl k' (N.double acc)
-          | true => bLtoN_tail tl k' (N.add 1 (N.double acc))
-          end
-      end
-  end.
-
-(*4.2.2*)
-Definition bLtoN (bl : bL) :=
-  bLtoN_tail bl (List.length bl) 0.
-
-Definition bLtoN_prefix (bl :bL)(k : nat) : N :=
-  bLtoN_tail bl k 0.
-
-(* tranfrom the first k bits into a byte *)
-Definition bLtoByte (bl : bL)(k : nat) :=
-  NtoByte (bLtoN_prefix bl k). 
-
-
-
-(*4.2.3*)
-Fixpoint bLtoBL_tail (s : bL)(k : nat)(acc : BL) : BL :=
-  match k with
-  | O => acc 
-  | S k' =>
-      (fun sl => bLtoBL_tail (fst sl) k' 
-      (List.app [bLtoByte (snd sl) 8] acc)) (partListBack s 8)
-  end.
-
-
-Definition bLtoBL (s : bL) : BL :=
-  bLtoBL_tail s (Nat.div (Nat.add(List.length s) 7%nat) 8%nat) []. 
-
-Fixpoint NtobL_tail (n : N)(k : nat)(acc : bL) : bL :=
-  match k with
-  | O => acc
-  | S k' => 
-      NtobL_tail (N.div n 2) k' (N.odd n :: acc)
-  end.
-
-(* [] for 0, trunk from right. *)
-Definition NtobL_len (len : nat)(n : N) : bL :=
-  NtobL_tail n len []. 
-
-Definition NtobL (n : N) : bL :=
-  NtobL_len (N.to_nat (N.size n)) n.
-
-Definition bStoN (bs : string) : N :=
-  bLtoN (bStobL bs). 
-
-
-(*4.2.4*)
-(*2019-10-09, realized that I need to keep preceding 0s 
-* And it is only used in KeyEx.v yet. *)
-Fixpoint BLtobL_tail (M : BL)(k : nat)(acc : bL) : bL :=
-  match k with
-  | O => acc
-  | S k'=> 
-      match M with
-      | [] => acc
-      | h :: tl =>
-          BLtobL_tail tl k' (List.app acc (NtobL_len 8 (Byte.to_N h)))
-      end
-  end.
-
-Definition BLtobL (M : BL) : bL :=
-  BLtobL_tail M (List.length M) [].
-
-Definition NtoBbL (n : N) : bL := BLtobL (NtoBL n). 
-
-(*Padding len to a multiplier of 8*)
-(*Croping from the rightside *)
-Definition NtoBbL_len (len : nat)(n : N) : bL := 
-  BLtobL (NtoBL_len (div_ceil_nat len 8%nat) n). 
-
-Definition NtobS (n : N) : string :=
-  bLtobS (NtobL n).
-
-Definition NtobS_len (n : N)(len : nat) : string :=
-  bLtobS (NtobL_len len n).
-
-Definition rmsp (s : string) := (RepChar s " "%char ""%string). 
-Fixpoint hStobS_tail (m_hex : string)(acc : string) : string :=
-  match m_hex with
-  | "" => acc
-  | String h tl =>
-      match HexString.ascii_to_digit h with
-      | None => ""
-      | Some v => hStobS_tail tl (acc ++ NtobS_len v 4)
-      end
-  end. 
-
-Definition hStobS (m_hex : string) : string :=
-  hStobS_tail (rmsp m_hex) "".
-
-Definition hStoN (m_hex : string) : N :=
-  HexString.Raw.to_N (rmsp m_hex) 0. 
-
-(*
-Definition hChartobL (m_hex : string) : bL :=
-  let rawbl := NtobL (hStoN m_hex) in
-    List.app
-    match (Nat.modulo (List.length rawbl) 4) with
-    | 1%nat => [false; false; false] 
-    | 2%nat => [false; false] 
-    | 3%nat => [false]
-    | _ => [false; false; false; false]
-    end
-    rawbl. 
-    *)
-Definition hStobL (hs : string) :=
-  bStobL (hStobS hs). 
-
-Definition NtohS (n : N) : string :=
-  match n with
-  | Npos p => HexString.Raw.of_pos p ""
-  | N0 => ""
-  end.  
-
-Definition NtohChar (n : N) : string :=
-  match n with
-  | Npos p => HexString.Raw.of_pos p ""
-  | N0 => "0"
-  end. 
-
-Fixpoint bLtohS_tail (bl : bL)(hSLen : nat)(acc : string) : string :=
-  match hSLen with
-  | O => acc
-  | S len' =>
-  let (pre, suf) := partListBack bl 4 in
-    match suf with
-    | [] => acc
-    | _ => bLtohS_tail pre len' ((NtohChar (bLtoN suf)) ++ acc)
-    end
-  end.
-
-Definition bLtohS (bl : bL) : string :=
-  bLtohS_tail bl (Nat.div (Nat.add (length bl) 3%nat) 4%nat) "".
-
-Definition bStohS (m_bin : string) : string :=
-  bLtohS (bStobL m_bin). 
-
-Fixpoint strtobL_tail (s : string)(acc : bL) :=
-  match s with
-  | "" => acc
-  | String c tl =>
-      strtobL_tail tl (List.app acc (NtobL_len 8 (N_of_ascii c)))
-  end. 
-
-Definition strtobL (s : string) :=
-  strtobL_tail s [].
-
-Fixpoint BLtostr_tail (Bl : BL)(acc : string) :=
-  match Bl with
-  | [] => acc
-  | h :: tl =>
-      BLtostr_tail tl (acc ++ (String (ascii_of_N (Byte.to_N h)) ""))
-  end. 
- 
-Definition BLtostr (Bl : BL) :=
-  BLtostr_tail Bl "". 
-
-Definition bLtostr (bl : bL) := 
-  BLtostr (bLtoBL bl). 
-
-
-Fixpoint bLeqb (bl1 bl2 : bL) : bool :=
-  match bl1, bl2 with
-  | [], [] => true
-  | h1 :: t1, h2 :: t2 => 
-      if Bool.eqb h1 h2 then bLeqb t1 t2
-        else false
-  | _, _ => false
-  end. 
-
-Fixpoint All0bL (bl : bL) : bool :=
-  match bl with
-  | [] => true
-  | true :: tl => false
-  | false :: tl =>
-      All0bL tl
-  end. 
-
-Fixpoint bLXOR_tail (a b acc : bL) : bL :=
-  match a, b with
-  | ha :: ta, hb :: tb =>
-       bLXOR_tail ta tb ((xorb ha hb) :: acc)
-  | [], _ => List.app (rev b) acc
-  | _, [] => List.app (rev a) acc 
-  end. 
-
-(* a and b are aligned to the right and 
- keep the overhead to the left of the result *)
-Definition bLXOR (a b : bL) :=
-  (bLXOR_tail (rev a) (rev b) []).
-
-(*
-Compute bLXOR (bStobL "111") (bStobL "1"). 
-Compute bLXOR (bStobL "110") (bStobL "1"). 
-Compute bLXOR (bStobL "011") (bStobL "1"). 
-Compute bLXOR (bStobL "11111101") (bStobL "111"). 
-Compute bLXOR (bStobL "111") (bStobL "11111101"). 
-Compute bLXOR (bStobL "111001") (bStobL "11111101"). 
-*)
+Require Export BasicTypes. 
 (* Primal field arithmetics. *)
 Definition P_add (p x y : N) :=
   (x + y) mod p. 
@@ -327,21 +50,22 @@ Definition P_div (p : N)(x : N)(y : N) : N :=
 (* The order of a primal field, a prime number greater than 3 *)
 Record prime_order : Type := mkpo {order : N; gt3 : order > 3 }. 
 
-(* The type of an element of F_p *)
+(* The type of an element in F_p *)
 Record Fpe (po : prime_order) : Type := 
   mkFpe {val : N; inrng : val < order po}. 
-(* The type of an element of F_2m *)
+(* The type of an element in F_2m *)
 Record Fbe (len : N) : Type := mkFbe {num : N; inlen : N.size num <= len}. 
-(* U is the type of elements *)
 
 (* U is the type of field elements. id0 is the identity of addition.
-id1 is the identity of multiplication. The rest are operators on the field.  *)
-Record ECField : Type := mkField {U : Type; wrp : N -> U; uwp : U -> N;
+id1 is the identity of multiplication. wrp is wrapper from N to U and
+uwp is the unwrapper. The rest are operators on the field.  *)
+Class ECField (U: Type) : Type := mkField {wrp : N -> U; uwp : U -> N;
   id0 : U; id1 : U; eql : U -> U -> bool; opp : U -> U;
      inv : U -> U; add : U -> U -> U; sub : U -> U -> U;
        mul : U -> U -> U; div : U -> U -> U; dbl : U -> U;
          squ : U -> U; pow : U -> N -> U}. 
-
+        
+Section inrng_sec. 
 Lemma mod_inrng (po : prime_order) (a : N) :
 a mod (order po) < (order po).
 Proof.
@@ -417,21 +141,22 @@ Definition po_sq (po : prime_order)(x : Fpe po) : Fpe po :=
   mkFpe po (P_sq (order po) (val po x)) (sq_inrng po x). 
 Definition po_pow (po : prime_order)(g : Fpe po)(a : N) : Fpe po :=
   mkFpe po (P_pow (order po) (val po g) a) (pow_inrng po g a). 
+End inrng_sec. 
 
 (* TODO Consider make pf_builder a constructor of ECField *)
-Definition pf_builder (p : N)(gt3 : p > 3) : ECField :=
+(* : ECField (Fpe {| order := p; gt3 := gt3 |})*)
+Definition pf_builder (p : N)(gt3 : p > 3) :=
 let po := mkpo p gt3 in
 let U := Fpe po in
 mkField U (pfe_builder po) (val po)
 (pfe_builder po 0) (pfe_builder po 1) (po_eq po)
 (po_opp po) (po_inv po) (po_add po) (po_sub po) (po_mul po)
   (po_div po) (po_dbl po) (po_sq po) (po_pow po).
-      
+
 Inductive FieldType : Type := primal_field | binary_field.  
 
-Module ecarith_mod.
-
-Context {fd : ECField}. 
+(*
+Context {fd : ECField}
 Definition u := U fd.
 Definition wp : N -> u := wrp fd.
 Definition uw : u -> N := uwp fd.
@@ -458,17 +183,26 @@ Infix "*" := ml.
 Infix "/" := dv.
 Infix "^" := pw. 
 Infix "=?" := eq.
-
+*)
+Declare Scope ecfield_scope. 
+Open Scope ecfield_scope. 
+Notation "- x" := (opp x) : ecfield_scope.
+Infix "+" := add : ecfield_scope. 
+Infix "-" := sub : ecfield_scope.
+Infix "*" := mul : ecfield_scope.
+Infix "/" := div : ecfield_scope.
+Infix "^" := pow : ecfield_scope.
+Infix "=?" := eql : ecfield_scope. 
 (* Regular Condition on Primal Fields *)
-Definition pf_rgl_cdt (a b : u) : Prop :=
-  let (f4, f27) := (wp 4, wp 27) in
-  let ad1 := f4 * a^3 in
-  let ad2 := f27 * (sq b) in
-    ad1 + ad2 =? i0 = false. 
+Definition pf_rgl_cdt {U : Type}{_ : ECField U}(a b : U) : Prop :=
+  let (f4, f27) := (wrp 4, wrp 27) in
+  let ad1 := f4 * (a^3) in
+  let ad2 := f27 * (squ b) in
+    ad1 + ad2 =? id0 = false. 
 
-Inductive ECurve : Type :=
-  | pf_curve (a b : u) (rgl : pf_rgl_cdt a b) 
-  | bf_curve (a b : u) (rgl : b =? i0 = false) . 
+Inductive ECurve {U : Type}{fd : ECField U} : Type :=
+  | pf_curve (a b : U) (rgl : pf_rgl_cdt a b) 
+  | bf_curve (a b : U) (rgl : b =? id0 = false) . 
 
 (*
 Inductive EC_Field : Type :=
@@ -484,13 +218,18 @@ Definition FieldtoBL_p := NtoBL.
 Definition FieldtoBL_b (m : N) :=
   NtoBL_len (N.to_nat (div_ceil_N m 8)). 
 
-Definition FieldtoBL (crv : ECurve)(ele : u) :=
+Definition FieldtoBL {U : Type}{fd : ECField U}(crv : ECurve)(ele : U) :=
   match crv with 
-  | pf_curve _ _ _ => NtoBL (uw ele)
-  | bf_curve _ _ _ => NtoBL (uw ele)
+  | pf_curve _ _ _ => NtoBL (uwp ele)
+  | bf_curve _ _ _ => NtoBL (uwp ele)
   end.
 
- 
+ Definition FieldtobL {U : Type}{fd : ECField U}(crv : ECurve)(ele : U) :=
+  match crv with 
+  | pf_curve _ _ _ => NtoBbL (uwp ele)
+  | bf_curve _ _ _ => NtoBbL (uwp ele)
+  end.
+
 (*4.2.6*)
 Definition BLtoField_p (Bl : BL)(q : N) : option N :=
   (fun (alpha : N)  => if leb q alpha then None else Some alpha) (BLtoN Bl).  
@@ -511,5 +250,3 @@ Definition FieldtoN_m (alpha : bL) : N :=
   *)
 
 Close Scope list_scope.
-
-End ecarith_mod.

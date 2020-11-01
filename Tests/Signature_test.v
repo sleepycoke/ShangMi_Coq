@@ -58,14 +58,14 @@ Definition x1 := hStoN
 Definition y1 := hStoN 
   "1C65D68A 4A08601D F24B431E 0CAB4EBE 084772B3 817E8581 1A8510B2 DF7ECA1A". 
 
-Definition field := pf_builder p Logic.eq_refl <: ECField .
+Definition field := pf_builder p Logic.eq_refl.
 Definition G := GE_wp field (xG, yG). 
-Definition fa := wrapper field a.
+Definition fa := @wrp _ field a.
 Definition kG := pf_mul fa G k.
 Definition P1 := GE_wp field (x1, y1).
 
-(*
-Time Example kGeqP1 : GE_eqb kG P1 = true.
+
+(*Time Example kGeqP1 : GE_eqb kG P1 = true.
 Proof. Time vm_compute. reflexivity. Qed. (*36s*)    
 *)
 
@@ -88,8 +88,12 @@ Definition s := bLtoN sbL.
 (*Example s_test : s = P_mul n factor1 factor2.
 Proof. vm_compute. reflexivity. Qed.  *)
 
-Definition fb := wrapper field b.
-Definition crv := pf_curve fa fb Logic.eq_refl. 
+Definition fb := @wrp _ field b.
+(*Fact rglfact : @pf_rgl_cdt _ field fa fb. 
+Proof. reflexivity. Qed.
+Print rglfact. *)
+(*Definition crv := pf_curve fa fb rglfact. *)
+Definition crv := @pf_curve _ field fa fb Logic.eq_refl. 
 
 (*Example sigA1_test : SigWithList Hash crv nbL xGbL yGbL ENTLa IDa
   dAbL xAbL yAbL M [k] = Some (M, (NtoBbL r, NtoBbL s)).
@@ -136,7 +140,7 @@ Definition P1t := pf_add (bLtoN pIn) (bLtoN aIn) (Cop (x0't, y0't)) (Cop (x00't,
 Compute NtohS (P_add nN (bLtoN et) x1't).  (*Correct*)
 *)
 (*Example veryA_1_test : VeriSig Hash crv nbL xGbL yGbL xAbL yAbL rbL sbL ZA M = None. 
-Proof. Time vm_compute. reflexivity. Qed.*)
+Proof. Time vm_compute. reflexivity. Qed. *)
 (*70s*)
 End A_1. 
 

@@ -1,4 +1,6 @@
 Require Export ECDef. 
+
+Open Scope N_scope. 
   
 (*A.5.2*)
 Definition tilde_p (yp : N) : bool :=

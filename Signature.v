@@ -11,14 +11,11 @@ Open Scope list.
 
 Section signature_sec. 
 
-Context {fd : ECField}. 
+Context {U : Type}{fd : ECField U}. 
 Variable hash : bL -> bL. 
 Definition grp := GE fd. 
 
 Definition cop := Cop fd.
-Definition wp := wrapper fd .
-Definition uw := unwrapper fd.
-
 
 Definition ComputeZ (ENTL_A ID_A a b xG yG xA yA : bL) :=
   hash (ENTL_A ++ ID_A ++ a ++ b ++ xG ++ yG ++ xA ++ yA).
@@ -31,7 +28,7 @@ Definition TrySigWithk (G : grp)(n dA e k : N)
   match gml G k with
   | InfO _ => None
   | Cop _ (x1, y1) => 
-      let r := P_add n e (unwrapper fd x1) in
+      let r := P_add n e (uwp x1) in
         if orb (N.eqb r 0) (N.eqb (r + k) n) then None else
         let s := P_mul n (P_inv n (P_add n 1 dA)) (P_sub n k (P_mul n r dA)) in
           if N.eqb s 0 then None else
@@ -61,7 +58,7 @@ Definition SigWithList (curve : ECurve)
     | bf_curve a' _ _ => pf_mul a' (*TODO bf case*)
     end in
   let (a, b) := match curve with 
-    | pf_curve a' b' _ | bf_curve a' b' _ => (uw a', uw b')
+    | pf_curve a' b' _ | bf_curve a' b' _ => (uwp a', uwp b')
   end in
   let Z_A := ComputeZ ENTL_A ID_A (NtoBbL a) (NtoBbL b) xGbL yGbL xAbL yAbL in
   let e := bLtoN (hash (Z_A ++ M)) in
@@ -105,7 +102,7 @@ Definition VeriSig_inner (gml : grp -> N -> grp)(gad : grp -> grp -> grp)
   match gad (gml G s') (gml PA t) with
   | InfO _ => Some "s'G + tPA = InfO"
   | Cop _ (x1', y1') => 
-      let R := P_add n e' (uw x1') in
+      let R := P_add n e' (uwp x1') in
       if R =? r' then None else Some "R != r'"
   end. 
 
