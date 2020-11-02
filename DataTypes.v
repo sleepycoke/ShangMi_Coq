@@ -66,7 +66,8 @@ Class ECField (U: Type) : Type := mkField {wrp : N -> U; uwp : U -> N;
          squ : U -> U; pow : U -> N -> U}. 
         
 Section inrng_sec. 
-Lemma mod_inrng (po : prime_order) (a : N) :
+Context (po : prime_order). 
+Lemma mod_inrng (a : N) :
 a mod (order po) < (order po).
 Proof.
 intros. 
@@ -78,69 +79,69 @@ intros. rewrite H0 in H1. inversion H1.
 apply mod_lt. apply H0. 
 Qed.
 
-Definition pfe_builder (po: prime_order)(n : N) : Fpe po :=
-  mkFpe po (n mod (order po)) (mod_inrng po n). 
+Definition pfe_builder (n : N) : Fpe po :=
+  mkFpe po (n mod (order po)) (mod_inrng n). 
 
-Definition pfe_id0_bd (po : prime_order) : Fpe po :=
-pfe_builder po 0. 
+Definition pfe_id0_bd : Fpe po :=
+pfe_builder 0. 
 
-Lemma add_inrng (po : prime_order)(x y : Fpe po) : 
+Lemma add_inrng (x y : Fpe po) : 
 P_add (order po) (val po x) (val po y) < (order po). 
 Proof. apply mod_inrng. Qed.
 
-Lemma opp_inrng (po : prime_order)(x : Fpe po) : 
+Lemma opp_inrng (x : Fpe po) : 
 P_opp (order po) (val po x) < (order po). 
 Proof. apply mod_inrng. Qed.
 
-Lemma sub_inrng (po : prime_order)(x y : Fpe po) : 
+Lemma sub_inrng (x y : Fpe po) : 
 P_sub (order po) (val po x) (val po y) < (order po). 
 Proof. apply mod_inrng. Qed.
 
-Lemma dbl_inrng (po : prime_order)(x : Fpe po) : 
+Lemma dbl_inrng (x : Fpe po) : 
 (N.double  (val po x)) mod (order po) < (order po). 
 Proof. apply mod_inrng. Qed.
 
-Lemma sq_inrng (po : prime_order)(x : Fpe po) : 
+Lemma sq_inrng (x : Fpe po) : 
 P_sq (order po) (val po x) < (order po). 
 Proof. apply mod_inrng. Qed.
 
-Lemma pow_inrng (po : prime_order)(g : Fpe po)(a : N): 
+Lemma pow_inrng (g : Fpe po)(a : N): 
 P_pow (order po) (val po g) a < (order po). 
 Proof. 
 Admitted. 
 
-Lemma mul_inrng (po : prime_order)(x y : Fpe po) : 
+Lemma mul_inrng (x y : Fpe po) : 
 P_mul (order po) (val po x) (val po y) < (order po). 
 Proof. apply mod_inrng. Qed.
 
-Lemma div_inrng (po : prime_order)(x y : Fpe po) : 
+Lemma div_inrng (x y : Fpe po) : 
 P_div (order po) (val po x) (val po y) < (order po). 
 Proof. apply mod_inrng. Qed.
 
-Lemma inv_inrng (po : prime_order)(x : Fpe po) : 
+Lemma inv_inrng (x : Fpe po) : 
 P_inv (order po) (val po x) < (order po). 
 Proof. Admitted. 
 
-Definition po_eq (po : prime_order)(x y : Fpe po) : bool :=
+Definition po_eq (x y : Fpe po) : bool :=
 (val po x) =? (val po y). 
-Definition po_add (po : prime_order)(x y : Fpe po) : Fpe po :=
-  mkFpe po (P_add (order po) (val po x) (val po y)) (add_inrng po x y). 
-Definition po_sub (po : prime_order)(x y : Fpe po) : Fpe po :=
-  mkFpe po (P_sub (order po) (val po x) (val po y)) (sub_inrng po x y). 
-Definition po_mul (po : prime_order)(x y : Fpe po) : Fpe po :=
-  mkFpe po (P_mul (order po) (val po x) (val po y)) (mul_inrng po x y). 
-Definition po_div (po : prime_order)(x y : Fpe po) : Fpe po :=
-  mkFpe po (P_div (order po) (val po x) (val po y)) (div_inrng po x y). 
-Definition po_opp (po : prime_order)(x : Fpe po) : Fpe po :=
-  mkFpe po (P_opp (order po) (val po x)) (opp_inrng po x). 
-Definition po_inv (po : prime_order)(x : Fpe po) : Fpe po :=
-  mkFpe po (P_inv (order po) (val po x)) (inv_inrng po x). 
-Definition po_dbl (po : prime_order)(x : Fpe po) : Fpe po :=
-  mkFpe po ( (N.double (val po x)) mod (order po) ) (dbl_inrng po x). 
-Definition po_sq (po : prime_order)(x : Fpe po) : Fpe po :=
-  mkFpe po (P_sq (order po) (val po x)) (sq_inrng po x). 
-Definition po_pow (po : prime_order)(g : Fpe po)(a : N) : Fpe po :=
-  mkFpe po (P_pow (order po) (val po g) a) (pow_inrng po g a). 
+Definition po_add (x y : Fpe po) : Fpe po :=
+  mkFpe po (P_add (order po) (val po x) (val po y)) (add_inrng x y). 
+Definition po_sub (x y : Fpe po) : Fpe po :=
+  mkFpe po (P_sub (order po) (val po x) (val po y)) (sub_inrng x y). 
+Definition po_mul (x y : Fpe po) : Fpe po :=
+  mkFpe po (P_mul (order po) (val po x) (val po y)) (mul_inrng x y). 
+Definition po_div (x y : Fpe po) : Fpe po :=
+  mkFpe po (P_div (order po) (val po x) (val po y)) (div_inrng x y). 
+Definition po_opp (x : Fpe po) : Fpe po :=
+  mkFpe po (P_opp (order po) (val po x)) (opp_inrng x). 
+Definition po_inv (x : Fpe po) : Fpe po :=
+  mkFpe po (P_inv (order po) (val po x)) (inv_inrng x). 
+Definition po_dbl (x : Fpe po) : Fpe po :=
+  mkFpe po ( (N.double (val po x)) mod (order po) ) (dbl_inrng x). 
+Definition po_sq (x : Fpe po) : Fpe po :=
+  mkFpe po (P_sq (order po) (val po x)) (sq_inrng x). 
+Definition po_pow (g : Fpe po)(a : N) : Fpe po :=
+  mkFpe po (P_pow (order po) (val po g) a) (pow_inrng g a). 
 End inrng_sec. 
 
 (* TODO Consider make pf_builder a constructor of ECField *)
