@@ -153,8 +153,11 @@ Definition NtobS (n : N) : string :=
 Definition NtobS_len (n : N)(len : nat) : string :=
   bLtobS (NtobL_len len n).
 
-Definition rmsp (s : string) := (RepChar s " "%char ""%string). 
-Fixpoint hStobS_tail (m_hex : string)(acc : string) : string :=
+(*Removes spaces and newlines*)
+Definition rmsp (s : string) := RepChar (RepChar s " "%char ""%string) "
+"%char ""%string. 
+(*Prefer not to use it.. *)
+(*Fixpoint hStobS_tail (m_hex : string)(acc : string) : string :=
   match m_hex with
   | "" => acc
   | String h tl =>
@@ -165,7 +168,7 @@ Fixpoint hStobS_tail (m_hex : string)(acc : string) : string :=
   end. 
 
 Definition hStobS (m_hex : string) : string :=
-  hStobS_tail (rmsp m_hex) "".
+  hStobS_tail (rmsp m_hex) "". *)
 
 Definition hStoN (m_hex : string) : N :=
   HexString.Raw.to_N (rmsp m_hex) 0. 
@@ -182,8 +185,9 @@ Definition hChartobL (m_hex : string) : bL :=
     end
     rawbl. 
     *)
-Definition hStobL (hs : string) :=
-  bStobL (hStobS hs). 
+(*Definition hStobL (hs : string) :=
+  bStobL (hStobS hs). *)
+Definition hStobL (hs : string) := NtoBbL (hStoN hs).
 
 Definition NtohS (n : N) : string :=
   match n with
