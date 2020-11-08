@@ -64,6 +64,8 @@ Class ECField (U: Type) : Type := mkField {wrp : N -> U; uwp : U -> N;
      inv : U -> U; add : U -> U -> U; sub : U -> U -> U;
        mul : U -> U -> U; div : U -> U -> U; dbl : U -> U;
          squ : U -> U; pow : U -> N -> U}. 
+Definition wrapper {U : Type}(fd : ECField U):= @wrp _ fd. 
+Definition unwrapper {U : Type}(fd : ECField U):= @uwp _ fd. 
         
 Section inrng_sec. 
 Context (po : prime_order). 

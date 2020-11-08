@@ -52,9 +52,9 @@ Definition ComputeR (G : grp)(r : N) : grp :=
   | bf_curve a _ _ => pf_mul a G r (*TODO bf*)
   end. 
 
-Definition ComputeTilde (w : N)(x : U) : N :=
+Definition ComputeTilde (field : ECField U)(w : N)(x : U) : N :=
       let w2 := N.shiftl 1 w in
-      w2 + (N.land (uwp x) (w2 - 1) ). 
+      w2 + (N.land (unwrapper field x) (w2 - 1) ). 
 
 Definition ComputeW (n : N) : N :=
   (div_ceil_N (N.size (n - 1)) 2) - 1.
@@ -77,20 +77,22 @@ Definition ComputeS (prehS : string)(ZA ZB : bL)
 
 (* A5 *)
 Definition ComputeT (n d x_tilde r : N) : N :=
- P_add n d (x_tilde * r). 
+ P_add n d (P_mul n x_tilde r). 
+
 Definition ComputeRBKBSB (*(comk : (bL -> bL) -> nat -> nat -> N 
     -> N -> bL -> bL -> bL)
     (coms : (bL -> bL) -> string -> bL -> bL -> N -> N
-     -> N -> N -> N -> N -> bL)*)(ml : grp -> N -> grp)
-     (ad : grp -> grp -> grp)(G : grp)(n h : N)
+     -> N -> N -> N -> N -> bL)*)(field : ECField U)
+     (G : grp)(n h : N)
       (ZA ZB : bL)(RA PA : grp)(rB dB : N) : optErr (grp * bL * bL) :=
+  let (ml, ad) := ml_ad_extractor crv in
   let RB := ComputeR G rB in 
   match RB with
   | InfO _ => Error "RB = InfO"(* impossible since rB < n *)
   | Cop _ (x2, y2) =>
       (* w2 := 2^w < n by definiton of w *)
       let w := ComputeW n in
-      let x2_tilde := ComputeTilde w x2 in
+      let x2_tilde := ComputeTilde field w x2 in
       let tB := ComputeT n dB x2_tilde rB in
       (* B5 *)
       match RA with
@@ -98,7 +100,7 @@ Definition ComputeRBKBSB (*(comk : (bL -> bL) -> nat -> nat -> N
       | Cop _ (x1, y1) => 
       if negb (OnCurve crv x1 y1) 
       then Error "RA is not on the curve" else 
-        let x1_tilde := ComputeTilde w x1 in
+        let x1_tilde := ComputeTilde field w x1 in
         (* B6 *)
         let V := ComputeV ml ad n h tB x1_tilde PA RA in
         match V with
@@ -133,15 +135,16 @@ Definition ComputeKAS1SA (*(hash_v : bL -> bL)(v : nat)
 (klen : nat)(comk : (bL -> bL) -> nat ->nat -> N -> N 
 -> bL -> bL -> bL)(coms : (bL -> bL) -> string -> bL 
 -> bL -> N -> N -> N -> N -> N -> N -> bL)*)
-(ml : grp -> N -> grp)(ad : grp -> grp -> grp)
+(*(ml : grp -> N -> grp)(ad : grp -> grp -> grp)*)
 (*(OnCrv : N -> N -> bool)*)
-(rA dA n h : N) (PB RA RB : grp)(ZA ZB SB : bL)
-: optErr (bL * bL * bL) :=
+  (field : ECField U) (rA dA n h : N) (PB RA RB : grp)(ZA ZB SB : bL)
+  : optErr (bL * bL * bL) :=
+  let (ml, ad) := ml_ad_extractor crv in
   match RA with
   | InfO _ => Error "RA = InfO"
   | Cop _ (x1, y1) =>
       let w := ComputeW n in
-      let x1_tilde := ComputeTilde w x1 in
+      let x1_tilde := ComputeTilde field w x1 in
       let tA := ComputeT n dA x1_tilde rA in
       match RB with
       (*RB cannot be InfO since rB < n*)
@@ -149,7 +152,7 @@ Definition ComputeKAS1SA (*(hash_v : bL -> bL)(v : nat)
       | Cop _ (x2, y2) =>
         if negb (OnCurve crv x2 y2) 
           then Error "RB is not on curve"
-        else let x2_tilde := ComputeTilde w x2 in
+        else let x2_tilde := ComputeTilde field w x2 in
         let U := ComputeV ml ad n h tA x2_tilde PB RB in  
         match U with
         | InfO _ => Error "U = InfO"
