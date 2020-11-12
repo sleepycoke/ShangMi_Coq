@@ -215,30 +215,25 @@ Inductive EC_Field : Type :=
 (* Same as NtoBL *)
 (*Definition FieldtoBL_p (fd : ECField)(ele : U fd) :=  
   NtoBL (uwr fd ele). *)
-Definition FieldtoBL_p := NtoBL.
-
+(*Definition FieldtoBL_p := NtoBL.
 
 Definition FieldtoBL_b (m : N) :=
-  NtoBL_len (N.to_nat (div_ceil_N m 8)). 
+  NtoBL_len (N.to_nat (div_ceil_N m 8)). *)
 
-Definition FieldtoBL {U : Type}{fd : ECField U}(crv : ECurve)(ele : U) :=
-  match crv with 
-  | pf_curve _ _ _ => NtoBL (uwp ele)
-  | bf_curve _ _ _ => NtoBL (uwp ele)
-  end.
-
- Definition FieldtobL {U : Type}{fd : ECField U}(crv : ECurve)(ele : U) :=
-  match crv with 
-  | pf_curve _ _ _ => NtoBbL (uwp ele)
-  | bf_curve _ _ _ => NtoBbL (uwp ele)
-  end.
+Definition FieldtoBL {U : Type}{fd : ECField U}(ele : U) := NtoBL (uwp ele).
+Definition FieldtobL {U : Type}{fd : ECField U}(ele : U) := NtoBbL (uwp ele).
 
 (*4.2.6*)
-Definition BLtoField_p (Bl : BL)(q : N) : option N :=
+Definition BLtoField {U : Type}{fd : ECField U}(p : N)(Bl : BL) : option U :=
+  let alpha := BLtoN Bl in
+  if leb p alpha then None else
+    Some (wrapper fd alpha). (*TODO bf case*)
+
+(*Definition BLtoField_p (Bl : BL)(q : N) : option N :=
   (fun (alpha : N)  => if leb q alpha then None else Some alpha) (BLtoN Bl).  
 
 Definition BLtoField_b (Bl : BL)(m : N) : option N :=
-  BLtoField_p Bl (N.shiftl 1 m). 
+  BLtoField_p Bl (N.shiftl 1 m). *)
 
 (*
 Definition BLtoField_b (Bl : BL) : bL :=

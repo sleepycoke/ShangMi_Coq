@@ -3,7 +3,7 @@ Require Import Coq.Strings.Ascii.
 
 (* ByteList is indeed a list of bytes*)
 Definition BL := list byte. 
-(* BitList is indeed a list of bool*)
+(* BitList is indeed a list of bools*)
 Definition bL := list bool. 
 Fixpoint bStobL_tail (bs : string)(acc : bL) : bL :=
   match bs with

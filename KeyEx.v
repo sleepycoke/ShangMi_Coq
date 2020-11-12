@@ -13,7 +13,6 @@ Section keyex_sec.
 Context {U : Type}{fd : ECField U}
   (hash_v : bL -> bL)(v : nat)(klen : nat)(crv : ECurve). 
 Definition grp := GE fd. 
-Definition ftobl := FieldtobL crv. 
 
 Fixpoint ComputeHaList (j : nat)(i : N)(Z : bL)
   (acc : list bL){struct j} :=
@@ -67,13 +66,13 @@ Definition ComputeV (ml : grp -> N -> grp)
 
 Open Scope N_scope.
 Definition ComputeK (x y : U)(ZA ZB : bL) : bL :=
-  KDF ((FieldtobL crv x) ++ (FieldtobL crv y) ++ ZA ++ ZB). 
+  KDF ((FieldtobL x) ++ (FieldtobL y) ++ ZA ++ ZB). 
 
 Definition ComputeS (prehS : string)(ZA ZB : bL)
     (x y x1 y1 x2 y2 : U) : bL :=
-    hash_v ((hStobL prehS) ++ (ftobl y) ++ 
-    (hash_v ((ftobl x) ++ ZA ++ ZB ++ (ftobl x1) ++ 
-    (ftobl y1) ++ (ftobl x2) ++ (ftobl y2)))). 
+    hash_v ((hStobL prehS) ++ (FieldtobL y) ++ 
+    (hash_v ((FieldtobL x) ++ ZA ++ ZB ++ (FieldtobL x1) ++ 
+    (FieldtobL y1) ++ (FieldtobL x2) ++ (FieldtobL y2)))). 
 
 (* A5 *)
 Definition ComputeT (n d x_tilde r : N) : N :=
@@ -98,7 +97,7 @@ Definition ComputeRBKBSB (*(comk : (bL -> bL) -> nat -> nat -> N
       match RA with
       | InfO _ => Error "RA = InfO"
       | Cop _ (x1, y1) => 
-      if negb (OnCurve crv x1 y1) 
+      if negb (OnCurve crv RA) 
       then Error "RA is not on the curve" else 
         let x1_tilde := ComputeTilde field w x1 in
         (* B6 *)
@@ -150,7 +149,7 @@ Definition ComputeKAS1SA (*(hash_v : bL -> bL)(v : nat)
       (*RB cannot be InfO since rB < n*)
       | InfO _ => Error "RB = InfO" 
       | Cop _ (x2, y2) =>
-        if negb (OnCurve crv x2 y2) 
+        if negb (OnCurve crv RB) 
           then Error "RB is not on curve"
         else let x2_tilde := ComputeTilde field w x2 in
         let U := ComputeV ml ad n h tA x2_tilde PB RB in  

@@ -1,10 +1,9 @@
 Require Export ECDef. 
 
-Open Scope N_scope. 
-  
+Print "*". 
 (*A.5.2*)
-Definition tilde_p (yp : N) : bool :=
-  N.odd yp. 
+Definition tilde_p {U : Type}{fd : ECField U}(yp : U) : bool :=
+  N.odd (uwp yp). 
 
 (*B.1.3*)
 Fixpoint Lucas_tail (p X Delta : N)(k : bL)(acc : N * N) : N * N :=
@@ -76,7 +75,18 @@ Definition square_root (p g : N) : option N :=
         (Nlist p) (* Should provide a random sequence *). 
 
 (* A.5.2 *)
-Definition recover_p (p a b xp : N)(y_tilde : bool) : option (N * N) :=
+(* We need p for square_root *)
+Definition recover_p {U : Type}{fd : ECField U}(p : N)(a b xp : U)
+  (y_tilde : bool) : option (GE fd) :=
+  let alpha := uwp (xp * xp * xp + a * xp + b) in
+    let beta := square_root p alpha in
+      match beta with
+      | None => None
+      | Some beta' =>
+          if Bool.eqb (odd beta') y_tilde then Some (Cop fd (xp, (wrp beta')))
+          else Some (Cop fd (xp, (wrp (p - beta'))))
+      end.
+(*Definition recover_p (p a b xp : N)(y_tilde : bool) : option (N * N) :=
   let alpha := (xp * xp * xp + a * xp + b) mod p in
     let beta := square_root p alpha in
       match beta with
@@ -84,7 +94,7 @@ Definition recover_p (p a b xp : N)(y_tilde : bool) : option (N * N) :=
       | Some beta' =>
           if Bool.eqb (odd beta') y_tilde then Some (xp, beta')
           else Some (xp, (p - beta'))
-      end.
+      end.*)
 
 (* B.1.5 *)
 Fixpoint Trace_p_tail (sq_add : N -> N)(T' : N)(j : nat) : N :=
@@ -110,10 +120,12 @@ Definition Semi_Trace_p (m gp : N)(alpha : N) : N :=
     Semi_Trace_p_tail (fun x => B_add (Bp_sq gp (Bp_sq gp x)) alpha) T j. 
 
 (* Find the smallest element in F_2m whose trace is 1*)
-Definition SolveTrace1_bfp(m gp : N) : option N :=
+(*Definition SolveTrace1_bfp(m gp : N) : option N :=
   TryBinaryLen (fun x => Trace_p m gp x =? 1) (N.to_nat m). 
+  *)
 
-Definition FindRoot_alg3 (ml : N -> N -> N)(sq : N -> N)(m beta tau : N) : option N :=
+(*Definition FindRoot_alg3 (ml : N -> N -> N)(sq : N -> N)(m beta tau : N)
+   : option N :=
   let (z, w) := 
     (* j is m - i, from m - 1 down to 0, returns (z_i, w_i) *)
     (fix c_loop (j : nat)(z' w' : N) : (N * N) :=
@@ -125,11 +137,11 @@ Definition FindRoot_alg3 (ml : N -> N -> N)(sq : N -> N)(m beta tau : N) : optio
               (z_i, w_i)
         end
     ) (N.to_nat (m - 1)) 0 beta in
-  if w =? 0 then None else Some z. 
+  if w =? 0 then None else Some z. *)
 
 (*B.1.6*)
 (*Find a root of z^2 + z = beta*)
-Definition FindRoot_bfp (m gp beta : N) : option N := 
+(*Definition FindRoot_bfp (m gp beta : N) : option N := 
   if beta =? 0 then Some 0 else
   if odd m then
     let z := Semi_Trace_p m gp beta in
@@ -190,14 +202,38 @@ Definition mul_m (x : bL)(y : bL) : bL :=
 Definition tilde_m (xp : bL)(yp : bL) : bool :=
   List.last (mul_m yp (inv_m xp)) false. 
 *)
+*)
 
 (*4.2.8 prime field case only*)
 Inductive cmp_type : Set := 
   cmp : cmp_type | ucp : cmp_type | mix : cmp_type. 
 
-
 Open Scope list_scope. 
-Definition Point2BL (f2Bl : N -> BL)(cp : cmp_type)(xp : N)(yp : N) : BL :=
+Definition Point2BL {U : Type}{fd : ECField U}
+  (cp : cmp_type)(point : GE fd) : BL :=
+  match point with
+  | InfO _ => [] (*Undefined case in the standard*)
+  | Cop _ (xp, yp) =>
+    let X1 := FieldtoBL xp in (* a *)
+    match cp with
+    | cmp => (* b *)
+        let yp_tilde := tilde_p yp in
+        match yp_tilde with
+        | false => x02 :: X1
+        | true => x03 :: X1
+        end
+    | ucp => (* c *)
+        x04 :: (X1 ++ (FieldtoBL yp))
+    | mix => (* d *)
+        match tilde_p yp with
+        | false => (x06 :: X1) ++ (FieldtoBL yp)
+        | true => (x07 :: X1) ++ (FieldtoBL yp)
+        end
+    end
+  end. 
+Definition Point2bL {U : Type}{fd : ECField U}
+  (cp : cmp_type)(point : GE fd) : bL := BLtobL (Point2BL cp point). 
+(*Definition Point2BL (f2Bl : N -> BL)(cp : cmp_type)(xp : N)(yp : N) : BL :=
   let X1 := f2Bl xp in (* a *)
   match cp with
   | cmp => (* b *)
@@ -213,64 +249,125 @@ Definition Point2BL (f2Bl : N -> BL)(cp : cmp_type)(xp : N)(yp : N) : BL :=
       | false => (x06 :: X1) ++ (f2Bl yp)
       | true => (x07 :: X1) ++ (f2Bl yp)
       end
-  end. 
+  end. *)
 
-Definition Point2BL_p := Point2BL FieldtoBL_p.  
+(*Definition Point2BL_p := Point2BL FieldtoBL_p.  
 
-Definition Point2BL_b (m : N) := Point2BL (FieldtoBL_b m).  
+Definition Point2BL_b (m : N) := Point2BL (FieldtoBL_b m).  *)
 
 (*4.2.9*)
-Definition BLtoPointStep1 (rcv : N -> bool -> option (N * N))(cp : cmp_type)(q : N)(S : BL) : option (N * N) :=
+(*Step a) - e) *)
+Definition BLtoPointStep1 {U : Type}{fd : ECField U}
+  (rcv : U -> bool -> option (GE fd))(cp : cmp_type)(q : N)(S : BL)
+     : option (GE fd) :=
   match cp with
   | cmp => 
       match S with
       | [] => None
       | PC :: X1 =>
-          let xp := BLtoN X1 in
+          match BLtoField q X1 with
+          | None => None
+          | Some xp =>
             match PC with
             | x02 => (rcv xp false)
             | x03 => (rcv xp true) 
             | _ => None
             end
+          end
       end
   | ucp =>
       match S with
       | [] => None
       | PC :: X1Y1 =>
           let (X1, Y1) := partList X1Y1 (Nat.div (List.length X1Y1)  2%nat) in
+          match BLtoField q X1, BLtoField q Y1 with 
+          | None, _ | _,  None => None
+          | Some xp, Some yp =>
             match PC with
-            | x04 => Some (BLtoN X1, BLtoN Y1)
+            | x04 => Some (Cop fd (xp, yp))
             | _ => None
             end
+          end
       end
   | mix =>
       match S with
       | [] => None
       | PC :: X1Y1 =>
           let (X1, Y1) := partList X1Y1 (Nat.div (List.length X1Y1)  2%nat) in
-          let sampleList := Nlist q in
-            let xp := BLtoN X1 in
-              match PC with (* I choose e.2.2 TODO how to choose? *)
-              | x06 => (rcv xp false)
-              | x07 => (rcv xp true) 
-              | _ => None
-              end
+          match BLtoField q X1, BLtoField q Y1 with 
+          | None, _ | _,  None => None
+          | Some xp, Some yp =>
+            match PC with (* I choose e.2.2 TODO how to choose? *)
+            | x06 => (rcv xp false)
+            | x07 => (rcv xp true) 
+            | _ => None
+            end
+          end
       end
   end. 
 
-
-Definition BLtoPointStep2 (OnCrv : N -> N -> bool)(point : N * N) : option (N * N) :=
-  let (xp, yp) := point in
+(* Definition BLtoPointStep1 (rcv : N -> bool -> option (N * N))(cp : cmp_type)(q : N)(S : BL) : option (N * N) :=
+    match cp with
+    | cmp => 
+        match S with
+        | [] => None
+        | PC :: X1 =>
+            let xp := BLtoN X1 in
+              match PC with
+              | x02 => (rcv xp false)
+              | x03 => (rcv xp true) 
+              | _ => None
+              end
+        end
+    | ucp =>
+        match S with
+        | [] => None
+        | PC :: X1Y1 =>
+            let (X1, Y1) := partList X1Y1 (Nat.div (List.length X1Y1)  2%nat) in
+              match PC with
+              | x04 => Some (BLtoN X1, BLtoN Y1)
+              | _ => None
+              end
+        end
+    | mix =>
+        match S with
+        | [] => None
+        | PC :: X1Y1 =>
+            let (X1, Y1) := partList X1Y1 (Nat.div (List.length X1Y1)  2%nat) in
+            let sampleList := Nlist q in
+              let xp := BLtoN X1 in
+                match PC with (* I choose e.2.2 TODO how to choose? *)
+                | x06 => (rcv xp false)
+                | x07 => (rcv xp true) 
+                | _ => None
+                end
+        end
+    end. *)
+(*Step f) - g) *)
+Definition BLtoPointStep2 {U : Type}{fd : ECField U}(crv : ECurve)
+ (point : GE fd) : option (GE fd) :=
     (*if N.eqb (P_sq p yp) (((P_power p xp 3) + a * xp + b) mod p) then Some point*)
-    if OnCrv xp yp then Some point
+    if OnCurve crv point then Some point
     else None. 
 
 (*TODO square_root uses Nlist and thus crashes the memory *)
-Definition BLtoPoint_p (cp : cmp_type)(p : N)(a : N)(b : N)(S : BL) : option (N * N) :=
+(* q is the size of the field *)
+Definition BLtoPoint {U : Type}{fd : ECField U}(cp : cmp_type)(q : N)
+  (crv : ECurve)(S : BL) : option (GE fd) :=
+  let (a, b) :=
+    match crv with 
+    | pf_curve a' b' _ | bf_curve a' b' _ => (a', b')
+    end in
+  match BLtoPointStep1 (recover_p q a b) cp q S with
+  | None => None
+  | Some point => BLtoPointStep2 crv point
+  end. 
+
+(*Definition BLtoPoint_p (cp : cmp_type)(p : N)(a : N)(b : N)(S : BL) : option (N * N) :=
   match BLtoPointStep1 (recover_p p a b) cp p S with
   | None => None
   | Some point => BLtoPointStep2 (OnCurve_pf p a b) point 
-  end. 
+  end. *)
 
 (*
 Definition BLtoPoint_bfp (cp : cmp_type)(m gp a b : N)(S : BL) : option (N * N) :=

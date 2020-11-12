@@ -52,13 +52,25 @@ Definition f3 := wrp 3.
 Definition f4 := wrp 4. 
 Definition f8 := wrp 8.
 
-Definition OnCurve (curve : ECurve) (x y : U) : bool := 
+Definition OnCurve (curve : ECurve) (point : grp) : bool := 
+  match point with 
+  | InfO _ => true
+  | Cop _ (x, y) =>
+    match curve with 
+    | pf_curve a b _ => 
+      (squ y) =? (x^3 + a*x + b)
+    | bf_curve a b _ => 
+      (squ y) + x * y =? ((x^3) + (a*(squ x))) + b
+    end
+  end.
+
+(*Definition OnCurve (curve : ECurve) (x y : U) : bool := 
   match curve with 
   | pf_curve a b _ => 
     (squ y) =? (x^3 + a*x + b)
   | bf_curve a b _ => 
     (squ y) + x * y =? ((x^3) + (a*(squ x))) + b
-  end.
+  end.*)
 
 
 (*

@@ -1,24 +1,28 @@
 Require Export KeyEx.
 
+Section pubkey_sec.
+Context {U : Type}{fd : ECField U}
+  (hash_v : bL -> bL)(v : nat)(klen : nat)(crv : ECurve). 
+Print GE_uwp. 
 (*A2 - A5 *)
-Definition TryComputeTwithK (hash_v : bL -> bL)(v : nat)(klen : nat)
-  (ml : GE -> N -> GE)(p2Bl : N -> N -> BL)(Ntobl : N -> bL)(k h : N)(G PB : GE)
-  : optErr (option (bL * bL * bL * bL)) :=
+Definition TryComputeTwithK 
+  (ml : grp -> N -> grp)(ptobL : grp -> bL)
+    (k h : N) (G PB : grp) : optErr (option (bL * bL * bL * bL)) :=
   let C1 := ml G k in
   match C1 with
-  | InfO => Error "C1 = InfO" (* impossible since k < n *)
-  | Cop (x1, y1) =>
-    let C1bl := BLtobL (p2Bl x1 y1) in
+  | InfO _ => Error "C1 = InfO _" (* impossible since k < n *)
+  | _ =>
+    let C1bl := ptobL C1 in
     let S := ml PB h in
     match S with
-    | InfO => Error "S = InfO"
+    | InfO _ => Error "S = InfO _"
     | _ =>
         let kPB := ml PB k in
         match kPB with
-        | InfO => Error "kPB = InfO" (* impossible? *)
-        | Cop (x2, y2) => 
-          let (x2bl, y2bl) := (Ntobl x2, Ntobl y2) in
-          let t := KDF (x2bl ++ y2bl) klen hash_v v in
+        | InfO _ => Error "kPB = InfO _" (* impossible? *)
+        | Cop _ (x2, y2) => 
+          let (x2bl, y2bl) := (NtoBbL (uwp x2), NtoBbL (uwp y2)) in
+          let t := KDF hash_v v klen (x2bl ++ y2bl) in
            if All0bL t then Normal None
            else Normal (Some (t, x2bl, y2bl, C1bl))
         end
@@ -26,15 +30,16 @@ Definition TryComputeTwithK (hash_v : bL -> bL)(v : nat)(klen : nat)
   end. 
 
 (* A1 - A8 *)
-Fixpoint ComputeCwithklist (hash_v : bL -> bL)(v : nat)(ml : GE -> N -> GE)(p2Bl : N -> N -> BL)(Ntobl : N -> bL)(h : N)(klist : list N)
-  (G PB : GE)(M : bL) : optErr bL :=
+Fixpoint ComputeCwithklist_fix (ml : grp -> N -> grp)
+  (p2bL : grp -> bL)(h : N)(klist : list N)
+  (G PB : grp)(M : bL) : optErr bL :=
   match klist with
   | [] => Error "klist depleted"
   | k :: tl =>
-      match TryComputeTwithK hash_v v (length M) ml p2Bl Ntobl k h G PB  with
+      match TryComputeTwithK ml p2bL k h G PB  with
       | Error err => Error (err ++ " k = " ++ (NtohS k))
       | Normal None =>
-          ComputeCwithklist hash_v v ml p2Bl Ntobl h tl G PB M
+          ComputeCwithklist_fix ml p2bL h tl G PB M
       | Normal (Some (t, x2bl, y2bl, C1bl)) =>
           let C2 := bLXOR M t in
           let C3 := hash_v (x2bl ++ M ++ y2bl) in
@@ -42,16 +47,58 @@ Fixpoint ComputeCwithklist (hash_v : bL -> bL)(v : nat)(ml : GE -> N -> GE)(p2Bl
       end
   end. 
 
-Definition ComputeCwithklist_pf (hash_v : bL -> bL)(v : nat)(p a h : N)(klist : list N)(cp : cmp_type)(G PB : GE)(M : bL) : optErr bL :=
+Definition ComputeCwithklist (h : N)(klist : list N)(cp : cmp_type)(G PB : grp)
+  (M : bL) : optErr bL :=             
+  let (ml,  ptobL) :=
+  match crv with
+  | pf_curve a _ _ => (pf_mul a, Point2bL cp)
+  | bf_curve a _ _ => (pf_mul a, Point2bL cp) (*TODO bf case*)
+  end in
+    ComputeCwithklist_fix ml ptobL h klist G PB M. 
+
+(*Definition ComputeCwithklist_pf (hash_v : bL -> bL)(v : nat)(p a h : N)(klist : list N)(cp : cmp_type)(G PB : GE)(M : bL) : optErr bL :=
   ComputeCwithklist hash_v v (pf_mul p a) (Point2BL_p cp) NtoBbL h klist G PB M. 
 
 Definition ComputeCwithklist_bfp (hash_v : bL -> bL)(v : nat)(m gp a h : N)(klist : list N)(cp : cmp_type)(G PB : GE)(M : bL) : optErr bL :=
   ComputeCwithklist hash_v v (bfp_mul m gp a) (Point2BL_b m cp) (NtoBbL_len (N.to_nat m)) h klist G PB M. 
+  *)
 
 (* B1 - B7 *)
-Definition ComputeM' (hash_v : bL -> bL)(v : nat)(klen : nat)(ml : GE -> N -> GE)(OnCrv : N -> N -> bool)(Bl2p : BL -> option (N * N))(Ntobl : N -> bL)(h dB : N)(C : bL) : optErr bL :=
-  let (C1bl, C2C3) := partListBack C (Nat.add klen v) in
-  match Bl2p (bLtoBL C1bl) with
+(* q is the size of the field *)
+Definition ComputeM' (cp : cmp_type)(crv : ECurve)(q : N)(h dB : N)(C : bL)
+   : optErr bL :=
+  let (ml, _) := ml_ad_extractor crv in
+  let (C1bL, C2C3bL) := partListBack C (Nat.add klen v) in
+  match BLtoPoint cp q crv (bLtoBL C1bL) with
+  | None => Error "Failed to uncompress C1"
+  | Some C1 =>
+    if negb (OnCurve crv C1) then Error "C1 not on curve"
+    else let S := ml C1 h in
+    match S with
+    | InfO _ => Error "S = InfO _"
+    | _ =>
+        let dBC1 := ml C1 dB in
+        match dBC1 with
+        | InfO _ => Error "dBC1 = InfO"
+        | Cop _ (x2, y2) =>
+            let (x2bL, y2bL) := (FieldtobL x2, FieldtobL y2) in
+            let t := KDF hash_v v klen (x2bL ++ y2bL) in
+            if All0bL t then Error "t is all 0s" else
+            let (C2bL, C3bL) := partList C2C3bL klen in
+            let M' := bLXOR C2bL t in
+            let u := hash_v (x2bL ++ M' ++ y2bL) in
+            if negb (bLeqb u C3bL) then Error "u != C3"
+            else Normal M'
+        end
+    end
+  end. 
+
+
+(* B1 - B7 *)
+(*Definition ComputeM' (ml : grp -> N -> grp)(Bl2p : BL -> option (N * N))
+  (Ntobl : N -> bL)(h dB : N)(C : bL) : optErr bL :=
+  let (C1bL, C2C3) := partListBack C (Nat.add klen v) in
+  match Bl2p (bLtoBL C1bL) with
   | None => Error "Failed to uncompress C1"
   | Some (x1, y1) =>
     if negb (OnCrv x1 y1) then Error "C1 not on curve"
@@ -64,40 +111,61 @@ Definition ComputeM' (hash_v : bL -> bL)(v : nat)(klen : nat)(ml : GE -> N -> GE
         match dBC1 with
         | InfO => Error "dBC1 = InfO"
         | Cop (x2, y2) =>
-            let (x2bl, y2bl) := (Ntobl x2, Ntobl y2) in
-            let t := KDF (x2bl ++ y2bl) klen hash_v v in
+            let (x2bL, y2bL) := (Ntobl x2, Ntobl y2) in
+            let t := KDF (x2bL ++ y2bL) klen hash_v v in
             if All0bL t then Error "t is all 0s" else
             let (C2, C3) := partList C2C3 klen in
             let M' := bLXOR C2 t in
-            let u := hash_v (x2bl ++ M' ++ y2bl) in
+            let u := hash_v (x2bL ++ M' ++ y2bL) in
             if negb (bLeqb u C3) then Error "u != C3"
             else Normal M'
         end
     end
   end. 
+*)
 
-Definition ComputeM'_pf (hash_v : bL -> bL)(v : nat)(klen : nat)(p a b h dB : N)(cp : cmp_type)(C : bL) : optErr bL :=
+(*Definition ComputeM'_pf (hash_v : bL -> bL)(v : nat)(klen : nat)(p a b h dB : N)(cp : cmp_type)(C : bL) : optErr bL :=
   ComputeM' hash_v v klen (pf_mul p a) (OnCurve_pf p a b) (BLtoPoint_p cp p a b) NtoBbL h dB C . 
 
 Definition ComputeM'_bfp (hash_v : bL -> bL)(v : nat)(klen : nat)(m gp a b h dB : N)(cp : cmp_type)(C : bL) : optErr bL :=
   ComputeM' hash_v v klen (bfp_mul m gp a) (OnCurve_bfp gp a b) (BLtoPoint_bfp cp m gp a b) (NtoBbL_len (N.to_nat m)) h dB C . 
+*)
+End pubkey_sec. 
 
 Module test_pf. 
-Definition p := hStoN "8542D69E 4C044F18 E8B92435 BF6FF7DE 45728391 5C45517D 722EDB8B 08F1DFC3".
-Definition a := hStoN "787968B4 FA32C3FD 2417842E 73BBFEFF 2F3C848B 6831D7E0 EC65228B 3937E498".
-Definition b := hStoN "63E4C6D3 B23B0C84 9CF84241 484BFE48 F61D59A5 B16BA06E 6E12D1DA 27C5249A".
-Definition xG := hStoN "421DEBD6 1B62EAB6 746434EB C3CC315E 32220B3B ADD50BDC 4C4E6C14 7FEDD43D".
-Definition yG := hStoN "0680512B CBB42C07 D47349D2 153B70C4 E5D7FDFC BFA36EA1 A85841B9 E46E09A2". 
-Definition n := hStoN "8542D69E 4C044F18 E8B92435 BF6FF7DD 29772063 0485628D 5AE74EE7 C32E79B7".
-Definition h := 1.  (* By Hasse Thm *)
+Definition p := hStoN 
+  "8542D69E 4C044F18 E8B92435 BF6FF7DE 45728391 5C45517D 722EDB8B 08F1DFC3".
+Definition field := pf_builder p Logic.eq_refl.
+Definition aN := hStoN 
+  "787968B4 FA32C3FD 2417842E 73BBFEFF 2F3C848B 6831D7E0 EC65228B 3937E498".
+Definition a := wrapper field aN.
+Definition bN := hStoN
+  "63E4C6D3 B23B0C84 9CF84241 484BFE48 F61D59A5 B16BA06E 6E12D1DA 27C5249A".
+Definition b := wrapper field bN.
+Definition crv := @pf_curve _ field a b Logic.eq_refl.
+Definition xGN := hStoN
+  "421DEBD6 1B62EAB6 746434EB C3CC315E 32220B3B ADD50BDC 4C4E6C14 7FEDD43D".
+Definition xG := wrapper field xGN.
+Definition yGN := hStoN 
+  "0680512B CBB42C07 D47349D2 153B70C4 E5D7FDFC BFA36EA1 A85841B9 E46E09A2". 
+Definition yG := wrapper field yGN.
+Definition n := hStoN 
+  "8542D69E 4C044F18 E8B92435 BF6FF7DD 29772063 0485628D 5AE74EE7 C32E79B7".
+Definition h := 1%N.  (* By Hasse Thm *)
 Definition M := hStobL "656E63 72797074 696F6E20 7374616E 64617264".
-Definition dB := hStoN "1649AB77 A00637BD 5E2EFE28 3FBF3535 34AA7F7C B89463F2 08DDBC29 20BB0DA0".
-Definition xB := hStoN "435B39CC A8F3B508 C1488AFC 67BE491A 0F7BA07E 581A0E48 49A5CF70 628A7E0A".
-Definition yB := hStoN "75DDBA78 F15FEECB 4C7895E2 C1CDF5FE 01DEBB2C DBADF453 99CCF77B BA076A42".
-Definition k := hStoN "4C62EEFD 6ECFC2B9 5B92FD6C 3D957514 8AFA1742 5546D490 18E5388D 49DD7B4F".
+Definition dB := hStoN 
+  "1649AB77 A00637BD 5E2EFE28 3FBF3535 34AA7F7C B89463F2 08DDBC29 20BB0DA0".
+Definition xBN := hStoN
+  "435B39CC A8F3B508 C1488AFC 67BE491A 0F7BA07E 581A0E48 49A5CF70 628A7E0A".
+Definition xB := wrapper field xBN.
+Definition yBN := hStoN
+  "75DDBA78 F15FEECB 4C7895E2 C1CDF5FE 01DEBB2C DBADF453 99CCF77B BA076A42".
+Definition yB := wrapper field yBN.
+Definition k := hStoN 
+  "4C62EEFD 6ECFC2B9 5B92FD6C 3D957514 8AFA1742 5546D490 18E5388D 49DD7B4F".
 
-Definition G := Cop (xG, yG).
-Definition PB := Cop (xB, yB).
+Definition G := Cop field (xG, yG).
+Definition PB := Cop field (xB, yB).
 Definition klen := length M.  
   (* Obsolete
 Time Check match TryComputeTwithK k p a h ucp G PB klen Hash constant_v with
@@ -119,6 +187,13 @@ end.
 Finished transaction in 1243.719 secs (1241.274u,1.171s) (successful) 
 Correct
 *)
+Definition C := hStobL "04245C26 FB68B1DD DDB12C4B 6BF9F2B6 D5FE60A3 83B0D18D
+ 1C4144AB F17F6252 E776CB92 64C2A7E8 8E52B199 03FDC473 78F605E3 6811F5C0 
+ 7423A24B 84400F01 B8650053 A89B41C4 18B0C3AA D00D886C 00286467 9C3D7360
+  C30156FA B7C80A02 76712DA9 D8094A63 4B766D3A 285E0748 0653426D". 
+(*Example cmpCtest_pf : Normal C = 
+  ComputeCwithklist Hash constant_v klen crv h [k] ucp G PB M. 
+Proof. Time vm_compute. (* 75s *) reflexivity. Qed.*)
 (*
 Time Compute match ComputeCwithklist_pf Hash constant_v p a h [k] ucp (Cop (xG, yG)) (Cop (xB, yB)) M with
 | Error s => Error s
@@ -132,8 +207,9 @@ end.
 Finished transaction in 1239.021 secs (1237.408u,0.874s) (successful)
 Correct
 *)
-Definition C := hStobL "04245C26 FB68B1DD DDB12C4B 6BF9F2B6 D5FE60A3 83B0D18D 1C4144AB F17F6252 E776CB92 64C2A7E8 8E52B199 03FDC473 78F605E3 6811F5C0 7423A24B 84400F01 B8650053 A89B41C4 18B0C3AA D00D886C 00286467 9C3D7360 C30156FA B7C80A02 76712DA9 D8094A63 4B766D3A 285E0748 0653426D". 
-
+(*Example cmpM'test_pf : Normal M = 
+  ComputeM' Hash constant_v klen ucp crv p h dB C. 
+Proof. Time vm_compute. (*39s*) reflexivity. Qed. *)
 (*
 Time Compute match ComputeM'_pf Hash constant_v klen p a b h dB ucp C with
 | Error s => Error s
@@ -148,7 +224,7 @@ Correct
 *)
 End test_pf. 
 
-Module test_bfp.
+(*Module test_bfp.
 Definition m := 257%N.
 Definition gp := (N.shiftl 1 257) + (N.shiftl 1 12) + 1. 
 Definition a := 0%N.
@@ -214,4 +290,4 @@ Compute bLXOR M  M'.
 *)
 (*Correct *)
 End test_bfp.
-
+*)
