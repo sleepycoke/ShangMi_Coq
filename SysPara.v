@@ -1,3 +1,4 @@
+(* Prefer to not include this file 
 Require Export ECAlg. 
 Require Export SM3. 
  
@@ -58,7 +59,7 @@ Fixpoint TryFunb4 (b u : N)(func : N -> N -> option bool)(l : list N) : bool :=
         end
   end.
 
-Fixpoint NInterval (low : N)(high : N) : list N :=
+Definition NInterval (low : N)(high : N) : list N :=
   map (N.add low) (Nlist (high + 1 - low)).
 
 (* Returns (v, w) so that m = 2 ^ v * w and w is odd *)
@@ -301,3 +302,4 @@ Definition PPB_list := map decode_PPB PPB_IRP.
 (*Time Compute map IrdTest (PPB_list).*) (*Finished transaction in 393.439 secs (393.19u,0.153s) (successful)All true, correct *)
 *)
 End tests. 
+*)
