@@ -168,7 +168,7 @@ Definition G := Cop field (xG, yG).
 Definition PB := Cop field (xB, yB).
 Definition klen := length M.  
   (* Obsolete
-Time Check match TryComputeTwithK k p a h ucp G PB klen Hash constant_v with
+Time Check match TryComputeTwithK k p a h ucp G PB klen SM3_Hash constant_v with
   | Error s => Error s
   | Normal None => Normal None
   | Normal (Some (a, b, c, d)) =>
@@ -192,10 +192,10 @@ Definition C := hStobL "04245C26 FB68B1DD DDB12C4B 6BF9F2B6 D5FE60A3 83B0D18D
  7423A24B 84400F01 B8650053 A89B41C4 18B0C3AA D00D886C 00286467 9C3D7360
   C30156FA B7C80A02 76712DA9 D8094A63 4B766D3A 285E0748 0653426D". 
 (*Example cmpCtest_pf : Normal C = 
-  ComputeCwithklist Hash constant_v klen crv h [k] ucp G PB M. 
+  ComputeCwithklist SM3_Hash constant_v klen crv h [k] ucp G PB M. 
 Proof. Time vm_compute. (* 75s *) reflexivity. Qed.*)
 (*
-Time Compute match ComputeCwithklist_pf Hash constant_v p a h [k] ucp (Cop (xG, yG)) (Cop (xB, yB)) M with
+Time Compute match ComputeCwithklist_pf SM3_Hash constant_v p a h [k] ucp (Cop (xG, yG)) (Cop (xB, yB)) M with
 | Error s => Error s
 | Normal bl => Normal (bLtohS bl)
 end. 
@@ -208,10 +208,10 @@ Finished transaction in 1239.021 secs (1237.408u,0.874s) (successful)
 Correct
 *)
 (*Example cmpM'test_pf : Normal M = 
-  ComputeM' Hash constant_v klen ucp crv p h dB C. 
+  ComputeM' SM3_Hash constant_v klen ucp crv p h dB C. 
 Proof. Time vm_compute. (*39s*) reflexivity. Qed. *)
 (*
-Time Compute match ComputeM'_pf Hash constant_v klen p a b h dB ucp C with
+Time Compute match ComputeM'_pf SM3_Hash constant_v klen p a b h dB ucp C with
 | Error s => Error s
 | Normal bl => Normal (bLtohS bl)
 end. 
@@ -247,14 +247,14 @@ Definition y1 := hStoN "00 B23B938D C0A94D1D F8F42CF4 5D2D6601 BF638C3D 7DE75A29
 Definition x2 := hStoN "00 83E628CF 701EE314 1E8873FE 55936ADF 24963F5D C9C64805 66C80F8A 1D8CC51B".
 Definition y2 := hStoN "01 524C647F 0C0412DE FD468BDA 3AE0E5A8 0FCC8F5C 990FEE11 60292923 2DCD9F36". 
 Definition P2 := Cop (x2, y2). 
-Definition t := KDF ((NtoBbL_len 257 x2) ++ (NtoBbL_len 257 y2)) klen Hash constant_v. 
+Definition t := KDF ((NtoBbL_len 257 x2) ++ (NtoBbL_len 257 y2)) klen SM3_Hash constant_v. 
 (*Compute bLtohS t.*) (*Correct*)
 Definition C2 := bLXOR M t . 
 (*Compute bLtohS C2.*) (*Correct*)
-Definition C3 := Hash ((NtoBbL_len 257 x2) ++ M ++ (NtoBbL_len 257 y2)). 
+Definition C3 := SM3_Hash ((NtoBbL_len 257 x2) ++ M ++ (NtoBbL_len 257 y2)). 
 (*Compute bLtohS C3. *)(*Correct*) 
 (*
-Time Compute match ComputeCwithklist_bfp Hash constant_v m gp a h [k] ucp G PB M with
+Time Compute match ComputeCwithklist_bfp SM3_Hash constant_v m gp a h [k] ucp G PB M with
 | Error s => Error s
 | Normal bl => Normal (bLtohS bl)
 end. 
@@ -275,7 +275,7 @@ Compute List.length C1C2C3.
 Compute List.length C. 
 Correct *)
 (*
-Time Compute match ComputeM'_bfp Hash constant_v klen m gp a b h dB ucp C with
+Time Compute match ComputeM'_bfp SM3_Hash constant_v klen m gp a b h dB ucp C with
 | Error s => Error s
 | Normal bl => Normal (bLtohS bl)
 end. 

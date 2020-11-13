@@ -39,7 +39,7 @@ Definition yAbL := hStobL
 Definition yA := bLtoN yAbL.
 Definition ZA := hStobL 
   "F4A38489 E32B45B6 F876E3AC 2168CA39 2362DC8F 23459C1D 1146FC3D BFB7BC9A".
-(*Example ZAtest : ComputeZ Hash ENTLa IDa abL bbL xGbL yGbL xAbL yAbL = ZA.
+(*Example ZAtest : ComputeZ SM3_Hash ENTLa IDa abL bbL xGbL yGbL xAbL yAbL = ZA.
 Proof. vm_compute. reflexivity. Qed. *)
 
 Definition M_bar := hStobL ("F4A38489 E32B45B6 F876E3AC 2168CA39 2362DC8F"
@@ -48,7 +48,7 @@ Definition M_bar := hStobL ("F4A38489 E32B45B6 F876E3AC 2168CA39 2362DC8F"
 
 Definition ebL := hStobL
   "B524F552 CD82B8B0 28476E00 5C377FB1 9A87E6FC 682D48BB 5D42E3D9 B9EFFE76".
-(*Example ebLTest : ebL = Hash M_bar := Logic.eq_refl. *)
+(*Example ebLTest : ebL = SM3_Hash M_bar := Logic.eq_refl. *)
 Definition e := bLtoN ebL.
 
 Definition k := hStoN 
@@ -95,7 +95,7 @@ Print rglfact. *)
 (*Definition crv := pf_curve fa fb rglfact. *)
 Definition crv := @pf_curve _ field fa fb Logic.eq_refl. 
 
-(*Example sigA1_test : SigWithList Hash crv nbL xGbL yGbL ENTLa IDa
+(*Example sigA1_test : SigWithList SM3_Hash crv nbL xGbL yGbL ENTLa IDa
   dAbL xAbL yAbL M [k] = Some (M, (NtoBbL r, NtoBbL s)).
 Proof. Time vm_compute. reflexivity. Qed. *)
 (*41s*)
@@ -139,7 +139,7 @@ Definition P1t := pf_add (bLtoN pIn) (bLtoN aIn) (Cop (x0't, y0't)) (Cop (x00't,
 (*
 Compute NtohS (P_add nN (bLtoN et) x1't).  (*Correct*)
 *)
-(*Example veryA_1_test : VeriSig Hash crv nbL xGbL yGbL xAbL yAbL rbL sbL ZA M = None. 
+(*Example veryA_1_test : VeriSig SM3_Hash crv nbL xGbL yGbL xAbL yAbL rbL sbL ZA M = None. 
 Proof. Time vm_compute. reflexivity. Qed. *)
 (*70s*)
 End A_1. 
@@ -185,7 +185,7 @@ Finished transaction in 1146.773 secs (1143.449u,1.716s) (successful)
 Compute NtohS (P_add nN e x1). 
 *)
 (*
-Time Compute match SigWithZAList_bfp HashN m gp a b n xG yG Z_A dA xA yA M [bLtoN k] with
+Time Compute match SigWithZAList_bfp SM3_HashN m gp a b n xG yG Z_A dA xA yA M [bLtoN k] with
   | None => None
   | Some (m',  (r, s)) => 
     Some (bLtostr m', ((bLtohS r), (bLtohS s)))
@@ -193,7 +193,7 @@ Time Compute match SigWithZAList_bfp HashN m gp a b n xG yG Z_A dA xA yA M [bLto
 *)
 (*Correct*)
 (*
-Time Compute VeriSig_bfp HashN m gp (bLtoN a) (bLtoN n) (bLtoN xG) (bLtoN yG) (bLtoN xA) (bLtoN yA) r s Z_A M.
+Time Compute VeriSig_bfp SM3_HashN m gp (bLtoN a) (bLtoN n) (bLtoN xG) (bLtoN yG) (bLtoN xA) (bLtoN yA) r s Z_A M.
 = None
      : option string
      *)

@@ -142,19 +142,19 @@ Definition klen := 128%nat.
  
 Definition KB := 
   hStobL "55B0AC62 A6B927BA 23703832 C853DED4". 
-(*Example KBtest : KB = KDF Hash constant_v klen  Z. 
+(*Example KBtest : KB = KDF SM3_Hash constant_v klen  Z. 
 Proof. vm_compute. reflexivity. Qed. *)
-(* Compute bLtohS (KDF Z_short klen Hash constant_v).
+(* Compute bLtohS (KDF Z_short klen SM3_Hash constant_v).
  (*Incorrect*) *)
 
 Definition SB := hStobL 
   "284C8F19 8F141B50 2E81250F 1581C7E9 EEB4CA69 90F9E02D F388B454 71F5BC5C". 
 
-(*Example SBtest : SB = ComputeS Hash crv "02" ZA ZB xV yV x1 y1 x2 y2.
+(*Example SBtest : SB = ComputeS SM3_Hash crv "02" ZA ZB xV yV x1 y1 x2 y2.
 Proof. vm_compute. reflexivity. Qed. *)
 
 (*Example rbkbsb_test : 
-  match ComputeRBKBSB Hash constant_v klen crv field 
+  match ComputeRBKBSB SM3_Hash constant_v klen crv field 
     G n h ZA ZB RA PA rB dBN with  
   | Error str => Error str
   | Normal (r, k, s) => Normal (GE_uwp r, k, s)
@@ -167,10 +167,10 @@ Definition S1 := hStobL
 Definition SA := hStobL 
   "23444DAF 8ED75343 66CB901C 84B3BDBB 63504F40 65C1116C 91A4C006 97E6CF7A". 
 
-(*Example kas1sa_test : Normal (KA, S1, SA) = ComputeKAS1SA Hash constant_v
+(*Example kas1sa_test : Normal (KA, S1, SA) = ComputeKAS1SA SM3_Hash constant_v
  klen crv field rA dAN n h PB RA RB ZA ZB SB.  
 Proof. Time vm_compute. reflexivity. Qed. *)
-(*Example veris2eqsa_test : VeriS2eqSA Hash crv ZA ZB SA xV yV x1 y1 x2 y2 = true.
+(*Example veris2eqsa_test : VeriS2eqSA SM3_Hash crv ZA ZB SA xV yV x1 y1 x2 y2 = true.
 Proof. vm_compute. reflexivity. Qed.*)  
 End test_pf. 
 
@@ -234,7 +234,7 @@ Definition SB := hStobL "4EB47D28 AD3906D6 244D01E0
   F6AEC73B 0B51DE15 74C13798 184E4833 DBAE295A". 
 (*
 Compute bLtohS (ComputeS_bf (N.to_nat m) "02" ZA ZB xV yV
- x1 y1 x2 y2 Hash). 
+ x1 y1 x2 y2 SM3_Hash). 
 Correc. Same as SB *)
 Definition xU := hStoN "00 DADD0874 06221D65 7BC3FA79 
   FF329BB0 22E9CB7D DFCFCCFE 277BE8CD 4AE9B954". 
@@ -244,7 +244,7 @@ Definition KA := hStobL "4E587E5C 66634F22 D973A7D9
   8BF8BE23".
 (*
 Compute bLtohS 
-  (ComputeK m Hash constant_v klen xU yU ZA ZB). 
+  (ComputeK m SM3_Hash constant_v klen xU yU ZA ZB). 
 Correct Same as KA*)
 
 (*
@@ -274,7 +274,7 @@ Finished transaction in 1156.16 secs (1155.32u,0.488s)
 (successful)
 *)
 (*
-Time Compute match ComputeRBKBSB_bfp Hash constant_v klen 
+Time Compute match ComputeRBKBSB_bfp SM3_Hash constant_v klen 
   m gp a b G n h ZA ZB RA PA rB dB with
 | Error err => Error err
 | Normal (rb, kb, sb) => Normal (
@@ -300,7 +300,7 @@ Finished transaction in 2817.141 secs (2815.495u,0.988s)
 *)
 (*Correct *)
 (*
-Time Compute match ComputeKAS1SA_bfp Hash constant_v klen
+Time Compute match ComputeKAS1SA_bfp SM3_Hash constant_v klen
  m gp a b rA dA n h PB RA RB ZA ZB SB with
 | Error err => Error err
 | Normal (ka, s1, sa) =>

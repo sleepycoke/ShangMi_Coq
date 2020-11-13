@@ -147,12 +147,12 @@ Fixpoint V_ntail (i : nat)(m : bL)(len : N) : N :=
   | S i' => CF (V_ntail i' m len) (Block i' m len)
   end.
 
-Definition HashN (m : bL) : N :=
+Definition SM3_HashN (m : bL) : N :=
   V (N.to_nat (n_of_B (N.of_nat (List.length m)))) m (N.of_nat (List.length m)). 
 
 (*TODO Consider refactor SM3 with bL *)
-Definition Hash (m : bL) : bL :=
-  NtobL_len 256 (HashN m). 
+Definition SM3_Hash (m : bL) : bL :=
+  NtobL_len 256 (SM3_HashN m). 
 
 (*
 Definition hex2bin_with_prefix (m_hex : string) :=
@@ -191,8 +191,8 @@ Definition bLtobin (m : bL) : string :=
 Definition pre_pad_0 (s : string)(mod_size : N) : string :=
   Z.iter (Z.modulo (Z.opp (Z.of_nat (String.length s))) (Z.of_N mod_size)) (append "0") s.    
 
-Definition Hash_hex (m_hex : string) :=
-  HashN (bStobL (pre_pad_0 (hStobS m_hex) 4)). 
+Definition SM3_Hash_hex (m_hex : string) :=
+  SM3_HashN (bStobL (pre_pad_0 (hStobS m_hex) 4)). 
 
 (*
 Definition exp_m := "616263".  
@@ -219,11 +219,11 @@ Compute HexString.of_N (Reg 64 IV B0). (*Correct*)
 Compute HexString.of_N ((Reg 64 IV B0) $ IV). (*Correct*)
 
 (* "0x66c7f0f462eeedd9d1f2d46bdc10e4e24167c4875cf2f7a2297da02b8f4ba8e0" *)
-Compute HexString.of_N (HashN (bStobL "011000010110001001100011")). (* Correct *) 
-Compute HexString.of_N (Hash_hex exp_m). (* Correct *) 
+Compute HexString.of_N (SM3_HashN (bStobL "011000010110001001100011")). (* Correct *) 
+Compute HexString.of_N (SM3_Hash_hex exp_m). (* Correct *) 
 
 Definition exp_m2 := "61626364616263646162636461626364616263646162636461626364616263646162636461626364616263646162636461626364616263646162636461626364".
 (*debe9ff9 2275b8a1 38604889 c18e5a4d 6fdb70e5 387e5765 293dcba3 9c0c5732*)
-Compute HexString.of_N (Hash_hex exp_m2). (* Correct *) 
+Compute HexString.of_N (SM3_Hash_hex exp_m2). (* Correct *) 
 *)
 *)
