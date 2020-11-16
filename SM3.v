@@ -4,12 +4,12 @@ Require Export DataTypes.
 Open Scope N_scope. 
 Open Scope list_scope. 
 
-Definition IV := 
-  HexString.to_N("0x7380166f4914b2b9172442d7da8a0600a96f30bc163138aae38dee4db0fb0e4e").
+Definition IV := hStoN 
+"7380166f4914b2b9172442d7da8a0600a96f30bc163138aae38dee4db0fb0e4e".
 
 (* 0 <= j <= 63*)
 Definition T (j : nat) : N := 
-  if Nat.leb j 15 then HexString.to_N "0x79cc4519"  else HexString.to_N "0x7a879d8a". 
+  if Nat.leb j 15 then hStoN "79cc4519"  else hStoN "7a879d8a". 
 
 (* 0 <= j <= 63, X Y Z are words*)
 Definition FF (j : nat) (X : N)(Y : N)(Z : N) : N :=
@@ -150,7 +150,6 @@ Fixpoint V_ntail (i : nat)(m : bL)(len : N) : N :=
 Definition SM3_HashN (m : bL) : N :=
   V (N.to_nat (n_of_B (N.of_nat (List.length m)))) m (N.of_nat (List.length m)). 
 
-(*TODO Consider refactor SM3 with bL *)
 Definition SM3_Hash (m : bL) : bL :=
   NtobL_len 256 (SM3_HashN m). 
 
@@ -189,7 +188,8 @@ Definition bLtobin (m : bL) : string :=
 
 *)
 Definition pre_pad_0 (s : string)(mod_size : N) : string :=
-  Z.iter (Z.modulo (Z.opp (Z.of_nat (String.length s))) (Z.of_N mod_size)) (append "0") s.    
+  Z.iter (Z.modulo (Z.opp (Z.of_nat (String.length s)))
+   (Z.of_N mod_size)) (append "0") s.    
 
 Definition SM3_Hash_hex (m_hex : string) :=
   SM3_HashN (bStobL (pre_pad_0 (hStobS m_hex) 4)). 
@@ -219,6 +219,7 @@ Compute HexString.of_N (Reg 64 IV B0). (*Correct*)
 Compute HexString.of_N ((Reg 64 IV B0) $ IV). (*Correct*)
 
 (* "0x66c7f0f462eeedd9d1f2d46bdc10e4e24167c4875cf2f7a2297da02b8f4ba8e0" *)
+
 Compute HexString.of_N (SM3_HashN (bStobL "011000010110001001100011")). (* Correct *) 
 Compute HexString.of_N (SM3_Hash_hex exp_m). (* Correct *) 
 
@@ -227,3 +228,4 @@ Definition exp_m2 := "6162636461626364616263646162636461626364616263646162636461
 Compute HexString.of_N (SM3_Hash_hex exp_m2). (* Correct *) 
 *)
 *)
+
