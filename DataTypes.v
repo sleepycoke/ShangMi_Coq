@@ -196,13 +196,16 @@ Infix "=?" := eql : ecfield_scope.
 (* Regular Condition on Primal Fields *)
 Definition pf_rgl_cdt {U : Type}{_ : ECField U}(a b : U) : Prop :=
   let (f4, f27) := (wrp 4, wrp 27) in
+    f4 * a^3 + f27 * (squ b) =? id0 = false. 
+(*Definition pf_rgl_cdt {U : Type}{_ : ECField U}(a b : U) : Prop :=
+  let (f4, f27) := (wrp 4, wrp 27) in
   let ad1 := f4 * (a^3) in
   let ad2 := f27 * (squ b) in
-    ad1 + ad2 =? id0 = false. 
+    ad1 + ad2 =? id0 = false. *)
 
 Inductive ECurve {U : Type}{fd : ECField U} : Type :=
-  | pf_curve (a b : U) (rgl : pf_rgl_cdt a b) 
-  (*| bf_curve (a b : U) (rgl : b =? id0 = false) *) . 
+  | pf_curve (a b : U) (rgl : pf_rgl_cdt a b).  
+  (*| bf_curve (a b : U) (rgl : b =? id0 = false) *)  
 
 (*
 Inductive EC_Field : Type :=
