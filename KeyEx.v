@@ -48,7 +48,7 @@ Definition KDF (Z : bL) : bL :=
 Definition ComputeR (G : grp)(r : N) : grp :=
   match crv with
   | pf_curve a _ _ => pf_mul a G r
-  | bf_curve a _ _ => pf_mul a G r (*TODO bf*)
+  (*| bf_curve a _ _ => pf_mul a G r*) (*TODO bf*)
   end. 
 
 Definition ComputeTilde (field : ECField U)(w : N)(x : U) : N :=

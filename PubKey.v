@@ -51,7 +51,7 @@ Definition ComputeCwithklist (h : N)(klist : list N)(cp : cmp_type)(G PB : grp)
   let (ml,  ptobL) :=
   match crv with
   | pf_curve a _ _ => (pf_mul a, Point2bL cp)
-  | bf_curve a _ _ => (pf_mul a, Point2bL cp) (*TODO bf case*)
+  (*| bf_curve a _ _ => (pf_mul a, Point2bL cp)*) (*TODO bf case*)
   end in
     ComputeCwithklist_fix ml ptobL h klist G PB M. 
 

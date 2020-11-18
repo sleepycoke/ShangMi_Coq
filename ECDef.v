@@ -59,8 +59,8 @@ Definition OnCurve (curve : ECurve) (point : grp) : bool :=
     match curve with 
     | pf_curve a b _ => 
       (squ y) =? (x^3 + a*x + b)
-    | bf_curve a b _ => 
-      (squ y) + x * y =? ((x^3) + (a*(squ x))) + b
+    (*| bf_curve a b _ => 
+      (squ y) + x * y =? ((x^3) + (a*(squ x))) + b*)
     end
   end.
 
@@ -288,7 +288,7 @@ Definition pf_add {U : Type}{fd : ECField U} := @pf_add_ac U fd.
 Definition ml_ad_extractor {U : Type}{fd : ECField U}(curve : ECurve) := 
   match curve with
   | pf_curve a _ _ => (pf_mul a, pf_add a)
-  | bf_curve a _ _ => (pf_mul a, pf_add a)
+  (*| bf_curve a _ _ => (pf_mul a, pf_add a)*)
   end. (*TODO bf case*)
 
 

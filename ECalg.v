@@ -1,6 +1,5 @@
 Require Export ECDef. 
 
-Print "*". 
 (*A.5.2*)
 Definition tilde_p {U : Type}{fd : ECField U}(yp : U) : bool :=
   N.odd (uwp yp). 
@@ -12,7 +11,8 @@ Fixpoint Lucas_tail (p X Delta : N)(k : bL)(acc : N * N) : N * N :=
   | ki :: tl =>
       match acc with (U0, V0) =>
         let (U1, V1) := 
-            ((U0 * V0) mod p, (P_div p ((N.square V0) + Delta * (N.square U0))) 2) in
+          ((U0 * V0) mod p, (P_div p ((N.square V0) 
+            + Delta * (N.square U0))) 2) in
           match ki with
           | false => Lucas_tail p X Delta tl (U1, V1)
           | true => Lucas_tail p X Delta tl 
@@ -356,7 +356,7 @@ Definition BLtoPoint {U : Type}{fd : ECField U}(cp : cmp_type)(q : N)
   (crv : ECurve)(S : BL) : option (GE fd) :=
   let (a, b) :=
     match crv with 
-    | pf_curve a' b' _ | bf_curve a' b' _ => (a', b')
+    | pf_curve a' b' _ (*| bf_curve a' b' _ *)=> (a', b')
     end in
   match BLtoPointStep1 (recover_p q a b) cp q S with
   | None => None

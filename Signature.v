@@ -55,10 +55,10 @@ Definition SigWithList (curve : ECurve)
   let gml := 
     match curve with 
     | pf_curve a' _ _ => pf_mul a'
-    | bf_curve a' _ _ => pf_mul a' (*TODO bf case*)
+    (*| bf_curve a' _ _ => pf_mul a'*) (*TODO bf case*)
     end in
   let (a, b) := match curve with 
-    | pf_curve a' b' _ | bf_curve a' b' _ => (uwp a', uwp b')
+    | pf_curve a' b' _ (*| bf_curve a' b' _*) => (uwp a', uwp b')
   end in
   let Z_A := ComputeZ ENTL_A ID_A (NtoBbL a) (NtoBbL b) xGbL yGbL xAbL yAbL in
   let e := bLtoN (hash (Z_A ++ M)) in
@@ -111,7 +111,7 @@ Definition VeriSig (curve : ECurve)(n xG yG xA yA r' s' Z_A M' : bL)
   let (gml, gad) := 
     match curve with 
     | pf_curve a _ _ => (pf_mul a, pf_add a)
-    | bf_curve a _ _ => (pf_mul a, pf_add a) (*TODO bf case*)
+    (*| bf_curve a _ _ => (pf_mul a, pf_add a)*) (*TODO bf case*)
     end in
   VeriSig_inner gml gad (bLtoN n) (bLtoN xG) (bLtoN yG)
    (bLtoN xA) (bLtoN yA) (bLtoN r') (bLtoN s') Z_A M'.

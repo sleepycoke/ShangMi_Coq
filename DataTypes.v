@@ -84,9 +84,6 @@ Qed.
 Definition pfe_builder (n : N) : Fpe po :=
   mkFpe po (n mod (order po)) (mod_inrng n). 
 
-Definition pfe_id0_bd : Fpe po :=
-pfe_builder 0. 
-
 Lemma add_inrng (x y : Fpe po) : 
 P_add (order po) (val po x) (val po y) < (order po). 
 Proof. apply mod_inrng. Qed.
@@ -205,7 +202,7 @@ Definition pf_rgl_cdt {U : Type}{_ : ECField U}(a b : U) : Prop :=
 
 Inductive ECurve {U : Type}{fd : ECField U} : Type :=
   | pf_curve (a b : U) (rgl : pf_rgl_cdt a b) 
-  | bf_curve (a b : U) (rgl : b =? id0 = false) . 
+  (*| bf_curve (a b : U) (rgl : b =? id0 = false) *) . 
 
 (*
 Inductive EC_Field : Type :=
