@@ -5,6 +5,7 @@ Require Export ECField.
 (* Affine Coordinates *)
 Inductive GE {U : Type}(fd : ECField U) : Type :=
   InfO : GE fd | Cop : U * U -> GE fd. 
+Check @GE. 
 
 (* Projective Coordinates *)
 (* Decide to use Standard Projective Coordinates only*)

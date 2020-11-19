@@ -35,8 +35,9 @@ Definition power_general (g : N)(a : N)(q : N)(sq : N -> N)
   let e := N.modulo a (q - 1) in
   power_tail g (NtobL e) q sq mp 1. 
 
+(*TODO added mod p for convenience of proof. Should remove it. *)
 Definition P_pow (p : N)(g : N)(a : N) : N :=
-  power_general g a p (P_sq p) (P_mul p). 
+  (power_general g a p (P_sq p) (P_mul p)) mod p. 
 
 (* B.1.2 *)
 Definition P_inv (p g : N) :=
@@ -106,8 +107,7 @@ Proof. apply mod_inrng. Qed.
 
 Lemma pow_inrng (g : Fpe po)(a : N): 
 P_pow (order po) (val po g) a < (order po). 
-Proof. 
-Admitted. 
+Proof. apply mod_inrng. Qed.
 
 Lemma mul_inrng (x y : Fpe po) : 
 P_mul (order po) (val po x) (val po y) < (order po). 
@@ -119,7 +119,7 @@ Proof. apply mod_inrng. Qed.
 
 Lemma inv_inrng (x : Fpe po) : 
 P_inv (order po) (val po x) < (order po). 
-Proof. Admitted. 
+Proof. apply mod_inrng. Qed.
 
 Definition po_eq (x y : Fpe po) : bool :=
 (val po x) =? (val po y). 
