@@ -25,7 +25,7 @@ Definition G := Cop field (xG, yG).
 Definition n := hStoN
   "8542D69E 4C044F18 E8B92435 BF6FF7DD 29772063 0485628D 5AE74EE7 C32E79B7". 
 Definition w := ComputeW n.
-(*Example wis127 : w = 127%N := Logic.eq_refl. *)
+Example wis127 : w = 127%N := Logic.eq_refl. 
 Definition dAN := hStoN
   "6FCBA2EF 9AE0AB90 2BC3BDE3 FF915D44 BA4CC78F 88E2F8E7 F8996D3B 8CCEEDEE". 
 Definition dA := wrapper field dAN.
@@ -76,46 +76,37 @@ Definition y2N := hStoN
 Definition x2 := wrapper field x2N.
 Definition y2 := wrapper field y2N.
 
-(*Compute NtohS (ComputeTilde w x2 p). Correct*)
 Definition x2_tilde := hStoN "B8F2B533 7B3DCF45 14E8BBC1 9D900EE5".
 
-(*Example x2_tilde_test : x2_tilde = ComputeTilde field w x2.
-Proof. vm_compute. reflexivity. Qed.   *)
+Example x2_tilde_test : x2_tilde = ComputeTilde field w x2.
+Proof. vm_compute. reflexivity. Qed.   
 Definition tB := hStoN 
   "2B2E11CB F03641FC 3D939262 FC0B652A 70ACAA25 B5369AD3 8B375C02 65490C9F". 
-(*Example tB_test : tB 
-  = ComputeT n (unwrapper field dB) x2_tilde rB := Logic.eq_refl. *)
+Example tB_test : tB 
+  = ComputeT n (unwrapper field dB) x2_tilde rB := Logic.eq_refl. 
 
 Definition x1_tilde := hStoN "E856C095 05324A6D 23150C40 8F162BF0". 
-(*Example x1_tilde_test : x1_tilde = ComputeTilde field w x1.
-Proof. vm_compute. reflexivity. Qed.   *)
+Example x1_tilde_test : x1_tilde = ComputeTilde field w x1.
+Proof. vm_compute. reflexivity. Qed.   
 Definition RA := Cop field (x1, y1). 
-(*Example ra_test : GE_eqb RA (ComputeR crv G rA) = true. 
-Proof. Time vm_compute. reflexivity. Qed.   34s *)
+Example ra_test : GE_eqb RA (ComputeR crv G rA) = true. 
+Proof. Time vm_compute. reflexivity. Qed.   (* 34s *)
 
 Definition RB := Cop field (x2, y2). 
-(*Example rb_test : GE_eqb RB (ComputeR crv G rB) = true. 
-Proof. Time vm_compute. reflexivity. Qed.   34s **)
+Example rb_test : GE_eqb RB (ComputeR crv G rB) = true. 
+Proof. Time vm_compute. reflexivity. Qed.   (* 34s *)
 
 Definition PA := Cop field (xA, yA). 
 Definition PB := Cop field (xB, yB). 
 
-(*Definition xA0 := hStoN 
+Definition xA0 := hStoN 
   "2079015F 1A2A3C13 2B67CA90 75BB2803 1D6F2239 8DD8331E 72529555 204B495B".
 Definition yA0 := hStoN 
   "6B3FE6FB 0F5D5664 DCA16128 B5E7FCFD AFA5456C 1E5A914D 1300DB61 F37888ED". 
-(*Compute Cop (xA0, yA0). 
-Time Compute ComputeR RA x1_tilde p a. Correct *)
-Definition RA0 := Cop (xA0, yA0). 
 Definition xA1 := hStoN 
   "1C006A3B FF97C651 B7F70D0D E0FC09D2 3AA2BE7A 8E9FF7DA F32673B4 16349B92".
 Definition yA1 := hStoN 
   "5DC74F8A CC114FC6 F1A75CB2 86864F34 7F9B2CF2 9326A270 79B7D37A FC1C145B".
-Definition RA1 := Cop (xA1, yA1). 
-(*
-Compute RA1.
-Compute pf_add PA RA0 p a. Correct *)
-*)
 Definition xVbL := hStobL 
   "47C82653 4DC2F6F1 FBF28728 DD658F21 E174F481 79ACEF29 00F8B7F5 66E40905". 
 Definition yVbL := hStobL 
@@ -125,41 +116,39 @@ Definition yVN := bLtoN yVbL.
 Definition xV := wrapper field xVN. 
 Definition yV := wrapper field yVN. 
 Definition V := Cop field (xV, yV). 
-(*Example Vtest : GE_eqb (ComputeV (pf_mul a) (pf_add a) n h tB x1_tilde PA RA)
+Example Vtest : GE_eqb (ComputeV (pf_mul a) (pf_add a) n h tB x1_tilde PA RA)
   V = true.
-Proof. vm_compute. reflexivity. Qed. *)
+Proof. Time vm_compute. reflexivity. Qed. (* 52.815 secs *)
 
 Definition Z := hStobL "47C82653 4DC2F6F1 FBF28728 DD658F21 E174F481 79ACEF29
  00F8B7F5 66E40905 2AF86EFE 732CF12A D0E09A1F 2556CC65 0D9CCCE3 E249866B 
  BB5C6846 A4C4A295 E4D1D0C3 CA4C7F11 BC8FF8CB 3F4C02A7 8F108FA0 98E51A66 
  8487240F 75E20F31 6B4B6D0E 276691BD 4A11BF72 F4FB501A E309FDAC B72FA6CC 
  336E6656 119ABD67". 
-(*Example Ztest : Z = xVbL ++ yVbL ++ ZA ++ ZB. 
-Proof. reflexivity. Qed. *)
-(*Definition Z_short := 
-  (NtoBbL xVN) ++ (NtoBbL yVN) ++ ZA ++ ZB. what is this for? *)
+Example Ztest : Z = xVbL ++ yVbL ++ ZA ++ ZB. 
+Proof. reflexivity. Qed. 
+
 Definition klen := 128%nat. 
  
 Definition KB := 
   hStobL "55B0AC62 A6B927BA 23703832 C853DED4". 
-(*Example KBtest : KB = KDF SM3_Hash constant_v klen  Z. 
-Proof. vm_compute. reflexivity. Qed. *)
-(* Compute bLtohS (KDF Z_short klen SM3_Hash constant_v).
- (*Incorrect*) *)
+Example KBtest : KB = KDF SM3_Hash constant_v klen  Z. 
+Proof. vm_compute. reflexivity. Qed. 
 
 Definition SB := hStobL 
   "284C8F19 8F141B50 2E81250F 1581C7E9 EEB4CA69 90F9E02D F388B454 71F5BC5C". 
 
-(*Example SBtest : SB = ComputeS SM3_Hash crv "02" ZA ZB xV yV x1 y1 x2 y2.
-Proof. vm_compute. reflexivity. Qed. *)
+Example SBtest : SB = @ComputeS _ field SM3_Hash "02" ZA ZB xV yV x1 y1 x2 y2.
+Proof. vm_compute. reflexivity. Qed. 
 
-(*Example rbkbsb_test : 
+Example rbkbsb_test : 
   match ComputeRBKBSB SM3_Hash constant_v klen crv field 
     G n h ZA ZB RA PA rB dBN with  
   | Error str => Error str
   | Normal (r, k, s) => Normal (GE_uwp r, k, s)
   end = Normal (GE_uwp RB, KB, SB).
-Proof. Time vm_compute. reflexivity. Qed. *)
+Proof. Time vm_compute. reflexivity. Qed. 
+(*94.608 secs*)
 
 Definition KA := hStobL "55B0AC62 A6B927BA 23703832 C853DED4". 
 Definition S1 := hStobL 
@@ -167,11 +156,13 @@ Definition S1 := hStobL
 Definition SA := hStobL 
   "23444DAF 8ED75343 66CB901C 84B3BDBB 63504F40 65C1116C 91A4C006 97E6CF7A". 
 
-(*Example kas1sa_test : Normal (KA, S1, SA) = ComputeKAS1SA SM3_Hash constant_v
+Example kas1sa_test : Normal (KA, S1, SA) = ComputeKAS1SA SM3_Hash constant_v
  klen crv field rA dAN n h PB RA RB ZA ZB SB.  
-Proof. Time vm_compute. reflexivity. Qed. *)
-(*Example veris2eqsa_test : VeriS2eqSA SM3_Hash crv ZA ZB SA xV yV x1 y1 x2 y2 = true.
-Proof. vm_compute. reflexivity. Qed.*)  
+Proof. Time vm_compute. reflexivity. Qed. 
+(* 67.986 secs *)
+Example veris2eqsa_test : @VeriS2eqSA _ field SM3_Hash ZA ZB SA xV yV x1 y1 x2 y2 = true.
+Proof. Time vm_compute. reflexivity. Qed.  
+(*5.392 secs *)
 End test_pf. 
 
 

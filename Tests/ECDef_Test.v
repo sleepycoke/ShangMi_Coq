@@ -1,5 +1,6 @@
 Require Import ECDef.
 
+(*
 Definition fd23 := pf_builder 23 Logic.eq_refl. 
 Example pc010isInfO : PC_to_AC (GE_PC_wp fd23 (0, 1, 0)) = InfO fd23.
 Proof. reflexivity. Qed. 
@@ -46,7 +47,7 @@ Compute bfp_double 5 37 1 P1 . (* 8, 31 correct *)
 Compute bfp_mul 5 37 1 P1 2 . (* 8, 31 correct *) 
 Compute bfp_add 5 37 1 P1 P2 .  (* 30, 21 correct *)
 *)
-
+*)
 Section pfmultest. 
 Definition p := hStoN
   "8542D69E 4C044F18 E8B92435 BF6FF7DE 45728391 5C45517D 722EDB8B 08F1DFC3". 
@@ -54,6 +55,8 @@ Definition field := pf_builder p Logic.eq_refl.
 Definition a := hStoN
   "787968B4 FA32C3FD 2417842E 73BBFEFF 2F3C848B 6831D7E0 EC65228B 3937E498". 
 Definition fa := wrapper field a. 
+Compute size p. 
+(*
 Definition x1 := hStoN
  "110FCDA5 7615705D 5E7B9324 AC4B856D 23E6D918 8B2AE477 59514657 CE25D112" .
 Definition y1 := hStoN
@@ -62,10 +65,6 @@ Definition P1 := GE_wp field (x1, y1).
 Definition x2 := hStoN "64D20D27 D0632957 F8028C1E 024F6B02 EDF23102 A566C932 AE8BD613 A8E865FE".
 Definition y2 := hStoN "64D20D27 D0632957 F8028C1E 024F6B02 EDF23102 A566C932 AE8BD613 A8E865FE".
 Definition P2 := GE_wp field (x2, y2). 
-(*
-Time Compute pf_mul_ac p a P2 2. 
-Time Compute pf_mul_ps p a P2 2. 
-Time Compute pf_double_ps p a (AC_to_PC_std P2). 
 *)
 (*
 Time Compute GE_uwp (pf_mul_ac field (wrapper field a) P2 10). 
@@ -93,9 +92,8 @@ Definition k := hStoN
   "6CB28D99 385C175C 94F94E93 4817663F C176D925 DD72B727 260DBAAE 1FB2F96F".
 Definition G := GE_wp field (xG, yG). 
 Definition kGac := pf_mul_ac fa G k.
-(*
-Example kGaceqP1 : GE_eqb kGac P1 = true. 
-Proof. Time native_compute. reflexivity. Qed. 
+(*Example kGaceqP1 : GE_eqb kGac P1 = true. 
+Proof. Time vm_compute. reflexivity. Qed. 
 (*705.683 secs vm_compute *)
 *)
 Definition kGpc := pf_mul_pc fa G k.  

@@ -47,6 +47,7 @@ Fixpoint TrySigWithList (G : grp)(n dA e : N)(klist : list N) : option (N * N) :
 
 End gml_sec. 
 
+
 (* 6.1 *)
 (* TODO How to generate klist? *)
 Definition SigWithList (curve : ECurve)

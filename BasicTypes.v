@@ -184,10 +184,8 @@ Definition hChartobL (m_hex : string) : bL :=
     end
     rawbl. 
     *)
-(*Definition hStobL (hs : string) :=
-  bStobL (hStobS hs). *)
-(*indeed hStoBbL now*)
-Definition hStobL (hs : string) := NtoBbL (hStoN hs).
+Definition hStobL (hs : string) := bStobL (hStobS hs). 
+Definition hStoBbL (hs : string) := NtoBbL (hStoN hs).
 
 Definition NtohS (n : N) : string :=
   match n with

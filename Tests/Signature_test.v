@@ -2,12 +2,6 @@ Require Import Signature.
 Section A_1. 
 Definition IDa := hStobL "414C 49434531 32334059 41484F4F 2E434F4D".
 Definition ENTLa := hStobL "0090". 
-(*
-Compute IDa. 
-Compute bLtohS (ENTL IDa).  
-
-Compute bLtobS ENTLa. 
-*)
 
 Definition pbL := hStobL 
 "8542D69E 4C044F18 E8B92435 BF6FF7DE 45728391 5C45517D 722EDB8B 08F1DFC3".
@@ -42,13 +36,14 @@ Definition ZA := hStobL
 (*Example ZAtest : ComputeZ SM3_Hash ENTLa IDa abL bbL xGbL yGbL xAbL yAbL = ZA.
 Proof. vm_compute. reflexivity. Qed. *)
 
-Definition M_bar := hStobL ("F4A38489 E32B45B6 F876E3AC 2168CA39 2362DC8F"
-  ++ "23459C1D 1146FC3D BFB7BC9A 6D657373 61676520 64696765 7374"). 
+Definition M_bar := hStobL "F4A38489 E32B45B6 F876E3AC 2168CA39 2362DC8F
+  23459C1D 1146FC3D BFB7BC9A 6D657373 61676520 64696765 7374". 
 (*Example M_bar_test : M_bar = ZA ++ M := Logic.eq_refl. *)
 
 Definition ebL := hStobL
   "B524F552 CD82B8B0 28476E00 5C377FB1 9A87E6FC 682D48BB 5D42E3D9 B9EFFE76".
-(*Example ebLTest : ebL = SM3_Hash M_bar := Logic.eq_refl. *)
+(*Example ebLTest : ebL = SM3_Hash M_bar. 
+Proof. Time vm_compute. reflexivity. Qed.*) 
 Definition e := bLtoN ebL.
 
 Definition k := hStoN 
@@ -76,29 +71,21 @@ Definition r := bLtoN rbL.
 (*Example r_test : r = (e + x1) mod n := Logic.eq_refl. *)
 
 Definition factor1 := P_inv n(1 + dA) .
-(*
-Compute NtohS factor1. (*Correct, should be inverse on field n*)
-*)
 Definition factor2 := P_sub n k (P_mul n r dA). 
 Definition sbL := hStobL
   "6FC6DAC3 2C5D5CF1 0C77DFB2 0F7C2EB6 67A45787 2FB09EC5 6327A67E C7DEEBE7".
 Definition s := bLtoN sbL.
 
-
 (*Example s_test : s = P_mul n factor1 factor2.
 Proof. vm_compute. reflexivity. Qed.  *)
 
 Definition fb := @wrp _ field b.
-(*Fact rglfact : @pf_rgl_cdt _ field fa fb. 
-Proof. reflexivity. Qed.
-Print rglfact. *)
-(*Definition crv := pf_curve fa fb rglfact. *)
 Definition crv := @pf_curve _ field fa fb Logic.eq_refl. 
 
 (*Example sigA1_test : SigWithList SM3_Hash crv nbL xGbL yGbL ENTLa IDa
   dAbL xAbL yAbL M [k] = Some (M, (NtoBbL r, NtoBbL s)).
 Proof. Time vm_compute. reflexivity. Qed. *)
-(*41s*)
+(*41.326s*)
 (*Definition tt := P_add nN rt st .
 
 Definition x0't := hStoN "7DEACE5F D121BC38 5A3C6317 249F413D 28C17291 A60DFD83 B835A453 92D22B0A". 

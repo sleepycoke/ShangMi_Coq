@@ -5,7 +5,6 @@ Require Export ECField.
 (* Affine Coordinates *)
 Inductive GE {U : Type}(fd : ECField U) : Type :=
   InfO : GE fd | Cop : U * U -> GE fd. 
-Check @GE. 
 
 (* Projective Coordinates *)
 (* Decide to use Standard Projective Coordinates only*)
@@ -155,7 +154,7 @@ Definition pf_double_pc (a : U)(P : gpc) : gpc :=
 
 (* Add for Standard Projective Cooridnates *)
 Definition pf_add_pc (a : U)(P1 P2 : gpc) : gpc :=
-  if GE_PC_invb_pf P1 P2 then tri (id0, id1, id0) else
+  if GE_PC_invb_pf P1 P2 then o_pc else
   if GE_PC_eqb P1 P2 then pf_double_pc a P1 else
   match P1, P2 with Tri _ (x1, y1, z1), Tri _ (x2, y2, z2) =>
     match z1 =? id0, z2 =? id0 with
@@ -182,7 +181,6 @@ Definition pf_add_pc (a : U)(P1 P2 : gpc) : gpc :=
 
 
 (* 3.2.3.1*)
-
 Definition pf_double_ac (a : U)(P : grp):=
   match P with
   | InfO _ => o
