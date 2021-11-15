@@ -61,7 +61,6 @@ Definition mask_34 (A : N) : N :=
   shiftr (land A (shiftl mask_ws (word_size * 1))) (word_size * 1). 
 Definition mask_44 (A : N) : N := 
   land A mask_ws. 
-Print "/\". 
 (* https://en.cppreference.com/w/c/language/operator_precedence *)
 (* Bit-wise operation are below + -*)
 Infix "/\" := N.land : N_scope.

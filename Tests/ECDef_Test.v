@@ -109,9 +109,6 @@ Definition t := hStoN "2B75F07E D7ECE7CC C1C8986B 991F441A D324D6D6 19FE06DD 63E
 Definition x00 := hStoN "1657FA75 BF2ADCDC 3C1F6CF0 5AB7B45E 04D3ACBE 8E4085CF A669CB25 64F17A9F".
 Definition y00 := hStoN "19F0115F 21E16D2F 5C3A485F 8575A128 BBCDDF80 296A62F6 AC2EB842 DD058E50".
 Definition P00 := GE_wp field (x00, y00).
-
-(*
 Example p00aceqPAt : GE_eqb P00 (pf_mul_ac fa PA t) = true .
-Proof. Time vm_compute. Qed.  (* 679.806 secs *)
-*)
+Proof. Time vm_compute.  Qed.  (* 679.806 secs *)
 End pfmultest.  

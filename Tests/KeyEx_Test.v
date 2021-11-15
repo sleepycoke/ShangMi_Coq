@@ -1,6 +1,8 @@
 Require Import KeyEx.
 Open Scope ecfield_scope. 
 Section test_pf. 
+Definition A2_begin_description := "Example A.2 on SM2p3 Annex A, page 11, begins. ". 
+Print A2_begin_description. 
 Definition p := hStoN 
   "8542D69E 4C044F18 E8B92435 BF6FF7DE 45728391 5C45517D 722EDB8B 08F1DFC3". 
 Definition field := pf_builder p Logic.eq_refl.
@@ -163,6 +165,8 @@ Proof. Time vm_compute. reflexivity. Qed.
 Example veris2eqsa_test : @VeriS2eqSA _ field SM3_Hash ZA ZB SA xV yV x1 y1 x2 y2 = true.
 Proof. Time vm_compute. reflexivity. Qed.  
 (*5.392 secs *)
+Definition A2_end_description := "Example A.2 on SM2p3 Annex A, page 11, ended. ". 
+Print A2_end_description. 
 End test_pf. 
 
 

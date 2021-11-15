@@ -4,7 +4,7 @@ Require Import NArith.
 Require Import Ascii String.
 Require Import Coq.Strings.HexString.
 
-
+(*
 Module notation_mod. 
 Definition testop := N.succ_double.
 Section notation_sec.
@@ -25,3 +25,4 @@ Class ECF : Type := mkField {U : Type; wrp : N -> U; uwp : U -> N;
 Print ECF.
 Notation "x + y" := (add x y).
 Print "+". 
+*)

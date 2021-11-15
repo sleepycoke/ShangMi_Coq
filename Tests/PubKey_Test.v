@@ -1,5 +1,8 @@
-
+Require Import PubKey.
+Open Scope ecfield_scope. 
 Module test_pf. 
+Definition A2_E2_begin_description := "Example 2 of A.2 on SM2p4 Annex A, page 10, begins. ". 
+Print A2_E2_begin_description. 
 Definition p := hStoN 
   "8542D69E 4C044F18 E8B92435 BF6FF7DE 45728391 5C45517D 722EDB8B 08F1DFC3".
 Definition field := pf_builder p Logic.eq_refl.
@@ -58,9 +61,9 @@ Definition C := hStobL "04245C26 FB68B1DD DDB12C4B 6BF9F2B6 D5FE60A3 83B0D18D
  1C4144AB F17F6252 E776CB92 64C2A7E8 8E52B199 03FDC473 78F605E3 6811F5C0 
  7423A24B 84400F01 B8650053 A89B41C4 18B0C3AA D00D886C 00286467 9C3D7360
   C30156FA B7C80A02 76712DA9 D8094A63 4B766D3A 285E0748 0653426D". 
-(*Example cmpCtest_pf : Normal C = 
+Example cmpCtest_pf : Normal C = 
   ComputeCwithklist SM3_Hash constant_v klen crv h [k] ucp G PB M. 
-Proof. Time vm_compute. (* 75s *) reflexivity. Qed.*)
+Proof. Time vm_compute. (* 75s *) reflexivity. Qed.
 (*
 Time Compute match ComputeCwithklist_pf SM3_Hash constant_v p a h [k] ucp (Cop (xG, yG)) (Cop (xB, yB)) M with
 | Error s => Error s
@@ -89,6 +92,8 @@ end.
 Finished transaction in 612.356 secs (611.425u,0.411s) (successful)
 Correct
 *)
+Definition A2_end_description := "Example 2 of A.2 on SM2p4 Annex A, page 10, ended. ". 
+Print A2_end_description. 
 End test_pf. 
 
 (*Module test_bfp.

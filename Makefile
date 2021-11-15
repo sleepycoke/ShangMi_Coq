@@ -15,4 +15,11 @@ all: $(OBJECTS) .depend
 .PHONY: clean
 clean:
 	rm -f .depend
-	rm -f *.glob *.log *.vo 
+	rm -f *.glob *.log *.vo *.vok *.vos .*.aux
+	rm -f Tests/*.glob Tests/*.log Tests/*.vo Tests/*.vok Tests/*.vos Tests/.*.aux
+
+test:
+	coqc Tests/ECDef_Test.v
+	coqc Tests/Signature_Test.v
+	coqc Tests/KeyEx_Test.v
+	coqc Tests/Pubkey_Test.v

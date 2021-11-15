@@ -2,7 +2,8 @@ Require Import Signature.
 Section A_1. 
 Definition IDa := hStobL "414C 49434531 32334059 41484F4F 2E434F4D".
 Definition ENTLa := hStobL "0090". 
-
+Definition A2_begin_description := "Example A.2 on SM2p2 Annex A, page 10, begins. ". 
+Print A2_begin_description. 
 Definition pbL := hStobL 
 "8542D69E 4C044F18 E8B92435 BF6FF7DE 45728391 5C45517D 722EDB8B 08F1DFC3".
 Definition p := bLtoN pbL. 
@@ -126,9 +127,11 @@ Definition P1t := pf_add (bLtoN pIn) (bLtoN aIn) (Cop (x0't, y0't)) (Cop (x00't,
 (*
 Compute NtohS (P_add nN (bLtoN et) x1't).  (*Correct*)
 *)
-(*Example veryA_1_test : VeriSig SM3_Hash crv nbL xGbL yGbL xAbL yAbL rbL sbL ZA M = None. 
-Proof. Time vm_compute. reflexivity. Qed. *)
+Example veryA_1_test : VeriSig SM3_Hash crv nbL xGbL yGbL xAbL yAbL rbL sbL ZA M = None. 
+Proof. Time vm_compute. reflexivity. Qed.
 (*70s*)
+Definition A2_end_description := "Example A.2 on SM2p2 Annex A, page 10, ended. ". 
+Print A2_end_description. 
 End A_1. 
 
 (*Module A_2. 
