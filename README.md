@@ -1,4 +1,4 @@
-# CertSM
+# ShangMi_Coq
 This project aims to formalize SM(商密)2, 3, 4 Algorithms in Coq. 
 However, only prime field cases are finished. 
 You may refer to ./Docs for the standards. 
