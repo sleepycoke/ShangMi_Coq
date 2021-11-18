@@ -16,3 +16,5 @@ To run the tests:
 make test
 
 This project was developed while I was a graduate student in Computer Science Department of Nanjing University. 
+
+To Contact me, please send an email to sleepycoke@gmail.com
